@@ -1,0 +1,591 @@
+---
+swagger: "2.0"
+info:
+  description: "TigerNet website"
+  version: "1.0.0"
+  title: "TigerNet Website"
+host: "localhost:3000"
+basePath: "/"
+schemes:
+- "https"
+- "http"
+consumes:
+- "application/json"
+paths:
+  /login:
+    post:
+      summary: "User log in"
+      operationId: "userLogin"
+      parameters:
+      - in: "body"
+        name: "user"
+        description: "user to log in"
+        required: false
+        schema:
+          $ref: "#/definitions/user"
+      responses:
+        200:
+          description: "Login successful"
+        401:
+          description: "email or password does not match"
+      x-swagger-router-controller: "Default"
+  /logout:
+    post:
+      summary: "User log out"
+      description: "User Log out"
+      operationId: "userLogout"
+      parameters: []
+      responses:
+        200:
+          description: "Logout Successfully"
+      x-swagger-router-controller: "Default"
+  /admin/users:
+    get:
+      summary: "Admin get all users"
+      description: "Admin get all users"
+      operationId: "admGetAllUser"
+      parameters: []
+      responses:
+        200:
+          description: "admin Get All user successful"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/users/{uid}:
+    get:
+      summary: "Admin get a user information"
+      description: "Admin get a user information"
+      operationId: "admGetUser"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "user id"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Admin get users information successful"
+          schema:
+            $ref: "#/definitions/User"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    put:
+      summary: "Admin edit an user(Unlock)"
+      description: "Admin edit an user(Unlock)"
+      operationId: "adminUsersUidPUT"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "user id"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "editedUser"
+        required: false
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "Edit user successful"
+          schema:
+            $ref: "#/definitions/User"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/patterns:
+    get:
+      summary: "Admin get all patterns in database"
+      description: "Get all pattern in database"
+      operationId: "admGetAllPatterns"
+      parameters: []
+      responses:
+        200:
+          description: "Get all Pattern successfully"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pattern"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    post:
+      summary: "Admin Create new pattern"
+      description: "Admin Create new pattern parameters: - name: pattern in: body\
+        \ description: new pattern schema: $ref: "
+      operationId: "adminPatternsPOST"
+      parameters: []
+      responses:
+        200:
+          description: "create Pattern successful"
+          schema:
+            $ref: "#/definitions/Pattern"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/patterns/{pid}:
+    get:
+      summary: "Admin get a Pattern"
+      description: "Admin get a Pattern"
+      operationId: "admGetPattern"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Get a pattern successfully"
+          schema:
+            $ref: "#/definitions/Pattern"
+      x-swagger-router-controller: "Default"
+    delete:
+      summary: "Admin delete a Pattern"
+      description: "Admin Delete a Pattern"
+      operationId: "admDelPattern"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Delete Pattern successful"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/patterns/{pid}/nodes:
+    get:
+      summary: "admin get all Nodes of a pattern"
+      description: "admin get all Nodes of a pattern"
+      operationId: "admGetAllNodes"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Get all node successful"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    post:
+      summary: "Admin create a new Node for a pattern"
+      description: "Admin create a new Node for a pattern"
+      operationId: "admCreate a Node for a pattern"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "newNode"
+        required: false
+        schema:
+          $ref: "#/definitions/Node"
+      responses:
+        200:
+          description: "Create new Node successful"
+          schema:
+            $ref: "#/definitions/Node"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/patterns/{pid}/nodes/{nid}:
+    get:
+      summary: "Admin get a Node"
+      description: "Admin get a Node"
+      operationId: "admGetNode"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Admin get a Node successful"
+          schema:
+            $ref: "#/definitions/Node"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    put:
+      summary: "Admin edit a Node, changing status"
+      description: "Admin edit a Node, changing status"
+      operationId: "admEditNode"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "editedNode"
+        required: false
+        schema:
+          $ref: "#/definitions/Node"
+      responses:
+        200:
+          description: "Admin edited Node successful"
+          schema:
+            $ref: "#/definitions/Node"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    delete:
+      summary: "admin Delete a Node"
+      description: "admin Delete a Node"
+      operationId: "admDelNode"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Admin Delete Node successful"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /admin/patterns/{pid}/nodes/{nid}/messages:
+    get:
+      summary: "Admin get all messages"
+      description: "Admin get all messages"
+      operationId: "admGetAllMess"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Admin get all messages successful"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Message"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    post:
+      summary: "Admin create a new message"
+      description: "Admin create a new message"
+      operationId: "admCreateMess"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "newMessage"
+        required: false
+        schema:
+          $ref: "#/definitions/Message"
+      responses:
+        200:
+          description: "Create new message successful"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "User does not authenticated for this functionality"
+        403:
+          description: "The two Node is not connected"
+      x-swagger-router-controller: "Default"
+  /patterns:
+    get:
+      summary: "User get all patterns in database"
+      description: "Get all pattern in database"
+      operationId: "userGetAllPatterns"
+      parameters: []
+      responses:
+        200:
+          description: "Get all Pattern successfully"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Pattern"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /patterns/{pid}:
+    get:
+      summary: "User get a Pattern"
+      description: "User get a Pattern"
+      operationId: "userGetPattern"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Get a pattern successfully"
+          schema:
+            $ref: "#/definitions/Pattern"
+      x-swagger-router-controller: "Default"
+  /patterns/{pid}/nodes:
+    get:
+      summary: "User get all Nodes of a pattern"
+      description: "User get all Nodes of a pattern"
+      operationId: "userGetAllNodes"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Get all node successful"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /patterns/{pid}/nodes/{nid}:
+    get:
+      summary: "Admin get a Node"
+      description: "Admin get a Node"
+      operationId: "userGetNode"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "User get a Node successful"
+          schema:
+            $ref: "#/definitions/Node"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    put:
+      summary: "User edit a Node, changing status"
+      description: "User edit a Node, changing status"
+      operationId: "userEditNode"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "editedNode"
+        required: false
+        schema:
+          $ref: "#/definitions/Node"
+      responses:
+        200:
+          description: "Admin edited Node successful"
+          schema:
+            $ref: "#/definitions/Node"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+  /patterns/{pid}/nodes/{nid}/messages:
+    get:
+      summary: "User get all messages"
+      description: "User get all messages"
+      operationId: "userGetAllMess"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "User get all messages successful"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Message"
+        401:
+          description: "User does not authenticated for this functionality"
+      x-swagger-router-controller: "Default"
+    post:
+      summary: "User create a new message"
+      description: "User create a new message"
+      operationId: "userCreateMess"
+      parameters:
+      - name: "pid"
+        in: "path"
+        description: "id of Pattern"
+        required: true
+        type: "string"
+      - name: "nid"
+        in: "path"
+        description: "id of Node"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "newMessage"
+        required: false
+        schema:
+          $ref: "#/definitions/Message"
+      responses:
+        200:
+          description: "Create new message successful"
+          schema:
+            $ref: "#/definitions/Message"
+        401:
+          description: "User does not authenticated for this functionality"
+        403:
+          description: "The two Node is not connected"
+      x-swagger-router-controller: "Default"
+definitions:
+  Node:
+    type: "object"
+    properties:
+      nid:
+        type: "string"
+      status:
+        type: "boolean"
+        description: "True = active, False = inactive"
+      connectorNode:
+        type: "boolean"
+      directs:
+        type: "array"
+        items:
+          type: "string"
+          description: "Id of direct connection Node"
+      messages:
+        type: "array"
+        items:
+          type: "string"
+    example:
+      nid: "node001"
+      status: true
+      directs:
+      - "node002"
+      - "node004"
+      connector: true
+      messages:
+      - "mess001"
+      - "mess002"
+  User:
+    type: "object"
+    properties:
+      uid:
+        type: "string"
+      username:
+        type: "string"
+      password:
+        type: "string"
+      type:
+        type: "string"
+        enum:
+        - "user"
+        - "admin"
+      status:
+        type: "boolean"
+        description: "True = active, False = locked"
+      questions:
+        type: "array"
+        items:
+          type: "string"
+    example:
+      uid: "user001"
+      username: "phuongnguyen"
+      password: "pwdnguyen"
+      type: "admin"
+      status: true
+      questions:
+      - "What is your pet name?Rex"
+      - "Where was you born?Hanoi"
+      - "What is your mother middle name?Xuan"
+  Pattern:
+    type: "object"
+    properties:
+      pid:
+        type: "string"
+      conNodeId:
+        type: "string"
+      nonConNodes:
+        type: "array"
+        items:
+          type: "string"
+    example:
+      pid: "patt001"
+      conNodeId: "node001"
+      nonConNodes:
+      - "node001"
+      - "node002"
+      - "node003"
+      - "node004"
+  Message:
+    type: "object"
+    properties:
+      mid:
+        type: "string"
+      content:
+        type: "string"
+      senderId:
+        type: "string"
+      recieverId:
+        type: "string"
+    example:
+      senderId: "senderId"
+      mid: "mid"
+      recieverId: "recieverId"
+      content: "content"
+  user:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+      password:
+        type: "string"
+    example:
+      email: "testUser"
+      password: "pwd1234"

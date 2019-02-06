@@ -1,0 +1,476 @@
+swagger: '2.0'
+info:
+  description: TigerNet website
+  version: 1.0.0
+  title: TigerNet Website
+host: 'localhost:3000'
+basePath: /
+schemes:
+  - https
+  - http
+consumes:
+  - application/json
+paths:
+  /login:
+    post:
+      summary: User log in
+      operationId: userLogin
+      parameters:
+        - name: user
+          in: body
+          description: user to log in
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+            example:
+              email: testUser
+              password: pwd1234
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: email or password does not match
+  /logout:
+    post:
+      summary: User log out
+      operationId: userLogout
+      description: User Log out
+      responses:
+        '200':
+          description: Logout Successfully
+  /admin/users:
+    get:
+      summary: Admin get all users
+      description: Admin get all users
+      operationId: admGetAllUser
+      responses:
+        '200':
+          description: admin Get All user successful
+        '401':
+          description: User does not authenticated for this functionality
+  '/admin/users/{uid}':
+    parameters:
+      - in: path
+        name: uid
+        required: true
+        type: string
+        description: user id
+    get:
+      summary: Admin get a user information
+      operationId: admGetUser
+      description: Admin get a user information
+      responses:
+        '200':
+          description: Admin get users information successful
+          schema:
+            $ref: '#/definitions/User'
+        '401':
+          description: User does not authenticated for this functionality
+    put:
+      summary: Admin edit an user(Unlock)
+      description: Admin edit an user(Unlock)
+      parameters:
+        - in: body
+          name: editedUser
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        '200':
+          description: Edit user successful
+          schema:
+            $ref: '#/definitions/User'
+        '401':
+          description: User does not authenticated for this functionality
+  /admin/patterns:
+    get:
+      summary: Admin get all patterns in database
+      operationId: admGetAllPatterns
+      description: Get all pattern in database
+      responses:
+        '200':
+          description: Get all Pattern successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pattern'
+        '401':
+          description: User does not authenticated for this functionality
+    post:
+      summary: Admin Create new pattern
+      description: >-
+        Admin Create new pattern parameters: - name: pattern in: body
+        description: new pattern schema: $ref: 
+      responses:
+        '200':
+          description: create Pattern successful
+          schema:
+            $ref: '#/definitions/Pattern'
+        '401':
+          description: User does not authenticated for this functionality
+  '/admin/patterns/{pid}':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+    get:
+      summary: Admin get a Pattern
+      operationId: admGetPattern
+      description: Admin get a Pattern
+      responses:
+        '200':
+          description: Get a pattern successfully
+          schema:
+            $ref: '#/definitions/Pattern'
+    delete:
+      summary: Admin delete a Pattern
+      operationId: admDelPattern
+      description: Admin Delete a Pattern
+      responses:
+        '200':
+          description: Delete Pattern successful
+        '401':
+          description: User does not authenticated for this functionality
+  '/admin/patterns/{pid}/nodes':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+    get:
+      summary: admin get all Nodes of a pattern
+      operationId: admGetAllNodes
+      description: admin get all Nodes of a pattern
+      responses:
+        '200':
+          description: Get all node successful
+        '401':
+          description: User does not authenticated for this functionality
+    post:
+      summary: Admin create a new Node for a pattern
+      description: Admin create a new Node for a pattern
+      operationId: admCreate a Node for a pattern
+      parameters:
+        - in: body
+          name: newNode
+          schema:
+            $ref: '#/definitions/Node'
+      responses:
+        '200':
+          description: Create new Node successful
+          schema:
+            $ref: '#/definitions/Node'
+        '401':
+          description: User does not authenticated for this functionality
+  '/admin/patterns/{pid}/nodes/{nid}':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+      - in: path
+        name: nid
+        type: string
+        required: true
+        description: id of Node
+    get:
+      summary: Admin get a Node
+      description: Admin get a Node
+      operationId: admGetNode
+      responses:
+        '200':
+          description: Admin get a Node successful
+          schema:
+            $ref: '#/definitions/Node'
+        '401':
+          description: User does not authenticated for this functionality
+    put:
+      summary: 'Admin edit a Node, changing status'
+      description: 'Admin edit a Node, changing status'
+      operationId: admEditNode
+      parameters:
+        - in: body
+          name: editedNode
+          schema:
+            $ref: '#/definitions/Node'
+      responses:
+        '200':
+          description: Admin edited Node successful
+          schema:
+            $ref: '#/definitions/Node'
+        '401':
+          description: User does not authenticated for this functionality
+    delete:
+      summary: admin Delete a Node
+      description: admin Delete a Node
+      operationId: admDelNode
+      responses:
+        '200':
+          description: Admin Delete Node successful
+        '401':
+          description: User does not authenticated for this functionality
+  '/admin/patterns/{pid}/nodes/{nid}/messages':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+      - in: path
+        name: nid
+        type: string
+        required: true
+        description: id of Node
+    get:
+      summary: Admin get all messages
+      description: Admin get all messages
+      operationId: admGetAllMess
+      responses:
+        '200':
+          description: Admin get all messages successful
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+        '401':
+          description: User does not authenticated for this functionality
+    post:
+      summary: Admin create a new message
+      description: Admin create a new message
+      operationId: admCreateMess
+      parameters:
+        - in: body
+          name: newMessage
+          schema:
+            $ref: '#/definitions/Message'
+      responses:
+        '200':
+          description: Create new message successful
+          schema:
+            $ref: '#/definitions/Message'
+        '401':
+          description: User does not authenticated for this functionality
+        '403':
+          description: The two Node is not connected
+  /patterns:
+    get:
+      summary: User get all patterns in database
+      operationId: userGetAllPatterns
+      description: Get all pattern in database
+      responses:
+        '200':
+          description: Get all Pattern successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pattern'
+        '401':
+          description: User does not authenticated for this functionality
+  '/patterns/{pid}':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+    get:
+      summary: User get a Pattern
+      operationId: userGetPattern
+      description: User get a Pattern
+      responses:
+        '200':
+          description: Get a pattern successfully
+          schema:
+            $ref: '#/definitions/Pattern'
+  '/patterns/{pid}/nodes':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+    get:
+      summary: User get all Nodes of a pattern
+      operationId: userGetAllNodes
+      description: User get all Nodes of a pattern
+      responses:
+        '200':
+          description: Get all node successful
+        '401':
+          description: User does not authenticated for this functionality
+  '/patterns/{pid}/nodes/{nid}':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+      - in: path
+        name: nid
+        type: string
+        required: true
+        description: id of Node
+    get:
+      summary: Admin get a Node
+      description: Admin get a Node
+      operationId: userGetNode
+      responses:
+        '200':
+          description: User get a Node successful
+          schema:
+            $ref: '#/definitions/Node'
+        '401':
+          description: User does not authenticated for this functionality
+    put:
+      summary: 'User edit a Node, changing status'
+      description: 'User edit a Node, changing status'
+      operationId: userEditNode
+      parameters:
+        - in: body
+          name: editedNode
+          schema:
+            $ref: '#/definitions/Node'
+      responses:
+        '200':
+          description: Admin edited Node successful
+          schema:
+            $ref: '#/definitions/Node'
+        '401':
+          description: User does not authenticated for this functionality
+  '/patterns/{pid}/nodes/{nid}/messages':
+    parameters:
+      - in: path
+        name: pid
+        type: string
+        required: true
+        description: id of Pattern
+      - in: path
+        name: nid
+        type: string
+        required: true
+        description: id of Node
+    get:
+      summary: User get all messages
+      description: User get all messages
+      operationId: userGetAllMess
+      responses:
+        '200':
+          description: User get all messages successful
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+        '401':
+          description: User does not authenticated for this functionality
+    post:
+      summary: User create a new message
+      description: User create a new message
+      operationId: userCreateMess
+      parameters:
+        - in: body
+          name: newMessage
+          schema:
+            $ref: '#/definitions/Message'
+      responses:
+        '200':
+          description: Create new message successful
+          schema:
+            $ref: '#/definitions/Message'
+        '401':
+          description: User does not authenticated for this functionality
+        '403':
+          description: The two Node is not connected
+definitions:
+  Node:
+    type: object
+    properties:
+      nid:
+        type: string
+      status:
+        type: boolean
+        description: True = active, False = inactive
+      connectorNode:
+        type: boolean
+      directs:
+        type: array
+        items:
+          type: string
+          description: Id of direct connection Node
+      messages:
+        type: array
+        items:
+          type: string
+    example:
+      nid: "node001"
+      status: true
+      directs: ["node002","node004"]
+      connector: true
+      messages: ["mess001","mess002" ]
+  User:
+    type: object
+    properties:
+      uid:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+      type:
+        type: string
+        enum:
+          - user
+          - admin
+      status:
+        type: boolean
+        description: True = active, False = locked
+      questions:
+        type: array
+        items:
+          type: string
+    example:
+      uid: "user001"
+      username: "phuongnguyen"
+      password: "pwdnguyen"
+      type: admin
+      status: true
+      questions: ["What is your pet name?Rex",
+                  "Where was you born?Hanoi",
+                  "What is your mother middle name?Xuan"]
+      
+  Pattern:
+    type: object
+    properties:
+      pid:
+        type: string
+      conNodeId:
+        type: string
+      nonConNodes:
+        type: array
+        items:
+          type: string
+    example: 
+      pid: "patt001"
+      conNodeId: "node001"
+      nonConNodes: ["node001","node002","node003","node004"]
+    
+  Message:
+    type: object
+    properties:
+      mid:
+        type: string
+      content:
+        type: string
+      senderId:
+        type: string
+      recieverId:
+        type: string
+    
+    
+  
