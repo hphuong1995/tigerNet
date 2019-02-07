@@ -8,7 +8,7 @@
  * newNode Node  (optional)
  * returns Node
  **/
-exports.admCreate a Node for a pattern = function(pid,newNode) {
+exports.admCreate = function(pid,newNode) {
   return new Promise(function(resolve, reject) {
     var examples = {};
     examples['application/json'] = {

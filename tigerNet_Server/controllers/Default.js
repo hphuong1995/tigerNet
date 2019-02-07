@@ -3,10 +3,10 @@
 var utils = require('../utils/writer.js');
 var Default = require('../service/DefaultService');
 
-module.exports.admCreate a Node for a pattern = function admCreate a Node for a pattern (req, res, next) {
+module.exports.admCreate = function admCreate(req, res, next) {
   var pid = req.swagger.params['pid'].value;
   var newNode = req.swagger.params['newNode'].value;
-  Default.admCreate a Node for a pattern(pid,newNode)
+  Default.admCreate(pid,newNode)
     .then(function (response) {
       utils.writeJson(res, response);
     })

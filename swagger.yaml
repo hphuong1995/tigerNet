@@ -155,7 +155,7 @@ paths:
     post:
       summary: Admin create a new Node for a pattern
       description: Admin create a new Node for a pattern
-      operationId: admCreate a Node for a pattern
+      operationId: admCreate
       parameters:
         - in: body
           name: newNode
