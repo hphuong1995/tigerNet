@@ -1,5 +1,6 @@
 'use strict';
 
+
 /**
  * Admin create a new Node for a pattern
  * Admin create a new Node for a pattern

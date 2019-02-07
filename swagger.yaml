@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   title: TigerNet Website
 host: 'localhost:3000'
-basePath: /
+basePath: /api/v1
 schemes:
   - https
   - http
@@ -395,7 +395,7 @@ definitions:
         type: string
       status:
         type: boolean
-        description: True = active, False = inactive
+        description: 'True = active, False = inactive'
       connectorNode:
         type: boolean
       directs:
@@ -408,11 +408,15 @@ definitions:
         items:
           type: string
     example:
-      nid: "node001"
+      nid: node001
       status: true
-      directs: ["node002","node004"]
+      directs:
+        - node002
+        - node004
       connector: true
-      messages: ["mess001","mess002" ]
+      messages:
+        - mess001
+        - mess002
   User:
     type: object
     properties:
@@ -429,21 +433,21 @@ definitions:
           - admin
       status:
         type: boolean
-        description: True = active, False = locked
+        description: 'True = active, False = locked'
       questions:
         type: array
         items:
           type: string
     example:
-      uid: "user001"
-      username: "phuongnguyen"
-      password: "pwdnguyen"
+      uid: user001
+      username: phuongnguyen
+      password: pwdnguyen
       type: admin
       status: true
-      questions: ["What is your pet name?Rex",
-                  "Where was you born?Hanoi",
-                  "What is your mother middle name?Xuan"]
-      
+      questions:
+        - What is your pet name?Rex
+        - Where was you born?Hanoi
+        - What is your mother middle name?Xuan
   Pattern:
     type: object
     properties:
@@ -455,11 +459,14 @@ definitions:
         type: array
         items:
           type: string
-    example: 
-      pid: "patt001"
-      conNodeId: "node001"
-      nonConNodes: ["node001","node002","node003","node004"]
-    
+    example:
+      pid: patt001
+      conNodeId: node001
+      nonConNodes:
+        - node001
+        - node002
+        - node003
+        - node004
   Message:
     type: object
     properties:
@@ -471,6 +478,3 @@ definitions:
         type: string
       recieverId:
         type: string
-    
-    
-  

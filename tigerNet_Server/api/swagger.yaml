@@ -5,7 +5,7 @@ info:
   version: "1.0.0"
   title: "TigerNet Website"
 host: "localhost:3000"
-basePath: "/"
+basePath: "/api/v1"
 schemes:
 - "https"
 - "http"
@@ -176,7 +176,7 @@ paths:
     post:
       summary: "Admin create a new Node for a pattern"
       description: "Admin create a new Node for a pattern"
-      operationId: "admCreate a Node for a pattern"
+      operationId: "admCreate"
       parameters:
       - name: "pid"
         in: "path"
