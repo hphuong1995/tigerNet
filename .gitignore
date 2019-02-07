@@ -4,3 +4,4 @@
 *.swagger-codegen-ignore
 tigerNet_Server/package-lock.json
 tigerNet_Server/node_modules
+.dbinit
