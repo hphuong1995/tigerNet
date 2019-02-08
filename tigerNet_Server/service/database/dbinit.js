@@ -1,7 +1,6 @@
 /* DO NOT Include this module, it is not ready for use */
 let connection = require('./connect');
 
-
 connection.beginTransaction( (err) => {
     if(err) {
         throw err;
