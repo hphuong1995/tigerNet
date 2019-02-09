@@ -1,20 +1,21 @@
 var mysql = require('mysql');
 var fs = require('fs');
-let connection = null;
+let pool = null;
 
 if(fs.existsSync('./.dbtoken')) {
     console.log("attempting to connect...");
     let connectionObject = JSON.parse(fs.readFileSync('./.dbtoken'));
-    connection = mysql.createConnection( connectionObject );
-    connection.connect( (err) => {//test to make sure connection is configured properly
-        if(err) {
-            console.log('Failed to create a connection to MySQL with the data provided in .dbtoken');
-            console.log(err.code);
-            console.log(err.message);
-            console.log(err.sqlMessage);
-        }
-        console.log("Successful connection");
-    });
+    connectionObject.connectionLimit = 10;
+    pool = mysql.createPool( connectionObject );
+    // connection.connect( (err) => {//test to make sure connection is configured properly
+    //     if(err) {
+    //         console.log('Failed to create a connection to MySQL with the data provided in .dbtoken');
+    //         console.log(err.code);
+    //         console.log(err.message);
+    //         console.log(err.sqlMessage);
+    //     }
+    //     console.log("Successful connection");
+    // });
 } else {    
     console.log('.dbtoken file not found, creating .dbtoken');
     let connectionObject = {
@@ -29,4 +30,13 @@ if(fs.existsSync('./.dbtoken')) {
     process.exit(0);
 }
 
-module.exports = connection;
+pool.getConnection((err, connection) => {
+    if(err) {
+        console.error(err);
+    }
+    if(connection) {
+        connection.release();
+    }
+});
+
+module.exports = pool;
