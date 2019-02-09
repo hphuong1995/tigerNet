@@ -3,7 +3,10 @@
  * DO NOT Include this module, it is not part of the server.
  * It is only for initializing the database
  */
-let pool = require('./connect');
+const pool = require('./connect');
+const uuid = require('uuid/v1');
+const bcrypt = require('bcrypt');
+
 pool.getConnection((err, connection) => {
     if (err) {
         connection.rollback(() => connection.release());
@@ -129,15 +132,16 @@ pool.getConnection((err, connection) => {
                                                             ON DELETE SET NULL,\
                                                             PRIMARY KEY (id)\
                                                         );";
-                                                query = "DROP TABLE IF EXISTS user_questions;";
+                                                query = "DROP TABLE IF EXISTS security_answers;";
                                                 connection.query(query, (err, res, fields) => {
                                                     if (err) {
                                                         connection.rollback(() => connection.release());
                                                         console.error("mysql error: " + err.message);
                                                         throw err;
                                                     }
-                                                    query = "CREATE TABLE user_questions (\
+                                                    query = "CREATE TABLE security_answers (\
                                                                 id VARCHAR(45) NOT NULL,\
+                                                                answer VARCHAR(45) NOT NULL,\
                                                                 fk_user_id VARCHAR(45) NOT NULL,\
                                                                 FOREIGN KEY (fk_user_id)\
                                                                 REFERENCES users(id)\
@@ -192,6 +196,7 @@ pool.getConnection((err, connection) => {
                                                                         }
                                                                         console.error("All tables created successfully");
                                                                         connection.release();
+                                                                        addInitialValues();
                                                                     });
                                                                 });
                                                             });
@@ -210,3 +215,74 @@ pool.getConnection((err, connection) => {
         });
     });
 });
+
+
+
+function addInitialValues() {
+    let adminUser = {
+        id: uuid(),
+        username: 'Harrison',
+        passHash: bcrypt.hashSync('tiger0485', 10),
+        isAdmin: true,
+        isBlocked: false
+    }
+
+    let questions = [
+        [uuid(), "What is your favorite class?"],
+        [uuid(), "When was your first dog born?"],
+        [uuid(), "What is your brother's name?"],
+    ];
+
+    let answers = [
+        {
+            id: uuid(),
+            questionId: questions[0][0],
+            userId: adminUser.id,
+            answer: "CS 744"
+        },
+        {
+            id: uuid(),
+            questionId: questions[1][0],
+            userId: adminUser.id,
+            answer: "2000"
+        },
+        {
+            id: uuid(),
+            questionId: questions[2][0],
+            userId: adminUser.id,
+            answer: "Leeroy"
+        }
+    ]
+    
+    let query = "INSERT INTO questions(id, question) VALUES ?";
+    pool.query(query, [questions], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked) VALUES ?";
+        let values = [
+            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked]
+        ]
+        pool.query(query, [values], (err, res, fields) => {
+            if (err) {
+                console.error("mysql error: " + err.message);
+                throw err;
+            }
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            values = [
+                [uuid(), answers[0].answer, answers[0].userId, answers[0].questionId],
+                [uuid(), answers[1].answer, answers[1].userId, answers[1].questionId],
+                [uuid(), answers[2].answer, answers[2].userId, answers[2].questionId]
+            ];
+            pool.query(query, [values], (err, res, fields) => {
+                if (err) {
+                    console.error("mysql error: " + err.message);
+                    throw err;
+                }
+                console.log("Database values initialized");
+            });
+        });
+    });
+
+}
