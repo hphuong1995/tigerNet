@@ -189,14 +189,26 @@ pool.getConnection((err, connection) => {
                                                                         console.error("mysql error: " + err.message);
                                                                         throw err;
                                                                     }
-                                                                    connection.commit((err) => {
+                                                                    query = "CREATE TABLE sessions (\
+                                                                                id VARCHAR(45) NOT NULL,\
+                                                                                csrf VARCHAR(45) NOT NULL,\
+                                                                                PRIMARY KEY (id)\
+                                                                            );";
+                                                                    connection.query(query, (err, res, fields) => {
                                                                         if (err) {
                                                                             connection.rollback(() => connection.release());
+                                                                            console.error("mysql error: " + err.message);
                                                                             throw err;
                                                                         }
-                                                                        console.error("All tables created successfully");
-                                                                        connection.release();
-                                                                        addInitialValues();
+                                                                        connection.commit((err) => {
+                                                                            if (err) {
+                                                                                connection.rollback(() => connection.release());
+                                                                                throw err;
+                                                                            }
+                                                                            console.error("All tables created successfully");
+                                                                            connection.release();
+                                                                            addInitialValues();
+                                                                        });
                                                                     });
                                                                 });
                                                             });
@@ -295,7 +307,7 @@ function addInitialValues() {
         let values = [
             [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked],
             [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked]
-        ]
+        ];
         pool.query(query, [values], (err, res, fields) => {
             if (err) {
                 console.error("mysql error: " + err.message);
