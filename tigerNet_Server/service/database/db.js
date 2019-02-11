@@ -44,13 +44,13 @@ module.exports.getUserById = (userId, callback) => {
  */
 module.exports.getUserByLogin = (username, password, callback) => {
     let query = "SELECT * from users WHERE username ='" + username + "'";
-    pool.query(query, (err, results, fields) => {
+    pool.query(query, (err, results) => {
         console.log('login query result: ' + JSON.stringify(results, null, 4));
         if(err) {
             callback(undefined, new Error(err.message, -10));
             return;
         }
-        if(fields.length == 0) {
+        if(results.length == 0) {
             callback(undefined, new Error("User not found.", -1));
             return;
         }
