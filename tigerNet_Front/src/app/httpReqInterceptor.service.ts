@@ -20,6 +20,9 @@ export class CSRFInterceptor implements HttpInterceptor {
                 withCredentials: true
             });
         }
+        request = request.clone({
+          setHeaders:{'Content-Type': 'application/json'}
+        });
         return next.handle( request );
     }
 }

@@ -16,6 +16,11 @@ export class LoginComponent implements OnInit {
   loading = false;
   submitted = false;
   incorrect = false;
+  loggedIn = false;
+  loginUser :any;
+
+  submitBtn: string;
+  wrongAnswer = false;
 
   constructor( private formBuilder : FormBuilder,
                 private userService : UserService,
@@ -25,9 +30,10 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.formBuilder.group({
       username: ['', Validators.required],
       password: ['', Validators.required],
-      question: ['', Validators.required],
-      answer: ['', Validators.required],
+      answer: [''],
     });
+    this.submitBtn = "Login";
+
   }
 
   get f() { return this.loginForm.controls; }
@@ -36,23 +42,43 @@ export class LoginComponent implements OnInit {
     this.submitted = true;
     this.incorrect = false;
     // stop here if form is invalid
-    //if (this.loginForm.invalid) {
-      //  return;
-  //  }
-    this.loading = false;
-    var user: any;
-    this.userService.login(this.f.username.value, this.f.password.value).subscribe(
-      (data) => { user = data;
-                  if(user){
-                    this.loading = false;
-                    this.incorrect = false;
-                    localStorage.setItem('user', JSON.stringify(user));
-                  }
-                  else{
-                    this.incorrect = true;
-                    this.loading = false;
-                  }
-    });
+    if (this.loginForm.invalid) {
+        console.log("invalid");
+        return;
+    }
+    if(!this.loggedIn){
+      this.loading = false;
+      this.userService.login(this.f.username.value, this.f.password.value).subscribe(
+        (data,error) => {
+                    this.loginUser = data;
+                    if(this.loginUser){
+                      this.loading = false;
+                      this.incorrect = false;
+                      this.loggedIn = true;
+                    }
+                    else{
+                      console.log("here");
+                      this.incorrect = true;
+                      this.loading = false;
+                    }
+      });
+    }
+    else{
+      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.loginUser.loginQuestion.id).subscribe(
+          (data) => {
+            var res : any;
+            res = data;
+            if(res.valid === true){
+              localStorage.setItem('user', JSON.stringify(this.loginUser));
+              this.router.navigate(['main']);
+            }
+            else{
+              console.log("false");
+              this.wrongAnswer = true;
+            }
+        });
+    }
+
 
   }
 }

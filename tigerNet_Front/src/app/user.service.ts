@@ -10,6 +10,36 @@ export class UserService {
 
   login(user: string, pass: string){
     var loginUser = { "username": user, "password": pass};
-    return this.http.post('api/v1/login', JSON.stringify(loginUser),{headers:{'Content-Type': 'application/json'}});
+    return this.http.post('api/v1/login', JSON.stringify(loginUser));
+  }
+
+  answerQuestion(answer: string, userId: string, quesId: string){
+    var ansQues = {"answer" : answer, "userId" : userId, "quesId": quesId};
+    return this.http.post('api/v1/login',JSON.stringify(ansQues));
+  }
+
+  isAuthenticated(){
+    if(JSON.parse(localStorage.getItem('user'))){
+      return true;
+    }
+    return false;
+  }
+
+  getCurrentUser(){
+    return JSON.parse(localStorage.getItem('user'));
+  }
+
+  isAdmAccount(){
+    if(!this.isAuthenticated()){
+      return false;
+    }
+    if(JSON.parse(localStorage.getItem('user')).isAdmin){
+      return true;
+    }
+    return false;
+  }
+
+  logout(){
+    localStorage.setItem('user', null);
   }
 }

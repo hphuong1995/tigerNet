@@ -1,14 +1,30 @@
-<div class="row">
-    <div class="col s12">
-      <nav>
-        <div class="nav-wrapper blue darken-1">
-          <!-- <a href="#" class="brand-logo">Logo</a> -->
-          <img class="brand-logo right" src="assets/images/logo_tiger.png" style="width:60px;height: 60px">
-          <a href="#" class="brand-logo center">Welcome to TigerNet</a>
-          <ul id="nav-mobile" class="left hide-on-med-and-down">
-            <li><a href="#">Login</a></li>
-          </ul>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" routerLink="/">TigerNet</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent" *ngIf="this.userService.isAuthenticated()">
+          <a class="nav-link" *ngIf="this.userService.isAuthenticated()">Hello {{this.userService.getCurrentUser().username}}</a>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" >Change password</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" routerLink="/" (click)="this.userService.logout()" *ngIf="this.userService.isAuthenticated()"> Logout </a>
+            </div>
+          </li>
         </div>
-      </nav>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/account" *ngIf="this.userService.isAuthenticated()"> Patterns</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/admin/accounts" *ngIf="this.userService.isAdmAccount()"> Users </a>
+        </li>
+      </ul>
     </div>
-  </div>
+  </nav>
+</header>
