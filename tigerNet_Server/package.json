@@ -6,7 +6,8 @@
   "scripts": {
     "prestart": "npm install",
     "start": "node index.js",
-    "databaseReset": "node service/database/dbinit.js"
+    "databaseReset": "node service/database/dbinit.js",
+    "test": "node service/database/test.js"
   },
   "keywords": [
     "swagger"

@@ -49,7 +49,7 @@ pool.getConnection((err, connection) => {
                     query = "DROP TABLE IF EXISTS messages;";
                     connection.query(query, (err, res, fields) => {
                         if (err) {
-                            connection.rollback();
+                            connection.rollback(() => connection.release());
                             console.error("mysql error: " + err.message);
                             throw err;
                         }
@@ -227,13 +227,23 @@ function addInitialValues() {
         isBlocked: false
     }
 
+    let user = {
+        id: uuid(),
+        username: 'Horacio',
+        passHash: bcrypt.hashSync('RpelioN2x', 10),
+        isAdmin: false,
+        isBlocked: false
+    }
+
     let questions = [
         [uuid(), "What is your favorite class?"],
         [uuid(), "When was your first dog born?"],
         [uuid(), "What is your brother's name?"],
+        [uuid(), "What is your favorite color?"],
+        [uuid(), "What is your favorite food?"],
     ];
 
-    let answers = [
+    let adminAnswers = [
         {
             id: uuid(),
             questionId: questions[0][0],
@@ -252,7 +262,28 @@ function addInitialValues() {
             userId: adminUser.id,
             answer: "Leeroy"
         }
-    ]
+    ];
+
+    let userAnswers = [
+        {
+            id: uuid(),
+            questionId: questions[2][0],
+            userId: user.id,
+            answer: "Kevin"
+        },
+        {
+            id: uuid(),
+            questionId: questions[3][0],
+            userId: user.id,
+            answer: "green"
+        },
+        {
+            id: uuid(),
+            questionId: questions[4][0],
+            userId: user.id,
+            answer: "apple pie"
+        }
+    ];
     
     let query = "INSERT INTO questions(id, question) VALUES ?";
     pool.query(query, [questions], (err, res, fields) => {
@@ -262,7 +293,8 @@ function addInitialValues() {
         }
         query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked) VALUES ?";
         let values = [
-            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked]
+            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked],
+            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked]
         ]
         pool.query(query, [values], (err, res, fields) => {
             if (err) {
@@ -271,9 +303,12 @@ function addInitialValues() {
             }
             query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
             values = [
-                [uuid(), answers[0].answer, answers[0].userId, answers[0].questionId],
-                [uuid(), answers[1].answer, answers[1].userId, answers[1].questionId],
-                [uuid(), answers[2].answer, answers[2].userId, answers[2].questionId]
+                [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId],
+                [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId],
+                [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId],
+                [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId],
+                [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId],
+                [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId]
             ];
             pool.query(query, [values], (err, res, fields) => {
                 if (err) {
@@ -284,5 +319,4 @@ function addInitialValues() {
             });
         });
     });
-
 }

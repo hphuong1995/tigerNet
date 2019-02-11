@@ -6,16 +6,8 @@ if(fs.existsSync('./.dbtoken')) {
     console.log("attempting to connect...");
     let connectionObject = JSON.parse(fs.readFileSync('./.dbtoken'));
     connectionObject.connectionLimit = 10;
+    connectionObject.typeCast = customCaster;
     pool = mysql.createPool( connectionObject );
-    // connection.connect( (err) => {//test to make sure connection is configured properly
-    //     if(err) {
-    //         console.log('Failed to create a connection to MySQL with the data provided in .dbtoken');
-    //         console.log(err.code);
-    //         console.log(err.message);
-    //         console.log(err.sqlMessage);
-    //     }
-    //     console.log("Successful connection");
-    // });
 } else {    
     console.log('.dbtoken file not found, creating .dbtoken');
     let connectionObject = {
@@ -38,5 +30,18 @@ pool.getConnection((err, connection) => {
         connection.release();
     }
 });
+
+/*
+ * By default the MySQL Node driver does not properly convert BIT values to booleans.
+ * This custom type caster is used to properly convert BIT values to booleans
+ */
+function customCaster( field, userDefaultTypeCasting ) {
+    if(field.type === 'BIT') {
+        // convert the field into a list of bits, least significant at index 0
+        let bytes = field.buffer();
+        return bytes[0] == 1;
+    }
+    return userDefaultTypeCasting();
+}
 
 module.exports = pool;
