@@ -1,4 +1,5 @@
 'use strict';
+var db = require('./database/db');
 
 
 /**
@@ -277,7 +278,7 @@ exports.admGetUser = function(uid) {
 
 /**
  * Admin Create new pattern
- * Admin Create new pattern parameters: - name: pattern in: body description: new pattern schema: $ref: 
+ * Admin Create new pattern parameters: - name: pattern in: body description: new pattern schema: $ref:
  *
  * returns Pattern
  **/
@@ -512,7 +513,7 @@ exports.userGetPattern = function(pid) {
  **/
 exports.userLogin = function(user) {
   return new Promise(function(resolve, reject) {
-    resolve();
+    db.getUserByLogin(user.username,user.password,resolve);
   });
 }
 
@@ -528,4 +529,3 @@ exports.userLogout = function() {
     resolve();
   });
 }
-

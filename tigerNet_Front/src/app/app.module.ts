@@ -8,6 +8,9 @@ import { NavComponent } from './component/nav/nav.component';
 import { WelcomeComponent } from './component/welcome/welcome.component';
 import { MainComponent } from './component/main/main.component';
 
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -18,7 +21,10 @@ import { MainComponent } from './component/main/main.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

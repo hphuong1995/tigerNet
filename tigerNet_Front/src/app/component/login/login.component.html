@@ -4,46 +4,27 @@
 <div class="row">
     <div class="col s6">
         <img class="responsive-img" src="assets/images/network3.png">
-    </div> 
+    </div>
     <div class="col s6">
-        <form method="POST" action="#">
-            <div class="row">
-                <div class="input-field col s8">
-                  <i class="material-icons prefix">account_circle</i>
-                  <input placeholder="Username" id="first_name" type="text" class="validate">
-                  <label for="first_name"></label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s8">
-                    <i class="material-icons prefix">vpn_key</i> 
-                    <input placeholder="Password" id="password" type="password" class="validate">
-                    <label for="password"></label>
-                </div>
-            </div>
-            <!-- <div *ngIf="flag" class="row">
-                
-                <div class="input-field col s8">
-                        <i class="material-icons prefix">question_answer</i> 
-                    <input placeholder="Security question" id="question" type="text">
-                    <label for="question"></label>
-                </div>
-                <div class="input-field col s8">
-                    
-                    <input placeholder="Please answer" id="answer" type="text" class="validate">
-                    <label for="answer"></label>
-                </div>
-            </div> -->
-            <div class="row">
-                <div class="input-field col s8">
-                <a id ="btn1" class="waves-effect waves-light btn-large blue darken-1">Get Started
-                    <i class="material-icons right">send</i>
-                </a>
-                </div>
-            </div>
-        </form>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
+          <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
+              <div *ngIf="f.username.errors.required">Username is required</div>
+          </div>
+      </div>
+      <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" formControlName="password" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }" />
+          <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
+              <div *ngIf="f.password.errors.required">Password is required</div>
+          </div>
+      </div>
+      <div class="form-group">
+          <button [disabled]="loading" class="btn btn-primary">Login</button>
+          <img *ngIf="loading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+      </div>
+    </form>
     </div>
 </div>
-
-
-
