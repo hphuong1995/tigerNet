@@ -9,6 +9,86 @@ const Error = require('../../data/error');
 //import Error from '../../data/error';
 const User = require('../../data/user');
 const Question = require('../../data/question');
+const Session = require('../../data/session');
+
+/*
+ * Returns an error or a session
+ * Error codes:
+ *  -1: Invalid sessionId
+ *  -2: Invalid CSRF token
+ *  -10: MySQL error
+ * Callback arguments: (session: Session, error: Error)
+ */
+module.exports.getSession = (sessionId, csrfToken) => {
+    let query = "SELECT * from sessions WHERE id = '" + sessionId + "'";
+    pool.query(query, (err, results) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        if(results.length == 0) {
+            callback(undefined, new Error("Session not found", -1));
+            return;
+        }
+        if(csrfToken !== results[0].csrf) {
+            callback(undefined, new Error("Invalid csrf token", -2));
+            return;
+        }
+    });
+}
+
+/*
+ * Returns an error or a session
+ * Error codes:
+ *  -1: Session already exists
+ *  -10: MySQL error
+ * Callback arguments: (session: Session, error: Error)
+ */
+module.exports.storeSession = (sessionId, csrfToken) => {
+    let query = "SELECT * from sessions WHERE id = '" + sessionId + "'";
+    pool.query(query, (err, results) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        if(results.length > 0) {
+            callback(undefined, new Error("Session already exists", -1));
+            return;
+        }
+        query = "INSERT INTO sessions(id, csrf) VALUES ?";
+        let values = [
+            [sessionId, csrfToken]
+        ];
+        pool.query(query, values, (err, result) => {
+            if(err) {
+                callback(undefined, new Error(err.message, -10));
+                return;
+            }
+            if(result.affectedRows != 1) {
+                callback(undefined, new Error("Only one row was supposed to be updated. Rows updated: " + result.affectedRows, -10));
+                return;
+            }
+            callback(new Session(sessionId, csrfToken), undefined);
+        });
+    });
+}
+
+/*
+ * Ensures a session is (or has been) deleted
+ * Error codes:
+ *  -10: MySQL error
+ * Callback arguments: (error: Error)
+ */
+module.exports.deleteSession = (sessionId) => {
+    let query = "DELETE from sessions WHERE id = '" + sessionId + "'";
+    pool.query(query, (err, results) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        callback(undefined);
+    });
+}
 
 /*
  * Returns an error or a user
