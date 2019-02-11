@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class CSRFInterceptor implements HttpInterceptor {
 
-    constructor( private cookieService: CookieService) {}
+    constructor(private cookieService: CookieService) {}
 
     intercept(request: HttpRequest<any>, next: HttpHandler) : Observable<HttpEvent<any>> {
         let csrf = this.cookieService.get('XSRF-TOKEN');

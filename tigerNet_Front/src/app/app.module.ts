@@ -12,6 +12,7 @@ import { CSRFInterceptor } from './httpReqInterceptor.service'
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { CookieService } from 'ngx-cookie-service';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
   ],
   providers: [
     CSRFInterceptor,
+    CookieService,
     { provide: HTTP_INTERCEPTORS, useClass: CSRFInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]
