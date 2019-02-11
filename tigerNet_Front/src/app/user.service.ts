@@ -10,16 +10,6 @@ export class UserService {
 
   login(user: string, pass: string){
     var loginUser = { "username": user, "password": pass};
-    return this.http.post('api/v1/login', JSON.stringify(loginUser),{headers:{'Content-Type': 'application/json'}}).subscribe(
-        (val) => {
-            console.log("POST call successful value returned in body",
-                        val);
-        },
-        response => {
-            console.log("POST call in error", response);
-        },
-        () => {
-            console.log("The POST observable is now completed.");
-        });
+    return this.http.post('api/v1/login', JSON.stringify(loginUser),{headers:{'Content-Type': 'application/json'}});
   }
 }
