@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit {
     if(!this.loggedIn){
       this.loading = false;
       this.userService.login(this.f.username.value, this.f.password.value).subscribe(
-        (data,error) => {
+        (data) => {
                     this.loginUser = data;
                     if(this.loginUser){
                       this.loading = false;
