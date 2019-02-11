@@ -8,8 +8,10 @@ import { NavComponent } from './component/nav/nav.component';
 import { WelcomeComponent } from './component/welcome/welcome.component';
 import { MainComponent } from './component/main/main.component';
 
+import { CSRFInterceptor } from './httpReqInterceptor.service'
+
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -26,7 +28,10 @@ import { HttpClientModule } from '@angular/common/http';
     ReactiveFormsModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    CSRFInterceptor,
+    { provide: HTTP_INTERCEPTORS, useClass: CSRFInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
