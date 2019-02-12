@@ -511,39 +511,56 @@ exports.userGetPattern = function(pid) {
  * user User user to log in (optional)
  * no response value expected for this operation
  **/
-exports.userLogin = function(user) {
-  return new Promise(function(resolve, reject) {
-    db.getUserByLogin(user.username,user.password,resolve);
-  });
-}
-// exports.userLogin = function(user) {
-//   return new Promise( (resolve, reject) => {
-//       db.getUserByLogin(user.username, user.password, (user, error) => {
-//           if(error) {
-//               /*
-//                * this is just an example, examine the status code and send
-//                * more appropriate error objects back depending on the code
-//                */
-//               reject("Invalid login or other reason");
-//               return;
-//           }
-//           db.getUserQuestions(user.id, (questions, error) => {
-//               // again, more appropriate error handling needed
-//               if(error || questions.length == 0) {
-//                   reject("something went wrong")
-//                   return;
-//               }
-//           });
-//           let result = {
-//               id: user.id,
-//               username: user.username,
-//               isAdmin: user.isAdmin,
-//               loginQuestion: questions[0]//use a random number generator to pick a random question
-//           }
-//           resolve(result);
-//       });
-//   });
-// }
+//exports.userLogin = function(user) {
+  //return new Promise(function(resolve, reject) {
+  //  db.getUserByLogin(user.username,user.password,resolve);
+//  });
+//}
+ exports.userLogin = function(user) {
+   return new Promise( (resolve, reject) => {
+      if(user.username){
+       db.getUserByLogin(user.username, user.password, (user, error) => {
+           if(error) {
+               /*
+                * this is just an example, examine the status code and send
+                * more appropriate error objects back depending on the code
+                */
+               reject("Invalid login or other reason");
+               return;
+           }
+           db.getUserQuestions(user.id, (questions, error) => {
+               // again, more appropriate error handling needed
+               if(error || questions.length == 0) {
+                   reject("something went wrong")
+                   return;
+               }
+               var rand = Math.floor(Math.random() * questions.length);
+               let result = {
+                   id: user.id,
+                   username: user.username,
+                   isAdmin: user.isAdmin,
+                   loginQuestion: questions[rand]//use a random number generator to pick a random question
+               }
+               resolve(result);
+           });
+       });
+     }
+     else{
+       db.getAnswer(user.userId, user.quesId, (answer,error) =>{
+         if(error){
+           reject("Invalid answer or other reason");
+           return;
+         }
+         if(user.answer === answer){
+           resolve({valid: true});
+         }
+         else{
+           resolve({valid:false});
+         }
+       });
+     }
+   });
+ }
 
 
 /**
