@@ -3,11 +3,12 @@
  */
 const uuid = require('uuid/v1');
 class User {
-    constructor(username, isAdmin, isBlocked, id) {
+    constructor(username, isAdmin, isBlocked, loginAttempts, id) {
         this.id = id || uuid();
         this.username = username;
         this.isAdmin = isAdmin;
         this.isBlocked = isBlocked;
+        this.loginAttempts = loginAttempts;
     }
 }
 module.exports = User;

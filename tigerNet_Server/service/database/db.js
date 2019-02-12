@@ -10,6 +10,7 @@ const Error = require('../../data/error');
 const User = require('../../data/user');
 const Question = require('../../data/question');
 const Session = require('../../data/session');
+const MAX_LOGIN_ATTEMPTS = 3;
 
 /*
  * Returns an error or a session
@@ -108,13 +109,15 @@ module.exports.getUserById = (userId, callback) => {
             callback(undefined, new Error("User not found.", -1));
             return;
         }
-        let user = new User(results[0].username, results[0].is_admin, results[0].is_blocked, results[0].id);
+        let user = new User(results[0].username, results[0].is_admin, results[0].is_blocked, results[0].login_attempts, results[0].id);
         callback(user, undefined);
     });
 }
 
 /*
  * Returns an error or a user
+ * Tracks failed user login attempts
+ * Blocks user and returns a -3 error when failed login attempts == MAX_LOGIN_ATTEMPTS
  * Error codes:
  *      -1: Invalid username
  *      -2: Invalid password
@@ -134,19 +137,111 @@ module.exports.getUserByLogin = (username, password, callback) => {
             callback(undefined, new Error("User not found.", -1));
             return;
         }
+        // if(results[0].login_attempts < 1) {
+        //     //block user
+        // }
         if(results[0].is_blocked) {
             callback(undefined, new Error("User is blocked.", -3));
             return;
         }
         //console.log('passhash: ' + passhash);
         bcrypt.compare(password, results[0].passhash, (err, res) => {
-            if(res) {
-                let user = new User(results[0].username, results[0].is_admin, results[0].is_blocked, results[0].id);
+            if(res) {//successful login
+                let user = new User(results[0].username, results[0].is_admin, results[0].is_blocked, results[0].login_attempts, results[0].id);
+                setLoginAttempts(user.id, 0, (err) => {
+                    if(err) {
+                        callback(undefined, new Error(err.message, -10));
+                        return;
+                    }
+                    user.loginAttempts = 0;
+                    callback(user, undefined);
+                    return;
+                });
                 callback(user, undefined);
             } else {
-                callback(undefined, new Error("Invalid password", -2));
+                if(results[0].login_attempts >= MAX_LOGIN_ATTEMPTS - 1) {//user just failed their last login attempt
+                    //block user and reset failed attempts
+                    this.setUserBlocked(results[0].id, true, (err) => {
+                        if(err) {
+                            callback(undefined, new Error(err.message, -10));
+                            return;
+                        }
+                        setLoginAttempts(results[0].id, 0, (err) => {
+                            if(err) {
+                                callback(undefined, new Error(err.message, -10));
+                                return;
+                            }
+                            callback(undefined, new Error("Login attempts exceeded, account has been blocked", -3));
+                            return;
+                        });
+                    });
+                } else {
+                    setLoginAttempts(results[0].id, results[0].login_attempts + 1, (err) => {
+                        if(err) {
+                            callback(undefined, new Error(err.message, -10));
+                            return;
+                        }
+                        callback(undefined, new Error("Incorrect password. Remaining attempts: " + MAX_LOGIN_ATTEMPTS - 1 - results[0].login_attempts + '.', -2));
+                        return;
+                    });
+                }
             }
         });
+    });
+}
+
+/*
+ * Block or unblock a user depending on the block argument
+ * Arguments: (userId: string, block: boolean, callback)
+ * Error codes:
+ *       -1: Invalid userid
+ *      -10: MySQL error
+ * Callback arguments: (error: Error)
+ */
+module.exports.setUserBlocked = (userId, block, callback) => {
+    let isBlocked = 0;
+    if(block) {
+        isBlocked = 1;
+    } else {
+        isBlocked = 0;
+    }
+    let query = "UPDATE users SET is_blocked = " + isBlocked + " WHERE id = '" + userId + "'";
+    pool.query(query, (err, result) => {
+        if(err) {
+            callback(new Error("MySQL Error trying to block or unblock user", -10));
+            return;
+        }
+        if(result.affectedRows < 1) {
+            callback(new Error("Tried to block or unblock invalid userId: " + userId, -1));
+            return;
+        }
+        callback(undefined);
+    })
+}
+
+/*
+ * Set the ammount of login attempts the user has left
+ * Arguments: (userId: string, block: boolean, callback)
+ * Error codes:
+ *       -1: Invalid userid
+ *      -10: MySQL error
+ * Callback arguments: (error: Error)
+ */
+let setLoginAttempts = (userId, attempts, callback) => {
+    if(attempts < 0 || attempts > MAX_LOGIN_ATTEMPTS) {
+        throw "Attempted to set an invalid number of login attempts: " + attempts;
+    }
+    let query = "UPDATE users SET login_attempts = " + attempts + " WHERE id = '" + userId + "'";
+    pool.query(query, (err, result) => {
+        if(err) {
+            callback(new Error("MySQL Error trying to set login attempts", -10));
+            return;
+        }
+        if(result.affectedRows < 1) {
+            callback(new Error("Tried to set login attempts for an invalid userId: " + userId, -1));
+            return;
+        }
+        callback(undefined);        
     });
 }
 

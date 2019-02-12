@@ -38,6 +38,7 @@ pool.getConnection((err, connection) => {
                             passhash VARCHAR(61) NOT NULL,\
                             is_admin BIT NOT NULL, \
                             is_blocked BIT NOT NULL,\
+                            login_attempts INT NOT NULL,\
                             PRIMARY KEY (id)\
                         );";
                 connection.query(query, (err) => {
@@ -311,10 +312,11 @@ function addInitialValues() {
             console.error("mysql error: " + err.message);
             throw err;
         }
-        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked) VALUES ?";
+        // login_attempts INT NOT NULL,\
+        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
         let values = [
-            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked],
-            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked]
+            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
+            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
         ];
         pool.query(query, [values], (err, res, fields) => {
             if (err) {
