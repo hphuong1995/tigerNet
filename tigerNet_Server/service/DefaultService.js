@@ -534,12 +534,11 @@ exports.userGetPattern = function(pid) {
                    reject("something went wrong")
                    return;
                }
-               var rand = Math.floor(Math.random() * questions.length);
                let result = {
                    id: user.id,
                    username: user.username,
                    isAdmin: user.isAdmin,
-                   loginQuestion: questions[rand]//use a random number generator to pick a random question
+                   loginQuestion: questions//use a random number generator to pick a random question
                }
                resolve(result);
            });
