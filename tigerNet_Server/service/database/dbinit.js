@@ -38,6 +38,7 @@ pool.getConnection((err, connection) => {
                             passhash VARCHAR(61) NOT NULL,\
                             is_admin BIT NOT NULL, \
                             is_blocked BIT NOT NULL,\
+                            login_attempts INT NOT NULL,\
                             PRIMARY KEY (id)\
                         );";
                 connection.query(query, (err) => {
@@ -189,25 +190,33 @@ pool.getConnection((err, connection) => {
                                                                         console.error("mysql error: " + err.message);
                                                                         throw err;
                                                                     }
-                                                                    query = "CREATE TABLE sessions (\
-                                                                                id VARCHAR(45) NOT NULL,\
-                                                                                csrf VARCHAR(45) NOT NULL,\
-                                                                                PRIMARY KEY (id)\
-                                                                            );";
+                                                                    query = "DROP TABLE IF EXISTS sessions;";
                                                                     connection.query(query, (err, res, fields) => {
                                                                         if (err) {
                                                                             connection.rollback(() => connection.release());
                                                                             console.error("mysql error: " + err.message);
                                                                             throw err;
                                                                         }
-                                                                        connection.commit((err) => {
+                                                                        query = "CREATE TABLE sessions (\
+                                                                                id VARCHAR(45) NOT NULL,\
+                                                                                csrf VARCHAR(45) NOT NULL,\
+                                                                                PRIMARY KEY (id)\
+                                                                            );";
+                                                                        connection.query(query, (err, res, fields) => {
                                                                             if (err) {
                                                                                 connection.rollback(() => connection.release());
+                                                                                console.error("mysql error: " + err.message);
                                                                                 throw err;
                                                                             }
-                                                                            console.error("All tables created successfully");
-                                                                            connection.release();
-                                                                            addInitialValues();
+                                                                            connection.commit((err) => {
+                                                                                if (err) {
+                                                                                    connection.rollback(() => connection.release());
+                                                                                    throw err;
+                                                                                }
+                                                                                console.error("All tables created successfully");
+                                                                                connection.release();
+                                                                                addInitialValues();
+                                                                            });
                                                                         });
                                                                     });
                                                                 });
@@ -296,17 +305,18 @@ function addInitialValues() {
             answer: "apple pie"
         }
     ];
-    
+
     let query = "INSERT INTO questions(id, question) VALUES ?";
     pool.query(query, [questions], (err, res, fields) => {
         if (err) {
             console.error("mysql error: " + err.message);
             throw err;
         }
-        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked) VALUES ?";
+        // login_attempts INT NOT NULL,\
+        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
         let values = [
-            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked],
-            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked]
+            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
+            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
         ];
         pool.query(query, [values], (err, res, fields) => {
             if (err) {
