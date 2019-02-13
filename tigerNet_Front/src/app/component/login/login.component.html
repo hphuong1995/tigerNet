@@ -24,7 +24,7 @@
         Incorrect password or username.
       </div>
       <div class="form-group" *ngIf="loginUser">
-          <label for="question">{{loginUser.loginQuestion.question}}</label>
+          <label for="question" *ngIf="currentQuestion" >{{currentQuestion.question}}</label>
           <input type="password" formControlName="answer" class="form-control" placeholder="Answer" />
           <div *ngIf="submitted && wrongAnswer" class="invalid-feedback" style="display: block;">
               <div *ngIf="wrongAnswer">Incorrect answer, please try again.</div>

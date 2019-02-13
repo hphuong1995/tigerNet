@@ -272,7 +272,7 @@ module.exports.getUserQuestions = (userId, callback) => {
  * Callback argments: (error: Error)
  */
 module.exports.setUserQuestionAnswers = (userId, questionAnswers, callback) => {
-    if(questionAnswers.length < 0 || questionAnswers > 3) {
+    if(questionAnswers.length != 3) {
         callback(new Error("Attempted to set an invalid amount of questions: " + questionAnswers.length, -1));
         return;
     }

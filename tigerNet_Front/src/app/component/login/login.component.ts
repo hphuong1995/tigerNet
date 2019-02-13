@@ -19,6 +19,9 @@ export class LoginComponent implements OnInit {
   loggedIn = false;
   loginUser :any;
 
+  questionCounter = 0; 
+  currentQuestion : any;
+
   submitBtn: string;
   wrongAnswer = false;
 
@@ -56,9 +59,11 @@ export class LoginComponent implements OnInit {
         (data) => {
                     this.loginUser = data;
                     if(this.loginUser){
+                      this.questionCounter =0;
                       this.loading = false;
                       this.incorrect = false;
                       this.loggedIn = true;
+                      this.currentQuestion = this.loginUser.loginQuestion[this.questionCounter];
                     }
                     else{
                       console.log("here");
@@ -68,7 +73,7 @@ export class LoginComponent implements OnInit {
       });
     }
     else{
-      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.loginUser.loginQuestion.id).subscribe(
+      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
           (data) => {
             var res : any;
             res = data;
@@ -77,6 +82,9 @@ export class LoginComponent implements OnInit {
               this.router.navigate(['main']);
             }
             else{
+              if(this.questionCounter < 3){
+                this.questionCounter = this.questionCounter + 1;
+              }
               console.log("false");
               this.wrongAnswer = true;
             }
