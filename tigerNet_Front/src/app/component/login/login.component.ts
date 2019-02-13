@@ -27,13 +27,17 @@ export class LoginComponent implements OnInit {
                 private router: Router) { }
 
   ngOnInit() {
-    this.loginForm = this.formBuilder.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-      answer: [''],
-    });
-    this.submitBtn = "Login";
-
+    if(this.userService.isAuthenticated()){
+      this.router.navigate(['main']);
+    }
+    else{
+      this.loginForm = this.formBuilder.group({
+        username: ['', Validators.required],
+        password: ['', Validators.required],
+        answer: [''],
+      });
+      this.submitBtn = "Login";
+    }
   }
 
   get f() { return this.loginForm.controls; }
