@@ -269,26 +269,72 @@ module.exports.getUserQuestions = (userId, callback) => {
 
 /*
  * Returns a user's list of questions
- * Arguments: (userId: string, questionIds: string[], callback)
+ * Arguments: (userId: string, questions: { qid: string, answer: string }[], callback)
  * Error codes:
+ *      -1: Invalid number of security questions
  *      -10: MySQL error
- * Callback argments: (questions: Question[], error: Error)
+ * Callback argments: (error: Error)
  */
-// module.exports.setUserQuestions = (userId, questionIds callback) => {
-//     let query = "SELECT question, questions.id FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
-//                     WHERE FK_USER_ID = '" + userId + "'";
+module.exports.setUserQuestions = (userId, questionAnswers, callback) => {
+    if(questionAnswers.length < 0 || questionAnswers > 3) {
+        callback(undefined, new Error("Attempted to set an invalid amount of questions: " + questionAnswers.length, -1));
+        return;
+    }
+    pool.getConnection((err, connection) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            connection.release();
+            return;
+        }
+        connection.beginTransaction((err) => {
+            if(err) {
+                callback(undefined, new Error(err.message, -10));
+                connection.rollback(() => connection.release());
+                return;
+            }
+            let query = "DELETE FROM security_answers WHERE fk_user_id ='" + userId + "'";
+            connection.query(query, (err) => {
+                if(err) {
+                    callback(undefined, new Error(err.message, -10));
+                    connection.rollback(() => connection.release());
+                    return;
+                }
+                let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+                let values = [];
+                questionAnswers.forEach( (q) => {
+                    values.push( [uuid(), q.answer, userId, q.qid] );
+                });
+                connection.query(query, values, (err) => {
+                    if(err) {
+                        callback(undefined, new Error(err.message, -10));
+                        connection.rollback(() => connection.release());
+                        return;
+                    }
+                    connection.commit((err) => {
+                        if (err) {
+                            connection.rollback(() => connection.release());
+                            callback(undefined, new Error(err.message, -10));
+                            throw err;
+                        }
+                        callback(undefined);
+                        connection.release();
+                    });
+                });
+            });
+        });
+    });
+}
+// module.exports.deleteSession = (sessionId) => {
+//     let query = "DELETE from sessions WHERE id = '" + sessionId + "'";
 //     pool.query(query, (err, results) => {
 //         if(err) {
 //             callback(undefined, new Error(err.message, -10));
 //             return;
 //         }
-//         let questions = [];
-//         questions = results.map( (question) => {
-//             return new Question(question.question, question.id);
-//         });
-//         callback(questions, undefined);
+//         callback(undefined);
 //     });
 // }
+
 
 /*
  * Returns a user's list of questions
