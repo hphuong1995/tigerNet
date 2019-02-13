@@ -7,3 +7,4 @@ tigerNet_Server/node_modules
 .dbtoken
 launch.json
 /.vscode
+web.config
