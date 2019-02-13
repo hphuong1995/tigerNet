@@ -27,6 +27,7 @@ pool.getConnection((err, connection) => {
         console.error(err);
     }
     if(connection) {
+        console.log("Established connection with database");
         connection.release();
     }
 });

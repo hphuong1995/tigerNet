@@ -128,7 +128,6 @@ module.exports.getUserById = (userId, callback) => {
 module.exports.getUserByLogin = (username, password, callback) => {
     let query = "SELECT * from users WHERE username ='" + username + "'";
     pool.query(query, (err, results) => {
-        console.log('login query result: ' + JSON.stringify(results, null, 4));
         if(err) {
             callback(undefined, new Error(err.message, -10));
             return;
@@ -263,9 +262,33 @@ module.exports.getUserQuestions = (userId, callback) => {
         questions = results.map( (question) => {
             return new Question(question.question, question.id);
         });
+        console.log("THE QUESTIONS: " + JSON.stringify(questions), null, 4);
         callback(questions, undefined);
     });
 }
+
+/*
+ * Returns a user's list of questions
+ * Arguments: (userId: string, questionIds: string[], callback)
+ * Error codes:
+ *      -10: MySQL error
+ * Callback argments: (questions: Question[], error: Error)
+ */
+// module.exports.setUserQuestions = (userId, questionIds callback) => {
+//     let query = "SELECT question, questions.id FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
+//                     WHERE FK_USER_ID = '" + userId + "'";
+//     pool.query(query, (err, results) => {
+//         if(err) {
+//             callback(undefined, new Error(err.message, -10));
+//             return;
+//         }
+//         let questions = [];
+//         questions = results.map( (question) => {
+//             return new Question(question.question, question.id);
+//         });
+//         callback(questions, undefined);
+//     });
+// }
 
 /*
  * Returns a user's list of questions
