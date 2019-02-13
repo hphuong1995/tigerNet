@@ -3,7 +3,7 @@
  * This is the only module that will query the database directly.
  */
 const pool = require('./connect');
-//const uuid = require('uuid/v1');
+const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const Error = require('../../data/error');
 //import Error from '../../data/error';
@@ -154,9 +154,7 @@ module.exports.getUserByLogin = (username, password, callback) => {
                     }
                     user.loginAttempts = 0;
                     callback(user, undefined);
-                    return;
                 });
-                callback(user, undefined);
             } else {
                 if(results[0].login_attempts >= MAX_LOGIN_ATTEMPTS - 1) {//user just failed their last login attempt
                     //block user and reset failed attempts
@@ -171,7 +169,6 @@ module.exports.getUserByLogin = (username, password, callback) => {
                                 return;
                             }
                             callback(undefined, new Error("Login attempts exceeded, account has been blocked", -3));
-                            return;
                         });
                     });
                 } else {
@@ -180,8 +177,7 @@ module.exports.getUserByLogin = (username, password, callback) => {
                             callback(undefined, new Error(err.message, -10));
                             return;
                         }
-                        callback(undefined, new Error("Incorrect password. Remaining attempts: " + MAX_LOGIN_ATTEMPTS - 1 - results[0].login_attempts + '.', -2));
-                        return;
+                        callback(undefined, new Error("Incorrect password. Remaining attempts: " + ( MAX_LOGIN_ATTEMPTS - 1 - results[0].login_attempts ) + '.', -2));
                     });
                 }
             }
@@ -262,7 +258,7 @@ module.exports.getUserQuestions = (userId, callback) => {
         questions = results.map( (question) => {
             return new Question(question.question, question.id);
         });
-        console.log("THE QUESTIONS: " + JSON.stringify(questions), null, 4);
+        //console.log("THE QUESTIONS: " + JSON.stringify(questions), null, 4);
         callback(questions, undefined);
     });
 }
@@ -275,66 +271,59 @@ module.exports.getUserQuestions = (userId, callback) => {
  *      -10: MySQL error
  * Callback argments: (error: Error)
  */
-module.exports.setUserQuestions = (userId, questionAnswers, callback) => {
+module.exports.setUserQuestionAnswers = (userId, questionAnswers, callback) => {
     if(questionAnswers.length < 0 || questionAnswers > 3) {
-        callback(undefined, new Error("Attempted to set an invalid amount of questions: " + questionAnswers.length, -1));
+        callback(new Error("Attempted to set an invalid amount of questions: " + questionAnswers.length, -1));
         return;
     }
     pool.getConnection((err, connection) => {
         if(err) {
-            callback(undefined, new Error(err.message, -10));
+            callback(new Error(err.message, -10));
             connection.release();
             return;
         }
         connection.beginTransaction((err) => {
             if(err) {
-                callback(undefined, new Error(err.message, -10));
+                callback(new Error(err.message, -10));
                 connection.rollback(() => connection.release());
                 return;
             }
+            //let query = "DELETE FROM security_answers WHERE fk_user_id ='" + userId + "'";
             let query = "DELETE FROM security_answers WHERE fk_user_id ='" + userId + "'";
             connection.query(query, (err) => {
                 if(err) {
-                    callback(undefined, new Error(err.message, -10));
+                    callback(new Error(err.message, -10));
                     connection.rollback(() => connection.release());
                     return;
                 }
-                let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+                //let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+                query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
                 let values = [];
                 questionAnswers.forEach( (q) => {
                     values.push( [uuid(), q.answer, userId, q.qid] );
                 });
-                connection.query(query, values, (err) => {
+                console.log(JSON.stringify(values, null, 4));
+                var queryVal = connection.query(query, [values], (err) => {
                     if(err) {
-                        callback(undefined, new Error(err.message, -10));
+                        callback(new Error(err.message, -10));
                         connection.rollback(() => connection.release());
                         return;
                     }
                     connection.commit((err) => {
                         if (err) {
                             connection.rollback(() => connection.release());
-                            callback(undefined, new Error(err.message, -10));
+                            callback(new Error(err.message, -10));
                             throw err;
                         }
                         callback(undefined);
                         connection.release();
                     });
                 });
+                console.log(queryVal.sql);
             });
         });
     });
 }
-// module.exports.deleteSession = (sessionId) => {
-//     let query = "DELETE from sessions WHERE id = '" + sessionId + "'";
-//     pool.query(query, (err, results) => {
-//         if(err) {
-//             callback(undefined, new Error(err.message, -10));
-//             return;
-//         }
-//         callback(undefined);
-//     });
-// }
-
 
 /*
  * Returns a user's list of questions

@@ -5,3 +5,5 @@
 tigerNet_Server/package-lock.json
 tigerNet_Server/node_modules
 .dbtoken
+launch.json
+/.vscode

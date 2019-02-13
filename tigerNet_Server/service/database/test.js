@@ -32,7 +32,7 @@ db.getUserByLogin('Horacio', 'RpelioN2x', (user, err) => {
                 throw err;
             }
             console.log('retrieved answer: ' + answer);
-            console.log("retrieving invalid user's answer to question: " + questions[0].question);
+            console.log("retrieving invalid user's answer to question (first time): " + questions[0].question);
             db.getAnswer("asdfasgaweraegfsdas", questions[0].id, (answer, err) => {
                 if (err) {
                     console.log('invalid retrieval caught. Error object:');
@@ -72,7 +72,7 @@ db.getUserByLogin('Horacio', 'RpelioN2x', (user, err) => {
                                 throw err;
                             }
                             console.log('retrieved answer: ' + answer);
-                            console.log("retrieving invalid user's answer to question: " + questions[0].question);
+                            console.log("retrieving invalid user's answer to question (second time): " + questions[0].question);
                             db.getAnswer(user.id, questions[0].id, (answer, err) => {
                                 if (err) {
                                     console.log('invalid retrieval caught. Error object:');
@@ -115,6 +115,7 @@ db.getUserByLogin('Horacio', 'RpelioN2x', (user, err) => {
                                                 if(user.isBlocked) {
                                                     throw err;
                                                 }
+                                                let idForLaterTesting = user.id;
                                                 //now to fail logins until the account is blocked
                                                 db.getUserByLogin('Horacio', 'wrong', (user, err) => {
                                                     if (err) {
@@ -158,8 +159,47 @@ db.getUserByLogin('Horacio', 'RpelioN2x', (user, err) => {
                                                                     console.error(JSON.stringify(user));
                                                                     return;
                                                                 }
-                                                                console.log("Test success");
-                                                                process.exit();
+                                                                db.getUserQuestions(idForLaterTesting, (questions, err) => {
+                                                                    if (err) {
+                                                                        console.error(err.message);
+                                                                        console.error('status: ' + err.status);
+                                                                        throw err;
+                                                                    }
+                                                                    let qas = [{qid: questions[0].id, answer: "NEW_ANSWER"}];
+                                                                    db.setUserQuestionAnswers(idForLaterTesting, qas, (err) => {
+                                                                        if (err) {
+                                                                            console.error(err.message);
+                                                                            console.error('status: ' + err.status);
+                                                                            throw err;
+                                                                        }
+                                                                        db.getUserQuestions(idForLaterTesting, (questns, err) => {
+                                                                            if (err) {
+                                                                                console.error(err.message);
+                                                                                console.error('status: ' + err.status);
+                                                                                throw err;
+                                                                            }
+                                                                            if(questns.length > 1) {
+                                                                                console.error("Should only be one question at this point. questions:");
+                                                                                console.error(JSON.stringify(questns, null, 4));
+                                                                                throw err;
+                                                                            }
+                                                                            console.log(idForLaterTesting + "'s questions :");
+                                                                            questns.forEach( (q) => {
+                                                                                db.getAnswer(idForLaterTesting, q.id, (answer, err) => {
+                                                                                    console.log(q.question + ':');
+                                                                                    if (err) {
+                                                                                        console.error(err.message);
+                                                                                        console.error('status: ' + err.status);
+                                                                                        throw err;
+                                                                                    }
+                                                                                    console.log("answer: " + answer);
+                                                                                });
+                                                                            });
+                                                                            console.log("Test success");
+                                                                            //process.exit();
+                                                                        });
+                                                                    });
+                                                                });
                                                             });
                                                         });
                                                     });
