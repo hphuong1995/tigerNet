@@ -264,8 +264,26 @@ module.exports.getUserQuestions = (userId, callback) => {
     });
 }
 
-//TODO create method to get a random user question that has not yet been answered incorrectly
-
+/*
+ * Returns a random unguessed question from a user
+ * Error codes:
+ *      -10: MySQL error
+ * Callback argments: (questions: Question[], error: Error)
+ */
+module.exports.getUserUnguessedQuestion = (callback) => {
+    let query = "SELECT question, questions.id, security_answers.incorrect_guess\
+                    FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
+                    WHERE FK_USER_ID = '" + userId + "'\
+                    AND security_answers.incorrect_guess = 0";
+    pool.query(query, (err, results) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        let rand = Math.floor(Math.random() * results.length);
+        callback(new Question(results[rand].question, results[rand].id, results[rand].incorrect_guess), undefined);
+    });
+}
 
 /*
  * Returns a user's list of questions
