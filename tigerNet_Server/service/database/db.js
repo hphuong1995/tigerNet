@@ -379,8 +379,8 @@ module.exports.getAnswer = (userId, questionId, callback) => {
  *      -10: MySQL error
  * Callback argments: (error: Error)
  */
-module.exports.setFailedGuess = (answerId, correctGuess, callback) => {
-    let query = "UPDATE security_answers SET incorrect_guess = " + correctGuess + " WHERE id = '" + answerId + "'";
+module.exports.setFailedGuessOnAnswer = (answerId, inCorrectGuess, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess + " WHERE id = '" + answerId + "'";
     pool.query(query, (err) => {
         if(err) {
             callback(undefined, new Error(err.message, -10));
@@ -402,8 +402,8 @@ module.exports.setFailedGuess = (answerId, correctGuess, callback) => {
  *      -10: MySQL error
  * Callback argments: (error: Error)
  */
-module.exports.setAllFailedGuesses = (userId, correctGuess, callback) => {
-    let query = "UPDATE security_answers SET incorrect_guess = " + correctGuess + " WHERE fk_user_id = '" + userId + "'";
+module.exports.setFailedGuessOnAllAnswers = (userId, inCorrectGuess, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess + " WHERE fk_user_id = '" + userId + "'";
     pool.query(query, (err) => {
         if(err) {
             callback(undefined, new Error(err.message, -10));
