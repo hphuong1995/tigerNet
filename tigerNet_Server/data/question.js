@@ -3,9 +3,10 @@
  */
 const uuid = require('uuid/v1');
 class Question {
-    constructor(question, id) {
+    constructor(question, id, incorrectGuess) {
         this.id = id || uuid();
         this.question = question;
+        this.incorrectlyGuessed = false
     }
 }
 module.exports = Question;

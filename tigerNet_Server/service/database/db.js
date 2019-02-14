@@ -247,7 +247,8 @@ let setLoginAttempts = (userId, attempts, callback) => {
  * Callback argments: (questions: Question[], error: Error)
  */
 module.exports.getUserQuestions = (userId, callback) => {
-    let query = "SELECT question, questions.id FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
+    let query = "SELECT question, questions.id security_answers.incorrect_guess\
+                    FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                     WHERE FK_USER_ID = '" + userId + "'";
     pool.query(query, (err, results) => {
         if(err) {
@@ -256,16 +257,19 @@ module.exports.getUserQuestions = (userId, callback) => {
         }
         let questions = [];
         questions = results.map( (question) => {
-            return new Question(question.question, question.id);
+            return new Question(question.question, question.id, question.incorrect_guess);
         });
         //console.log("THE QUESTIONS: " + JSON.stringify(questions), null, 4);
         callback(questions, undefined);
     });
 }
 
+//TODO create method to get a random user question that has not yet been answered incorrectly
+
+
 /*
  * Returns a user's list of questions
- * Arguments: (userId: string, questions: { qid: string, answer: string }[], callback)
+ * Arguments: (userId: string, questions: { qid: string, answer: string, guessedWrong: boolean }[], callback)
  * Error codes:
  *      -1: Invalid number of security questions
  *      -10: MySQL error
@@ -297,10 +301,10 @@ module.exports.setUserQuestionAnswers = (userId, questionAnswers, callback) => {
                     return;
                 }
                 //let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
-                query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+                query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
                 let values = [];
                 questionAnswers.forEach( (q) => {
-                    values.push( [uuid(), q.answer, userId, q.qid] );
+                    values.push( [uuid(), q.answer, userId, q.qid, q.guessedWrong] );
                 });
                 console.log(JSON.stringify(values, null, 4));
                 var queryVal = connection.query(query, [values], (err) => {
@@ -332,6 +336,7 @@ module.exports.setUserQuestionAnswers = (userId, questionAnswers, callback) => {
  *      -10: MySQL error
  * Callback argments: (answer: String, error: Error)
  */
+// reset all questions so they can be answered again
 module.exports.getAnswer = (userId, questionId, callback) => {
     let query = "SELECT answer FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                     WHERE FK_USER_ID = '" + userId + "' AND FK_QUESTION_ID ='" + questionId + "'";

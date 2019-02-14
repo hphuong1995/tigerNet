@@ -143,6 +143,7 @@ pool.getConnection((err, connection) => {
                                                     query = "CREATE TABLE security_answers (\
                                                                 id VARCHAR(45) NOT NULL,\
                                                                 answer VARCHAR(45) NOT NULL,\
+                                                                incorrect_guess BIT NOT NULL\
                                                                 fk_user_id VARCHAR(45) NOT NULL,\
                                                                 FOREIGN KEY (fk_user_id)\
                                                                 REFERENCES users(id)\
