@@ -550,7 +550,7 @@ exports.userGetPattern = function(pid) {
            reject("Invalid answer or other reason");
            return;
          }
-         if(user.answer === answer){
+         if(user.answer.answer === answer){
            resolve({valid: true});
          }
          else{

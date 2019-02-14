@@ -194,13 +194,13 @@ module.exports.getUserByLogin = (username, password, callback) => {
  * Callback arguments: (error: Error)
  */
 module.exports.setUserBlocked = (userId, block, callback) => {
-    let isBlocked = 0;
-    if(block) {
-        isBlocked = 1;
-    } else {
-        isBlocked = 0;
-    }
-    let query = "UPDATE users SET is_blocked = " + isBlocked + " WHERE id = '" + userId + "'";
+    // let isBlocked = 0;
+    // if(block) {
+    //     isBlocked = 1;
+    // } else {
+    //     isBlocked = 0;
+    // }
+    let query = "UPDATE users SET is_blocked = " + block + " WHERE id = '" + userId + "'";
     pool.query(query, (err, result) => {
         if(err) {
             callback(new Error("MySQL Error trying to block or unblock user", -10));
@@ -330,13 +330,12 @@ module.exports.setUserQuestionAnswers = (userId, questionAnswers, callback) => {
 }
 
 /*
- * Returns a user's list of questions
+ * Returns a user's answer object to the specified question
  * Error codes:
  *       -1: Invalid user or question id
  *      -10: MySQL error
- * Callback argments: (answer: String, error: Error)
+ * Callback argments: (answer: SecurityAnswer, error: Error)
  */
-// reset all questions so they can be answered again
 module.exports.getAnswer = (userId, questionId, callback) => {
     let query = "SELECT answer FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                     WHERE FK_USER_ID = '" + userId + "' AND FK_QUESTION_ID ='" + questionId + "'";
@@ -349,6 +348,53 @@ module.exports.getAnswer = (userId, questionId, callback) => {
             callback(undefined, new Error("Invalid user or question id", -1));
             return;
         }
-        callback(results[0].answer, undefined);
+        //callback(results[0].answer, undefined);
+        callback(new SecurityAnswer(results[0].answer, userId, questionId, results[0].id));
+    });
+}
+
+/*
+ * Sets an answer's incorrect guess value to the specified boolean
+ * Arguments: (answerId: string, correctGuess: boolean, callback)
+ * Error codes:
+ *       -1: Invalid answerId
+ *      -10: MySQL error
+ * Callback argments: (error: Error)
+ */
+module.exports.setFailedGuess = (answerId, correctGuess, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + correctGuess + " WHERE id = '" + answerId + "'";
+    pool.query(query, (err) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        if(result.affectedRows < 1) {
+            callback(undefined, new Error("Invalid answerId", -1));
+            return;
+        }
+        callback(undefined);
+    });
+}
+
+/*
+ * Sets all of a user's answers incorrect guess values to the specified boolean
+ * Arguments: (answerId: string, correctGuess: boolean, callback)
+ * Error codes:
+ *       -1: Invalid userId or answerId
+ *      -10: MySQL error
+ * Callback argments: (error: Error)
+ */
+module.exports.setAllFailedGuesses = (userId, correctGuess, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + correctGuess + " WHERE fk_user_id = '" + userId + "'";
+    pool.query(query, (err) => {
+        if(err) {
+            callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        if(result.affectedRows < 1) {
+            callback(undefined, new Error("Invalid userId or answerId", -1));
+            return;
+        }
+        callback(undefined);
     });
 }

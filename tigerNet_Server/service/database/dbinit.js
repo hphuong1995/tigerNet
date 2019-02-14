@@ -143,7 +143,7 @@ pool.getConnection((err, connection) => {
                                                     query = "CREATE TABLE security_answers (\
                                                                 id VARCHAR(45) NOT NULL,\
                                                                 answer VARCHAR(45) NOT NULL,\
-                                                                incorrect_guess BIT NOT NULL\
+                                                                incorrect_guess BIT NOT NULL,\
                                                                 fk_user_id VARCHAR(45) NOT NULL,\
                                                                 FOREIGN KEY (fk_user_id)\
                                                                 REFERENCES users(id)\
@@ -324,14 +324,14 @@ function addInitialValues() {
                 console.error("mysql error: " + err.message);
                 throw err;
             }
-            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
             values = [
-                [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId],
-                [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId],
-                [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId],
-                [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId],
-                [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId],
-                [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId]
+                [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
+                [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
+                [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
+                [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
+                [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
+                [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
             ];
             pool.query(query, [values], (err, res, fields) => {
                 if (err) {
