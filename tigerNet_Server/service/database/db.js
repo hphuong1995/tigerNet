@@ -10,6 +10,7 @@ const Error = require('../../data/error');
 const User = require('../../data/user');
 const Question = require('../../data/question');
 const Session = require('../../data/session');
+const SecurityAnswer = require('../../data/securityAnswer');
 const MAX_LOGIN_ATTEMPTS = 3;
 
 /*
@@ -247,7 +248,7 @@ let setLoginAttempts = (userId, attempts, callback) => {
  * Callback argments: (questions: Question[], error: Error)
  */
 module.exports.getUserQuestions = (userId, callback) => {
-    let query = "SELECT question, questions.id security_answers.incorrect_guess\
+    let query = "SELECT question, questions.id, security_answers.incorrect_guess\
                     FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                     WHERE FK_USER_ID = '" + userId + "'";
     pool.query(query, (err, results) => {
@@ -267,10 +268,11 @@ module.exports.getUserQuestions = (userId, callback) => {
 /*
  * Returns a random unguessed question from a user
  * Error codes:
+ *      -1: User has no unguessed questions
  *      -10: MySQL error
- * Callback argments: (questions: Question[], error: Error)
+ * Callback argments: (question: Question, error: Error)
  */
-module.exports.getUserUnguessedQuestion = (callback) => {
+module.exports.getUserUnguessedQuestion = (userId, callback) => {
     let query = "SELECT question, questions.id, security_answers.incorrect_guess\
                     FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                     WHERE FK_USER_ID = '" + userId + "'\
@@ -278,6 +280,10 @@ module.exports.getUserUnguessedQuestion = (callback) => {
     pool.query(query, (err, results) => {
         if(err) {
             callback(undefined, new Error(err.message, -10));
+            return;
+        }
+        if(results.length == 0) {
+            callback(undefined, new Error("no unguessed questions found", -1));
             return;
         }
         let rand = Math.floor(Math.random() * results.length);
@@ -379,15 +385,11 @@ module.exports.getAnswer = (userId, questionId, callback) => {
  *      -10: MySQL error
  * Callback argments: (error: Error)
  */
-module.exports.setFailedGuessOnAnswer = (answerId, inCorrectGuess, callback) => {
-    let query = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess + " WHERE id = '" + answerId + "'";
+module.exports.setFailedGuessOnAnswer = (answerId, setFailed, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + setFailed + " WHERE id = '" + answerId + "'";
     pool.query(query, (err) => {
         if(err) {
             callback(undefined, new Error(err.message, -10));
-            return;
-        }
-        if(result.affectedRows < 1) {
-            callback(undefined, new Error("Invalid answerId", -1));
             return;
         }
         callback(undefined);
@@ -402,8 +404,8 @@ module.exports.setFailedGuessOnAnswer = (answerId, inCorrectGuess, callback) => 
  *      -10: MySQL error
  * Callback argments: (error: Error)
  */
-module.exports.setFailedGuessOnAllAnswers = (userId, inCorrectGuess, callback) => {
-    let query = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess + " WHERE fk_user_id = '" + userId + "'";
+module.exports.setFailedGuessOnAllAnswers = (userId, setFailed, callback) => {
+    let query = "UPDATE security_answers SET incorrect_guess = " + setFailed + " WHERE fk_user_id = '" + userId + "'";
     pool.query(query, (err) => {
         if(err) {
             callback(undefined, new Error(err.message, -10));

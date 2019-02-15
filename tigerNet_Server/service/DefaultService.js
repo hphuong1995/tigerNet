@@ -528,20 +528,24 @@ exports.userGetPattern = function(pid) {
                reject("Invalid login or other reason");
                return;
            }
-           db.getUserQuestions(user.id, (questions, error) => {
-               // again, more appropriate error handling needed
-               if(error || questions.length == 0) {
-                   reject("something went wrong")
-                   return;
-               }
-               let result = {
-                   id: user.id,
-                   username: user.username,
-                   isAdmin: user.isAdmin,
-                   loginQuestion: questions//use a random number generator to pick a random question
-               }
-               resolve(result);
-           });
+           db.getUserUnguessedQuestion(user.id, (question, error) => {
+            if(error) {
+              if(error.status == -10) {
+                reject(error.message);
+                return;
+              } else {//error message is -1, no unguessed questions
+                reject(error.message);
+              }
+            }
+            let result = {
+              id: user.id,
+              username: user.username,
+              isAdmin: user.isAdmin,
+              loginQuestion: question
+            }
+            resolve(result);
+            return;
+          });
        });
      }
      else{
@@ -550,11 +554,36 @@ exports.userGetPattern = function(pid) {
            reject("Invalid answer or other reason");
            return;
          }
-         if(user.answer.answer === answer){
+         if(user.answer === answer.answer){
            resolve({valid: true});
          }
          else{
-           resolve({valid:false});
+           db.setFailedGuessOnAnswer(answer.id, true, (error) => {
+            if(error) {
+              reject(error.message);
+              return
+            }
+            db.getUserUnguessedQuestion(user.userId, (question, error) => {
+              if(error) {
+                if(error.status == -10) {
+                  reject(error.message);
+                  return;
+                } else {//error message is -1, no unguessed questions
+                  db.setUserBlocked(user.userId, true, (error) => {
+                    if(error) {
+                      reject(error.message);
+                      return;
+                    }
+                  });
+                  reject("User is blocked.");
+                }
+              }
+              resolve({
+                id: question.id,
+                question: question.question
+              });
+             });
+           });
          }
        });
      }
