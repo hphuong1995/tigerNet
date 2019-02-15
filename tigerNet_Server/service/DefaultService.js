@@ -549,7 +549,9 @@ exports.userGetPattern = function(pid) {
        });
      }
      else{
+      
        db.getAnswer(user.userId, user.quesId, (answer,error) =>{
+
          if(error){
            reject("Invalid answer or other reason");
            return;

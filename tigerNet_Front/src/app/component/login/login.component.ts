@@ -66,7 +66,7 @@ export class LoginComponent implements OnInit {
       });
     }
     else{
-      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.loginUser.loginQuestion.id).subscribe(
+      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
           (data) => {
             var res : any;
             res = data;
