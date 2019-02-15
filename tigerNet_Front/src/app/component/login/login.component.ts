@@ -18,6 +18,7 @@ export class LoginComponent implements OnInit {
   incorrect = false;
   loggedIn = false;
   loginUser :any;
+  currentQuestion: any;
 
   submitBtn: string;
   wrongAnswer = false;
@@ -55,6 +56,7 @@ export class LoginComponent implements OnInit {
                       this.loading = false;
                       this.incorrect = false;
                       this.loggedIn = true;
+                      this.currentQuestion = this.loginUser.loginQuestion;
                     }
                     else{
                       console.log("here");
@@ -74,6 +76,7 @@ export class LoginComponent implements OnInit {
             }
             else{
               console.log("false");
+              this.currentQuestion = res;
               this.wrongAnswer = true;
             }
         });
