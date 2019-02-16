@@ -10,16 +10,16 @@ var db = require('./database/db');
  * newNode Node  (optional)
  * returns Node
  **/
-exports.admCreate = function(pid,newNode) {
-  return new Promise(function(resolve, reject) {
+exports.admCreate = function (pid, newNode) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "nid" : "node001",
-  "status" : true,
-  "directs" : [ "node002", "node004" ],
-  "connector" : true,
-  "messages" : [ "mess001", "mess002" ]
-};
+      "nid": "node001",
+      "status": true,
+      "directs": ["node002", "node004"],
+      "connector": true,
+      "messages": ["mess001", "mess002"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -38,15 +38,15 @@ exports.admCreate = function(pid,newNode) {
  * newMessage Message  (optional)
  * returns Message
  **/
-exports.admCreateMess = function(pid,nid,newMessage) {
-  return new Promise(function(resolve, reject) {
+exports.admCreateMess = function (pid, nid, newMessage) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-};
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -64,8 +64,8 @@ exports.admCreateMess = function(pid,nid,newMessage) {
  * nid String id of Node
  * no response value expected for this operation
  **/
-exports.admDelNode = function(pid,nid) {
-  return new Promise(function(resolve, reject) {
+exports.admDelNode = function (pid, nid) {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -78,8 +78,8 @@ exports.admDelNode = function(pid,nid) {
  * pid String id of Pattern
  * no response value expected for this operation
  **/
-exports.admDelPattern = function(pid) {
-  return new Promise(function(resolve, reject) {
+exports.admDelPattern = function (pid) {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -94,16 +94,16 @@ exports.admDelPattern = function(pid) {
  * editedNode Node  (optional)
  * returns Node
  **/
-exports.admEditNode = function(pid,nid,editedNode) {
-  return new Promise(function(resolve, reject) {
+exports.admEditNode = function (pid, nid, editedNode) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "nid" : "node001",
-  "status" : true,
-  "directs" : [ "node002", "node004" ],
-  "connector" : true,
-  "messages" : [ "mess001", "mess002" ]
-};
+      "nid": "node001",
+      "status": true,
+      "directs": ["node002", "node004"],
+      "connector": true,
+      "messages": ["mess001", "mess002"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -121,20 +121,20 @@ exports.admEditNode = function(pid,nid,editedNode) {
  * nid String id of Node
  * returns List
  **/
-exports.admGetAllMess = function(pid,nid) {
-  return new Promise(function(resolve, reject) {
+exports.admGetAllMess = function (pid, nid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
-    examples['application/json'] = [ {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-}, {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-} ];
+    examples['application/json'] = [{
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    }, {
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    }];
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -151,8 +151,8 @@ exports.admGetAllMess = function(pid,nid) {
  * pid String id of Pattern
  * no response value expected for this operation
  **/
-exports.admGetAllNodes = function(pid) {
-  return new Promise(function(resolve, reject) {
+exports.admGetAllNodes = function (pid) {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -164,18 +164,18 @@ exports.admGetAllNodes = function(pid) {
  *
  * returns List
  **/
-exports.admGetAllPatterns = function() {
-  return new Promise(function(resolve, reject) {
+exports.admGetAllPatterns = function () {
+  return new Promise(function (resolve, reject) {
     var examples = {};
-    examples['application/json'] = [ {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-}, {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-} ];
+    examples['application/json'] = [{
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    }, {
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    }];
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -191,8 +191,8 @@ exports.admGetAllPatterns = function() {
  *
  * no response value expected for this operation
  **/
-exports.admGetAllUser = function() {
-  return new Promise(function(resolve, reject) {
+exports.admGetAllUser = function () {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -206,16 +206,16 @@ exports.admGetAllUser = function() {
  * nid String id of Node
  * returns Node
  **/
-exports.admGetNode = function(pid,nid) {
-  return new Promise(function(resolve, reject) {
+exports.admGetNode = function (pid, nid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "nid" : "node001",
-  "status" : true,
-  "directs" : [ "node002", "node004" ],
-  "connector" : true,
-  "messages" : [ "mess001", "mess002" ]
-};
+      "nid": "node001",
+      "status": true,
+      "directs": ["node002", "node004"],
+      "connector": true,
+      "messages": ["mess001", "mess002"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -232,14 +232,14 @@ exports.admGetNode = function(pid,nid) {
  * pid String id of Pattern
  * returns Pattern
  **/
-exports.admGetPattern = function(pid) {
-  return new Promise(function(resolve, reject) {
+exports.admGetPattern = function (pid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-};
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -256,17 +256,17 @@ exports.admGetPattern = function(pid) {
  * uid String user id
  * returns User
  **/
-exports.admGetUser = function(uid) {
-  return new Promise(function(resolve, reject) {
+exports.admGetUser = function (uid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "uid" : "user001",
-  "username" : "phuongnguyen",
-  "password" : "pwdnguyen",
-  "type" : "admin",
-  "status" : true,
-  "questions" : [ "What is your pet name?Rex", "Where was you born?Hanoi", "What is your mother middle name?Xuan" ]
-};
+      "uid": "user001",
+      "username": "phuongnguyen",
+      "password": "pwdnguyen",
+      "type": "admin",
+      "status": true,
+      "questions": ["What is your pet name?Rex", "Where was you born?Hanoi", "What is your mother middle name?Xuan"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -282,14 +282,14 @@ exports.admGetUser = function(uid) {
  *
  * returns Pattern
  **/
-exports.adminPatternsPOST = function() {
-  return new Promise(function(resolve, reject) {
+exports.adminPatternsPOST = function () {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-};
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -307,17 +307,17 @@ exports.adminPatternsPOST = function() {
  * editedUser User  (optional)
  * returns User
  **/
-exports.adminUsersUidPUT = function(uid,editedUser) {
-  return new Promise(function(resolve, reject) {
+exports.adminUsersUidPUT = function (uid, editedUser) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "uid" : "user001",
-  "username" : "phuongnguyen",
-  "password" : "pwdnguyen",
-  "type" : "admin",
-  "status" : true,
-  "questions" : [ "What is your pet name?Rex", "Where was you born?Hanoi", "What is your mother middle name?Xuan" ]
-};
+      "uid": "user001",
+      "username": "phuongnguyen",
+      "password": "pwdnguyen",
+      "type": "admin",
+      "status": true,
+      "questions": ["What is your pet name?Rex", "Where was you born?Hanoi", "What is your mother middle name?Xuan"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -336,15 +336,15 @@ exports.adminUsersUidPUT = function(uid,editedUser) {
  * newMessage Message  (optional)
  * returns Message
  **/
-exports.userCreateMess = function(pid,nid,newMessage) {
-  return new Promise(function(resolve, reject) {
+exports.userCreateMess = function (pid, nid, newMessage) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-};
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -363,16 +363,16 @@ exports.userCreateMess = function(pid,nid,newMessage) {
  * editedNode Node  (optional)
  * returns Node
  **/
-exports.userEditNode = function(pid,nid,editedNode) {
-  return new Promise(function(resolve, reject) {
+exports.userEditNode = function (pid, nid, editedNode) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "nid" : "node001",
-  "status" : true,
-  "directs" : [ "node002", "node004" ],
-  "connector" : true,
-  "messages" : [ "mess001", "mess002" ]
-};
+      "nid": "node001",
+      "status": true,
+      "directs": ["node002", "node004"],
+      "connector": true,
+      "messages": ["mess001", "mess002"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -390,20 +390,20 @@ exports.userEditNode = function(pid,nid,editedNode) {
  * nid String id of Node
  * returns List
  **/
-exports.userGetAllMess = function(pid,nid) {
-  return new Promise(function(resolve, reject) {
+exports.userGetAllMess = function (pid, nid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
-    examples['application/json'] = [ {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-}, {
-  "senderId" : "senderId",
-  "mid" : "mid",
-  "recieverId" : "recieverId",
-  "content" : "content"
-} ];
+    examples['application/json'] = [{
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    }, {
+      "senderId": "senderId",
+      "mid": "mid",
+      "recieverId": "recieverId",
+      "content": "content"
+    }];
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -420,8 +420,8 @@ exports.userGetAllMess = function(pid,nid) {
  * pid String id of Pattern
  * no response value expected for this operation
  **/
-exports.userGetAllNodes = function(pid) {
-  return new Promise(function(resolve, reject) {
+exports.userGetAllNodes = function (pid) {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
@@ -433,18 +433,18 @@ exports.userGetAllNodes = function(pid) {
  *
  * returns List
  **/
-exports.userGetAllPatterns = function() {
-  return new Promise(function(resolve, reject) {
+exports.userGetAllPatterns = function () {
+  return new Promise(function (resolve, reject) {
     var examples = {};
-    examples['application/json'] = [ {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-}, {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-} ];
+    examples['application/json'] = [{
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    }, {
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    }];
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -462,16 +462,16 @@ exports.userGetAllPatterns = function() {
  * nid String id of Node
  * returns Node
  **/
-exports.userGetNode = function(pid,nid) {
-  return new Promise(function(resolve, reject) {
+exports.userGetNode = function (pid, nid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "nid" : "node001",
-  "status" : true,
-  "directs" : [ "node002", "node004" ],
-  "connector" : true,
-  "messages" : [ "mess001", "mess002" ]
-};
+      "nid": "node001",
+      "status": true,
+      "directs": ["node002", "node004"],
+      "connector": true,
+      "messages": ["mess001", "mess002"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -488,14 +488,14 @@ exports.userGetNode = function(pid,nid) {
  * pid String id of Pattern
  * returns Pattern
  **/
-exports.userGetPattern = function(pid) {
-  return new Promise(function(resolve, reject) {
+exports.userGetPattern = function (pid) {
+  return new Promise(function (resolve, reject) {
     var examples = {};
     examples['application/json'] = {
-  "pid" : "patt001",
-  "conNodeId" : "node001",
-  "nonConNodes" : [ "node001", "node002", "node003", "node004" ]
-};
+      "pid": "patt001",
+      "conNodeId": "node001",
+      "nonConNodes": ["node001", "node002", "node003", "node004"]
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
@@ -512,85 +512,167 @@ exports.userGetPattern = function(pid) {
  * no response value expected for this operation
  **/
 //exports.userLogin = function(user) {
-  //return new Promise(function(resolve, reject) {
-  //  db.getUserByLogin(user.username,user.password,resolve);
+//return new Promise(function(resolve, reject) {
+//  db.getUserByLogin(user.username,user.password,resolve);
 //  });
 //}
- exports.userLogin = function(user) {
-   return new Promise( (resolve, reject) => {
-      if(user.username){
-       db.getUserByLogin(user.username, user.password, (user, error) => {
-           if(error) {
-               /*
-                * this is just an example, examine the status code and send
-                * more appropriate error objects back depending on the code
-                */
-               reject("Invalid login or other reason");
-               return;
-           }
-           db.getUserUnguessedQuestion(user.id, (question, error) => {
-            if(error) {
-              if(error.status == -10) {
-                reject(error.message);
-                return;
-              } else {//error message is -1, no unguessed questions
-                reject(error.message);
-              }
-            }
-            let result = {
-              id: user.id,
-              username: user.username,
-              isAdmin: user.isAdmin,
-              loginQuestion: question
-            }
-            resolve(result);
-            return;
-          });
-       });
-     }
-     else{
-      
-       db.getAnswer(user.userId, user.quesId, (answer,error) =>{
+// exports.userLogin = function (user) {
+//   return new Promise((resolve, reject) => {
+//     if (user.username) {
+//       db.getUserByLogin(user.username, user.password, (user, error) => {
+//         if (error) {
+//           /*
+//            * this is just an example, examine the status code and send
+//            * more appropriate error objects back depending on the code
+//            */
+//           reject("Invalid login or other reason");
+//           return;
+//         }
+//         db.getUserUnguessedQuestion(user.id, (question, error) => {
+//           if (error) {
+//             if (error.status == -10) {
+//               reject(error.message);
+//               return;
+//             } else {//error message is -1, no unguessed questions
+//               reject(error.message);
+//             }
+//           }
+//           let result = {
+//             id: user.id,
+//             username: user.username,
+//             isAdmin: user.isAdmin,
+//             loginQuestion: question
+//           }
+//           resolve(result);
+//           return;
+//         });
+//       });
+//     }
+//     else {
 
-         if(error){
-           reject("Invalid answer or other reason");
-           return;
-         }
-         if(user.answer === answer.answer){
-           resolve({valid: true});
-         }
-         else{
-           db.setFailedGuessOnAnswer(answer.id, true, (error) => {
-            if(error) {
+//       db.getAnswer(user.userId, user.quesId, (answer, error) => {
+
+//         if (error) {
+//           reject("Invalid answer or other reason");
+//           return;
+//         }
+//         if (user.answer === answer.answer) {
+//           resolve({ valid: true });
+//         }
+//         else {
+//           db.setFailedGuessOnAnswer(answer.id, true, (error) => {
+//             if (error) {
+//               reject(error.message);
+//               return
+//             }
+//             db.getUserUnguessedQuestion(user.userId, (question, error) => {
+//               if (error) {
+//                 if (error.status == -10) {
+//                   reject(error.message);
+//                   return;
+//                 } else {//error message is -1, no unguessed questions
+//                   db.setUserBlocked(user.userId, true, (error) => {
+//                     if (error) {
+//                       reject(error.message);
+//                       return;
+//                     }
+//                   });
+//                   reject("User is blocked.");
+//                 }
+//               }
+//               resolve({
+//                 id: question.id,
+//                 question: question.question
+//               });
+//             });
+//           });
+//         }
+//       });
+//     }
+//   });
+// }
+exports.userLogin = function (user) {
+  return new Promise((resolve, reject) => {
+    if (user.username) {
+      userLogin(user, resolve, reject);
+    } else {
+      answerSecurityQuestion(user, resolve, reject);
+    }
+  });
+}
+
+function userLogin(user, resolve, reject) {
+  db.getUserByLogin(user.username, user.password, (user, error) => {
+    if (error) {
+      /*
+       * this is just an example, examine the status code and send
+       * more appropriate error objects back depending on the code
+       */
+      reject("Invalid login or other reason");
+      return;
+    }
+    db.getUserUnguessedQuestion(user.id, (question, error) => {
+      if (error) {
+        if (error.status == -10) {
+          reject(error.message);
+          return;
+        } else {//error message is -1, no unguessed questions
+          reject(error.message);
+        }
+      }
+      let result = {
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin,
+        loginQuestion: question
+      }
+      resolve(result);
+      return;
+    });
+  });
+}
+
+function answerSecurityQuestion(user, resolve, reject) {
+  db.getAnswer(user.userId, user.quesId, (answer, error) => {
+
+    if (error) {
+      reject("Invalid answer or other reason");
+      return;
+    }
+    if (user.answer === answer.answer) {
+      resolve({ valid: true });
+    }
+    else {
+      db.setFailedGuessOnAnswer(answer.id, true, (error) => {
+        if (error) {
+          reject(error.message);
+          return
+        }
+        db.getUserUnguessedQuestion(user.userId, (question, error) => {
+          if (error) {
+            if (error.status == -10) {
               reject(error.message);
-              return
-            }
-            db.getUserUnguessedQuestion(user.userId, (question, error) => {
-              if(error) {
-                if(error.status == -10) {
+              return;
+            } else {//error message is -1, no unguessed questions
+              db.setUserBlocked(user.userId, true, (error) => {
+                if (error) {
                   reject(error.message);
                   return;
-                } else {//error message is -1, no unguessed questions
-                  db.setUserBlocked(user.userId, true, (error) => {
-                    if(error) {
-                      reject(error.message);
-                      return;
-                    }
-                  });
-                  reject("User is blocked.");
                 }
-              }
-              resolve({
-                id: question.id,
-                question: question.question
               });
-             });
-           });
-         }
-       });
-     }
-   });
- }
+              reject("User is blocked.");
+            }
+          }
+          resolve({
+            id: question.id,
+            question: question.question
+          });
+        });
+      });
+    }
+  });
+}
+
 
 
 /**
@@ -599,8 +681,8 @@ exports.userGetPattern = function(pid) {
  *
  * no response value expected for this operation
  **/
-exports.userLogout = function() {
-  return new Promise(function(resolve, reject) {
+exports.userLogout = function () {
+  return new Promise(function (resolve, reject) {
     resolve();
   });
 }
