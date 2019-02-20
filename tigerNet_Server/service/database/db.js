@@ -13,6 +13,18 @@ const Session = require('../../data/session');
 const SecurityAnswer = require('../../data/securityAnswer');
 const MAX_LOGIN_ATTEMPTS = 3;
 
+
+module.exports.getAllUsers = (callback) => {
+  let query = "SELECT * from users";
+  pool.query(query, (err, results) =>{
+    if(err){
+      callback(undefined, new Error(err.message,-10));
+    }
+    console.log(results);
+    callback(results,undefined);
+  });
+}
+
 /*
  * Returns an error or a session
  * Error codes:
@@ -237,7 +249,7 @@ let setLoginAttempts = (userId, attempts, callback) => {
             callback(new Error("Tried to set login attempts for an invalid userId: " + userId, -1));
             return;
         }
-        callback(undefined);        
+        callback(undefined);
     });
 }
 

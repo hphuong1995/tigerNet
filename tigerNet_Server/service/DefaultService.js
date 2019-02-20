@@ -193,7 +193,16 @@ exports.admGetAllPatterns = function () {
  **/
 exports.admGetAllUser = function () {
   return new Promise(function (resolve, reject) {
-    resolve();
+    db.getAllUsers( (users, error) => {
+      if (error) {
+        reject("Invalid request or other reason");
+        return;
+      }
+      else {
+        console.log(users);
+        resolve(users);
+      }
+    });
   });
 }
 
