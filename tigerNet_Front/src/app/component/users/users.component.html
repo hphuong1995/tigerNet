@@ -1,0 +1,21 @@
+<div class='container' style='margin-top: 10px;'>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Username</th>
+        <th scope="col">Status</th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody *ngIf="users">
+      <tr scope="row" *ngFor="let user of users">
+        <td>{{user.username}}</td>
+        <td *ngIf="user.is_blocked">Blocked</td>
+        <td *ngIf="!user.is_blocked">Active</td>
+        <td align="right" *ngIf="user.is_blocked">
+          <button  type="button" class="btn btn-outline-success" id ="{{user.id}}" ng-click = "unblock()" >Unblock</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -13,6 +13,9 @@ import { CSRFInterceptor } from './httpReqInterceptor.service'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { CookieService } from 'ngx-cookie-service';
+import { PatternsComponent } from './component/patterns/patterns.component';
+import { NodesComponent } from './component/nodes/nodes.component';
+import { UsersComponent } from './component/users/users.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +23,10 @@ import { CookieService } from 'ngx-cookie-service';
     LoginComponent,
     NavComponent,
     WelcomeComponent,
-    MainComponent
+    MainComponent,
+    PatternsComponent,
+    NodesComponent,
+    UsersComponent
   ],
   imports: [
     BrowserModule,
