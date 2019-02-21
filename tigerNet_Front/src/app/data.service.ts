@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root'
 })
 export class DataService {
+  public csrf: string;
 
   constructor(private http: HttpClient) { }
 

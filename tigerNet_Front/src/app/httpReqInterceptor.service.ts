@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
-import { CookieService } from 'ngx-cookie-service';
 import { Observable } from 'rxjs';
+import { DataService } from 'src/app/data.service'
 
 @Injectable()
 export class CSRFInterceptor implements HttpInterceptor {
 
-    constructor(private cookieService: CookieService) {}
+    constructor(private data: DataService) {}
 
     intercept(request: HttpRequest<any>, next: HttpHandler) : Observable<HttpEvent<any>> {
-        let csrf = this.cookieService.get('XSRF-TOKEN');
+        let csrf = this.data.csrf;
         if(csrf) {
             request = request.clone({
                 withCredentials: true,
-                setHeaders: { 'X-XSRF-TOKEN': csrf }
+                setHeaders: { 'CSRF': csrf }
             });
         } else {
             request = request.clone({
