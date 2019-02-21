@@ -15,10 +15,10 @@ export class UserService {
   }
 
   answerQuestion(answer: string, userId: string, quesId: string): Observable<Object> {
-    var ansQues = {"answer" : answer, "userId" : userId, "quesId": quesId};
-    //var ansQues = { "answer" : answer };
-    return this.http.post('api/v1/login/',JSON.stringify(ansQues));
-    //return this.http.post('api/v1/login/question',JSON.stringify(ansQues));
+    //var ansQues = {"answer" : answer, "userId" : userId, "quesId": quesId};
+    var ansQues = { "answer" : answer };
+    //return this.http.post('api/v1/login/',JSON.stringify(ansQues));
+    return this.http.post('api/v1/login/question',JSON.stringify(ansQues));
   }
 
   isAuthenticated(){

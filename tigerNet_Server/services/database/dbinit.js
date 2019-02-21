@@ -3,7 +3,8 @@
  * DO NOT Include this module, it is not part of the server.
  * It is only for initializing the database
  */
-const pool = require('./connect');
+//const pool = require('./connect');
+const pool = require('./../../dist/services/database/connect');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 
@@ -339,6 +340,7 @@ function addInitialValues() {
                     throw err;
                 }
                 console.log("Database values initialized");
+                process.exit(0);
             });
         });
     });

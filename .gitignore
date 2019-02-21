@@ -8,3 +8,5 @@ tigerNet_Server/node_modules
 launch.json
 /.vscode
 web.config
+tigerNet_Server/dist
+tigerNet_Server/public
