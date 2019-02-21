@@ -148,7 +148,7 @@ router.post("/api/v1/login/question", ( req: Request, res: Response ) => {
             res.status(500).send(err.message);
             return;
         }
-        if (req.body.answer === answer.answer) {
+        if (req.body.answer === answer.answer) {// correct guess
             db.setFailedGuessOnAllAnswers(req.session.user.id, false, (err1: Err) => {
                 if (err1) {
                     res.status(500).send(err1.message);
@@ -158,7 +158,7 @@ router.post("/api/v1/login/question", ( req: Request, res: Response ) => {
                 res.send({ valid: true });
                 return;
             });
-        } else {
+        } else {// incorrect guess
             db.setFailedGuessOnAnswer(answer.id, true, (err1: Err) => {
                 if (err1) {
                     res.status(500).send(err1.message);

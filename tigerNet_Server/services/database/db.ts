@@ -53,6 +53,7 @@ class DB {
     public getSession(sessionId: string, csrfToken: string,
                       callback: (session: Session, err: Err) => void): void {
         const query: string = "SELECT * from sessions WHERE id = '" + sessionId + "'";
+        console.log(query);
         pool.query(query, (err: MysqlError, results: any[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
@@ -273,7 +274,6 @@ class DB {
             questions = results.map( (question: any) => {
                 return new Question(question.question, question.id, question.incorrect_guess);
             });
-            // console.log("THE QUESTIONS: " + JSON.stringify(questions), null, 4);
             callback(questions, undefined);
         });
     }
@@ -297,6 +297,7 @@ class DB {
             }
             if (results.length === 0) {
                 callback(undefined, new Err("All security questions have been guessed wrong.", -1));
+                return;
             }
             const rand: number = Math.floor(Math.random() * results.length);
             callback(new Question(results[rand].question, results[rand].id, results[rand].incorrect_guess), undefined);
@@ -345,7 +346,7 @@ class DB {
                     questionAnswers.forEach( (q) => {
                         values.push( [uuid(), q.answer, userId, q.qid, q.guessedWrong] );
                     });
-                    console.log(JSON.stringify(values, null, 4));
+                    // console.log(JSON.stringify(values, null, 4));
                     const queryVal: Query = connection.query(query, [values], (err3) => {
                         if (err3) {
                             callback(new Err(err3.message, -10));
@@ -362,7 +363,7 @@ class DB {
                             connection.release();
                         });
                     });
-                    console.log(queryVal.sql);
+                    // console.log(queryVal.sql);
                 });
             });
         });
@@ -377,7 +378,7 @@ class DB {
      */
      public getAnswer(userId: string, questionId: string,
                       callback: (answer: SecurityAnswer, err: Err) => void): void {
-        const query: string = "SELECT answer FROM questions JOIN security_answers\
+        const query: string = "SELECT answer, security_answers.id FROM questions JOIN security_answers\
                         ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                         WHERE FK_USER_ID = '" + userId + "' AND FK_QUESTION_ID ='" + questionId + "'";
         console.log(query);
@@ -406,6 +407,7 @@ class DB {
     public setFailedGuessOnAnswer(answerId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void {
         const query: string = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess +
             " WHERE id = '" + answerId + "'";
+        console.log(query);
         pool.query(query, (err: MysqlError, result: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
