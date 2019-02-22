@@ -253,7 +253,7 @@ function addInitialValues() {
     let user = {
         id: uuid(),
         username: 'Horacio',
-        passHash: bcrypt.hashSync('RpelioN2x', 10),
+        passHash: bcrypt.hashSync('tiger0485', 10),
         isAdmin: false,
         isBlocked: false
     }
