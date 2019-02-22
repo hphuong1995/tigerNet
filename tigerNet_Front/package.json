@@ -21,6 +21,8 @@
     "@angular/router": "~7.2.0",
     "@types/jquery": "^3.3.29",
     "core-js": "^2.5.4",
+    "cytoscape": "^3.4.2",
+    "cytoscape-cose-bilkent": "^4.0.0",
     "jquery": "^3.3.1",
     "materialize": "^1.0.0",
     "materialize-css": "^1.0.0",
