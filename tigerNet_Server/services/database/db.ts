@@ -240,7 +240,15 @@ class DB {
                 callback(new Err("Tried to block or unblock invalid userId: " + userId, -1));
                 return;
             }
-            callback(undefined);
+            if (!block) {
+              this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
+                  if (err1) {
+                      return;
+                  }
+                  callback(undefined);
+                  return;
+              });
+            }
         });
     }
 

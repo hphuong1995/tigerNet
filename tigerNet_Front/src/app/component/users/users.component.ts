@@ -20,7 +20,7 @@ export class UsersComponent implements OnInit {
   unblockUser(userId: string) {
     console.log("here");
     this.dataService.unblockUser(userId).subscribe(data =>{
-      console.log(data);
+      this.users = data;
     });
   }
 
