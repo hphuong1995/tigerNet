@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,11 @@ export class DataService {
 
   constructor(private http: HttpClient) { }
 
-  getAllUsers(){
+  getAllUsers(): Observable<Object> {
     return this.http.get('api/v1/admin/users');
+  }
+
+  getNetwork(): Observable<HttpResponse<Object>> {
+    return this.http.get('api/v1/network', { observe: 'response'});
   }
 }
