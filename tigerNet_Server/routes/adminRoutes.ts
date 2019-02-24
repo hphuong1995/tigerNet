@@ -95,4 +95,16 @@ router.get("/users", (req: Request, res: Response) => {
     });
 });
 
+router.put("/users/:uid", (req: Request, res: Response) => {
+  console.log(req.params.uid);
+  db.unblockUser(req.params.uid, (users: User[], err: Err) => {
+      if (err) {
+          res.status(500).send(err.message);
+      } else {
+        // NEED TO RETURN NEW USER LIST TO UPDATE THE FRONT END
+          res.send(users);
+      }
+  });
+});
+
 export { router as adminRoutes };

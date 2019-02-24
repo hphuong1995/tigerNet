@@ -10,10 +10,10 @@
     <tbody *ngIf="users">
       <tr scope="row" *ngFor="let user of users">
         <td>{{user.username}}</td>
-        <td *ngIf="user.is_blocked">Blocked</td>
-        <td *ngIf="!user.is_blocked">Active</td>
-        <td align="right" *ngIf="user.is_blocked">
-          <button  type="button" class="btn btn-outline-success" id ="{{user.id}}" ng-click = "unblock()" >Unblock</button>
+        <td *ngIf="user.isBlocked">Blocked</td>
+        <td *ngIf="!user.isBlocked">Active</td>
+        <td align="right" *ngIf="user.isBlocked">
+          <button  type="button" class="btn btn-outline-success" id ="{{user.id}}" on-click = "unblockUser(user.id)" >Unblock</button>
         </td>
       </tr>
     </tbody>

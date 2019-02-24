@@ -17,8 +17,11 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  unblock() {
-
+  unblockUser(userId: string) {
+    console.log("here");
+    this.dataService.unblockUser(userId).subscribe(data =>{
+      console.log(data);
+    });
   }
 
 }

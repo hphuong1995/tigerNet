@@ -42,6 +42,22 @@ const MAX_LOGIN_ATTEMPTS: number = 3;
 
 class DB {
     constructor() { return; }
+
+    public unblockUser(userId: string, callback: (users: User[], err: Err) => void): void {
+        const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
+        pool.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+            }
+            this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
+                if (err1) {
+                    return;
+                }
+                return;
+            });
+        });
+    }
+
     /*
      * Returns an error or a session
      * Error codes:
