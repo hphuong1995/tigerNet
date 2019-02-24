@@ -98,7 +98,6 @@ router.all( "/*", ( req: Request, res: Response, next: NextFunction ) => {
         if (err) {
             endSession(req, res, () => {
                 res.status(403).send(err);
-                return;
             });
             return;
         }

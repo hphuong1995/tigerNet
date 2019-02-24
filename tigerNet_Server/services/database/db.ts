@@ -159,7 +159,7 @@ class DB {
                 callback(undefined, new Err("User not found.", -1));
                 return;
             }
-            const user = new User(results[0].username, results[0].is_admin, results[0].login_attempts, results[0].id);
+            const user = new User(results[0].username, results[0].is_admin, results[0].is_blocked, results[0].id);
             callback(user, undefined);
         });
     }
@@ -191,7 +191,7 @@ class DB {
                     const user: User = new User(
                         results[0].username,
                         results[0].is_admin,
-                        results[0].login_attempts,
+                        results[0].is_blocked,
                         results[0].id
                     );
                     callback(user, undefined);
