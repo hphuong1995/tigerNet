@@ -55,7 +55,7 @@ export class LoginComponent implements OnInit {
       this.loading = false;
       this.userService.login(this.f.username.value, this.f.password.value).subscribe(
         (res: HttpResponse<Object>) => {
-                    this.data.csrf = res.headers.get("CSRF");
+                    // this.data.csrf = res.headers.get("CSRF");
                     this.loginUser = res.body;
                     if(this.loginUser){
                       this.loading = false;

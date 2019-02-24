@@ -24,7 +24,7 @@ router.post( "/api/v1/login", ( req: Request, res: Response ) => {
             }
             const sess = new Session( req.session.id, uuid());
             req.session.user = user;
-            res.header("CSRF", sess.csrf);
+            res.cookie("X-CSRF", sess.csrf, { expires: new Date(Date.now() + 1_200_000)});
             db.storeSession(sess, (session: Session, err3: Err) => {
                 if (err3) {
                     endSession(req, res, (e: Err) => {
@@ -64,7 +64,7 @@ router.post( "/api/v1/login", ( req: Request, res: Response ) => {
  * Validate session and csrf
  */
 router.all( "/*", ( req: Request, res: Response, next: NextFunction ) => {
-    const csrf: string = req.header( "CSRF" );
+    const csrf: string = req.header( "X-CSRF" );
     const sid = req.session.id;
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, CSRF");
     db.getSession(sid, csrf, (session: Session, err: Err) => {
@@ -75,7 +75,6 @@ router.all( "/*", ( req: Request, res: Response, next: NextFunction ) => {
             });
             return;
         }
-        res.header("CSRF", session.csrf);
         next();
     });
 } );
