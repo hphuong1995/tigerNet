@@ -43,20 +43,20 @@ const MAX_LOGIN_ATTEMPTS: number = 3;
 class DB {
     constructor() { return; }
 
-    public unblockUser(userId: string, callback: (users: User[], err: Err) => void): void {
-        const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
-            if (err) {
-                callback(undefined, new Err(err.message, -10));
-            }
-            this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
-                if (err1) {
-                    return;
-                }
-                return;
-            });
-        });
-    }
+    // public unblockUser(userId: string, callback: (err: Err) => void): void {
+    //     const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
+    //     pool.query(query, (err: MysqlError, results: any) => {
+    //         if (err) {
+    //             callback(new Err(err.message, -10));
+    //         }
+    //         this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
+    //             if (err1) {
+    //                 callback(new Err(err.message, -10));
+    //             }
+    //             callback(undefined);
+    //         });
+    //     });
+    // }
 
     /*
      * Returns an error or a session
@@ -167,7 +167,6 @@ class DB {
     /*
      * Returns an error or a user
      * Tracks failed user login attempts
-     * Blocks user and returns a -3 error when failed login attempts == MAX_LOGIN_ATTEMPTS
      * Error codes:
      *      -1: Invalid username
      *      -2: Invalid password

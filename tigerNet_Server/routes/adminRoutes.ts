@@ -95,14 +95,23 @@ router.get("/users", (req: Request, res: Response) => {
     });
 });
 
+/*
+ * Unblocks the specified user
+ */
 router.put("/users/:uid", (req: Request, res: Response) => {
   console.log(req.params.uid);
-  db.unblockUser(req.params.uid, (users: User[], err: Err) => {
+  db.setUserBlocked(req.params.uid, false, (err: Err) => {
       if (err) {
           res.status(500).send(err.message);
       } else {
         // NEED TO RETURN NEW USER LIST TO UPDATE THE FRONT END
-          res.send(users);
+        db.getAllUsers( (users: User[], err1: Err) => {
+            if (err1) {
+                res.status(500).send(err1.message);
+            } else {
+                res.send(users);
+            }
+        });
       }
   });
 });
