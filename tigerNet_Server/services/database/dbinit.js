@@ -26,6 +26,25 @@ pool.getConnection((err, connection) => {
                 console.error("mysql error: " + err.message);
                 throw err;
             }
+            let query = "DROP TABLE IF EXISTS id;";
+            connection.query(query, (err, res, fields) => {
+                if (err) {
+                    connection.rollback(() => connection.release());
+                    console.error("mysql error: " + err.message);
+                    throw err;
+                }
+                let query = "CREATE TABLE id (\
+                        nodeId INT NOT NULL,\
+                        patternId INT NOT NULL,\
+                        messageId INT NOT NULL,\
+                        PRIMARY KEY (nodeId)\
+                    );";
+                connection.query(query, (err, res, fields) => {
+                    if (err) {
+                        connection.rollback(() => connection.release());
+                        console.error("mysql error: " + err.message);
+                        throw err;
+                    }
             query = "DROP TABLE IF EXISTS users;";
             connection.query(query, (err, res, fields) => {
                 if (err) {
@@ -83,12 +102,23 @@ pool.getConnection((err, connection) => {
                                     console.error("mysql error: " + err.message);
                                     throw err;
                                 }
+                                // query = "CREATE TABLE nodes (\
+                                //             id VARCHAR(45) NOT NULL,\
+                                //             is_active BIT NOT NULL,\
+                                //             connected_node_id VARCHAR(45),\
+                                //             PRIMARY KEY (id)\
+                                //         );";                                
                                 query = "CREATE TABLE nodes (\
-                                            id VARCHAR(45) NOT NULL,\
-                                            is_active BIT NOT NULL,\
-                                            connected_node_id VARCHAR(45),\
-                                            PRIMARY KEY (id)\
-                                        );";
+                                    id VARCHAR(6) NOT NULL,\
+                                    is_active BIT NOT NULL,\
+                                    is_connector BIT NOT NULL,\
+                                    fk_pattern_id VARCHAR(6),\
+                                    FOREIGN KEY (fk_pattern_id)\
+                                    REFERENCES patterns(id)\
+                                    ON UPDATE CASCADE\
+                                    ON DELETE CASCADE,\
+                                    PRIMARY KEY (id)\
+                                );";
                                 connection.query(query, (err) => {
                                     if (err) {
                                         connection.rollback(() => connection.release());
@@ -170,13 +200,17 @@ pool.getConnection((err, connection) => {
                                                                 console.error("mysql error: " + err.message);
                                                                 throw err;
                                                             }
+                                                            // query = "CREATE TABLE patterns (\
+                                                            //             id VARCHAR(6) NOT NULL,\
+                                                            //             fk_connected_node_id VARCHAR(45),\
+                                                            //             FOREIGN KEY (fk_connected_node_id)\
+                                                            //             REFERENCES nodes(id)\
+                                                            //             ON UPDATE CASCADE\
+                                                            //             ON DELETE SET NULL,\
+                                                            //             PRIMARY KEY (id)\
+                                                            //         );";
                                                             query = "CREATE TABLE patterns (\
-                                                                        id VARCHAR(45) NOT NULL,\
-                                                                        fk_connected_node_id VARCHAR(45),\
-                                                                        FOREIGN KEY (fk_connected_node_id)\
-                                                                        REFERENCES nodes(id)\
-                                                                        ON UPDATE CASCADE\
-                                                                        ON DELETE SET NULL,\
+                                                                        id VARCHAR(6) NOT NULL,\
                                                                         PRIMARY KEY (id)\
                                                                     );";
                                                             connection.query(query, (err) => {
@@ -237,7 +271,7 @@ pool.getConnection((err, connection) => {
             });
         });
     });
-});
+}); }); });
 
 
 
@@ -339,8 +373,18 @@ function addInitialValues() {
                     console.error("mysql error: " + err.message);
                     throw err;
                 }
-                console.log("Database values initialized");
-                process.exit(0);
+                query = "INSERT INTO id (nodeId, patternId, messageId) VALUES ?";
+                values = [
+                    [0, 0, 0]
+                ]
+                pool.query(query, [values], (err, res, fields) => {
+                    if (err) {
+                        console.error("mysql error: " + err.message);
+                        throw err;
+                    }
+                    console.log("Database values initialized");
+                    process.exit(0);
+                });
             });
         });
     });

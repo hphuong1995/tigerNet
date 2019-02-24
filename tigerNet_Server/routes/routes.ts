@@ -81,4 +81,145 @@ router.get( "/exampleEndpoint/:pathparam", ( req: Request, res: Response, next: 
     }
 } );
 
+/*
+ * Get all patterns
+ */
+router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
+    /*
+     * Grab the user object from the session.
+     * This object persists until the user logs out or the session expires (a long timeout)
+     * The user object is validated in the authentication endpoints - no need to double check that
+     */
+
+    const hardCodedPattern: string =     '{\
+        "patterns": [\
+            {\
+                "id": "P01",\
+                "pattern": {\
+                    "nodes": [\
+                        {\
+                            "id": "N01",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        },\
+                        {\
+                            "id": "N02",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        },\
+                        {\
+                            "id": "N03",\
+                            "isActive": true,\
+                            "isConnector": true\
+                        }\
+                    ],\
+                    "connections": [\
+                        {\
+                            "node": "N01",\
+                            "other": "N02"\
+                        },\
+                        {\
+                            "node": "N02",\
+                            "other": "N03"\
+                        },\
+                        {\
+                            "node": "N03",\
+                            "other": "N01"\
+                        }\
+                    ]\
+                }\
+            },\
+            {\
+                "id": "P02",\
+                "pattern": {\
+                    "nodes": [\
+                        {\
+                            "id": "N04",\
+                            "isActive": true,\
+                            "isConnector": true\
+                        },\
+                        {\
+                            "id": "N05",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        },\
+                        {\
+                            "id": "N06",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        }\
+                    ],\
+                    "connections": [\
+                        {\
+                            "node": "N04",\
+                            "other": "N05"\
+                        },\
+                        {\
+                            "node": "N05",\
+                            "other": "N06"\
+                        },\
+                        {\
+                            "node": "N06",\
+                            "other": "N04"\
+                        }\
+                    ]\
+                }\
+            },\
+            {\
+                "id": "P03",\
+                "pattern": {\
+                    "nodes": [\
+                        {\
+                            "id": "N07",\
+                            "isActive": true,\
+                            "isConnector": true\
+                        },\
+                        {\
+                            "id": "N08",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        },\
+                        {\
+                            "id": "N09",\
+                            "isActive": true,\
+                            "isConnector": false\
+                        }\
+                    ],\
+                    "connections": [\
+                        {\
+                            "node": "N07",\
+                            "other": "N08"\
+                        },\
+                        {\
+                            "node": "N08",\
+                            "other": "N09"\
+                        },\
+                        {\
+                            "node": "N09",\
+                            "other": "N07"\
+                        }\
+                    ]\
+                }\
+            }\
+        ],\
+        "patternConnections": [\
+            {\
+                "pattern": "P01",\
+                "other": "P02"\
+            },\
+            {\
+                "pattern": "P02",\
+                "other": "P03"\
+            },\
+            {\
+                "pattern": "P03",\
+                "other": "P01"\
+            }\
+        ]\
+    }';
+
+    const examplePattern: any = JSON.parse(hardCodedPattern);
+    res.send(examplePattern);
+} );
+
 export { router as routes };

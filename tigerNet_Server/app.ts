@@ -12,14 +12,15 @@ import { routes } from "./routes/routes";
 
 const app = express();
 
-app.use(cors({
-    credentials: true,
-    exposedHeaders: ["CSRF"],
-    origin: [
-        "http://localhost:4200",
-        "http://localhost:3000"
-    ]
-}));
+// app.use(cors({
+//     credentials: true,
+//     exposedHeaders: ["CSRF"],
+//     origin: [
+//         "http://localhost:4200",
+//         "http://localhost:3000"
+//     ]
+// }));
+app.use(cors());
 app.use( bodyParser.json() );
 app.use( bodyParser.urlencoded( { extended: false } ) );
 app.use( cookieParser() );
