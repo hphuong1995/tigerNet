@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Network } from './data/network';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class DataService {
     return this.http.get('api/v1/admin/users');
   }
 
-  getNetwork(): Observable<HttpResponse<Object>> {
-    return this.http.get('api/v1/network', { observe: 'response'});
+  getNetwork(): Observable<HttpResponse<Network>> {
+    return this.http.get<Network>('api/v1/network', { observe: 'response'});
   }
 }

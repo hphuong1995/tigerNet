@@ -2,6 +2,10 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import { DataService } from 'src/app/data.service';
 import { HttpResponse } from '@angular/common/http';
+import { Network } from 'src/app/data/network';
+import { Pattern } from 'src/app/data/pattern';
+import { Node } from 'src/app/data/node';
+import { UserService } from 'src/app/user.service';
 
 declare var cytoscape: any;
 
@@ -14,7 +18,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     private cy: any;
     private else: any;
     private i: any;
-    private network: any;
+    private network: Network;
     constructor(private data: DataService) { }
 
     ngOnInit() {
@@ -24,23 +28,24 @@ export class MainComponent implements OnInit, AfterViewInit {
         let nonConnectorSelectors = "";
         let inactiveSelectors = "";
         let isConnectorSelectors = "";
-        this.data.getNetwork().subscribe((res: HttpResponse<Object>) => {
+        this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
             if (!res.ok) {
                 alert("Error loading the network");
                 return;
             }
-            this.network = res.body;
-            this.network.patterns.forEach( (pObj: any) => {
+            // this.network = new Network(res.body.patterns, res.body.patternConnections);
+            this.network = <Network>res.body
+            this.network.patterns.forEach( (pattern: any) => {
                 elements.push({
                     data: {
-                        id: pObj.id
+                        id: pattern.id
                     }
                 })
-                pObj.pattern.nodes.forEach(( node: any) => {
+                pattern.nodes.forEach(( node: any) => {
                     elements.push({
                         data: {
                             id: node.id,
-                            parent: pObj.id
+                            parent: pattern.id
                         }
                     });
                     if(node.isActive) {
@@ -53,7 +58,7 @@ export class MainComponent implements OnInit, AfterViewInit {
                         inactiveSelectors += "#" + node.id + ",";
                     }
                 });
-                pObj.pattern.connections.forEach(( connection: any) => {
+                pattern.connections.forEach(( connection: any) => {
                     elements.push({
                         data: {
                             id: "" + connection.node + connection.other,
@@ -66,23 +71,19 @@ export class MainComponent implements OnInit, AfterViewInit {
             this.network.patternConnections.forEach((pConnection: any) => {
                 let pid: string = pConnection.pattern;
                 let otherPid: string = pConnection.other;
-                let patternObj: any = this.network.patterns.find( (pObj: any) => {
-                    return pObj.id === pid;
-                });
-                if(!patternObj) {
+                let pattern: Pattern = Network.getPatternById(this.network, pid);
+                if(!pattern) {
                     alert( "no connector node found in pattern" );
                 }
-                let otherPatternObj: any = this.network.patterns.find( (pObj: any) => {
-                    return pObj.id === otherPid;
-                });
-                if(!otherPatternObj) {
+                let otherPattern: Pattern = Network.getPatternById(this.network, otherPid);
+                if(!otherPattern) {
                     alert( "no connector node found in pattern" );
                 }
-                let connectorNode: any = patternObj.pattern.nodes.find( (n: any ) => n.isConnector );
+                let connectorNode: Node = Pattern.getConnectorNode(pattern);
                 if(!connectorNode) {
                     alert( "no connector node found in pattern" );
                 }
-                let otherConnectorNode: any = otherPatternObj.pattern.nodes.find( (n: any ) => n.isConnector );
+                let otherConnectorNode: Node = Pattern.getConnectorNode(otherPattern);
                 if(!otherConnectorNode) {
                     alert( "no connector node found in pattern" );
                 }
