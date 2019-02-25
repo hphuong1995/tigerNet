@@ -4,89 +4,114 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DataService } from 'src/app/data.service';
 import { HttpResponse } from '@angular/common/http';
+import { routerNgProbeToken } from '@angular/router/src/router_module';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss']
 })
 
 export class LoginComponent implements OnInit {
-  public flag:boolean=false;
+    public flag: boolean = false;
 
-  loginForm: FormGroup;
-  loading = false;
-  submitted = false;
-  incorrect = false;
-  loggedIn = false;
-  loginUser :any;
-  currentQuestion: any;
+    loginForm: FormGroup;
+    loading = false;
+    submitted = false;
+    incorrect = false;
+    loggedIn = false;
+    loginUser: any;
+    currentQuestion: any;
 
-  submitBtn: string;
-  wrongAnswer = false;
+    submitBtn: string;
+    wrongAnswer = false;
 
-  constructor( private formBuilder : FormBuilder,
-                private userService : UserService,
-                private data: DataService,
-                private router: Router) { }
+    constructor(private formBuilder: FormBuilder,
+        private userService: UserService,
+        private data: DataService,
+        private router: Router) { }
 
-  ngOnInit() {
-    this.loginForm = this.formBuilder.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-      answer: [''],
-    });
-    this.submitBtn = "Login";
-
-  }
-
-  get f() { return this.loginForm.controls; }
-
-  onSubmit() {
-    this.submitted = true;
-    this.incorrect = false;
-    // stop here if form is invalid
-    console.log("hit");
-    if (this.loginForm.invalid) {
-        console.log("invalid");
-        return;
-    }
-    if(!this.loggedIn){
-      this.loading = false;
-      this.userService.login(this.f.username.value, this.f.password.value).subscribe(
-        (res: HttpResponse<Object>) => {
-                    // this.data.csrf = res.headers.get("CSRF");
-                    this.loginUser = res.body;
-                    if(this.loginUser){
-                      this.loading = false;
-                      this.incorrect = false;
-                      this.loggedIn = true;
-                      this.currentQuestion = this.loginUser.loginQuestion;
-                    }
-                    else{
-                      console.log("here");
-                      this.incorrect = true;
-                      this.loading = false;
-                    }
-      });
-    }
-    else{
-      this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
-          (data) => {
-            var res : any;
-            res = data;
-            if(res.valid === true){
-              localStorage.setItem('user', JSON.stringify(this.loginUser));
-              this.router.navigate(['main']);
-            }
-            else{
-              console.log("false");
-              this.currentQuestion = res;
-              this.wrongAnswer = true;
-            }
+    ngOnInit() {
+        localStorage.setItem('user', null);
+        this.loginForm = this.formBuilder.group({
+            username: ['', Validators.required],
+            password: ['', Validators.required],
+            answer: [''],
         });
+        this.submitBtn = "Login";
+
     }
 
+    get f() { return this.loginForm.controls; }
 
-  }
+    onSubmit() {
+        this.submitted = true;
+        this.incorrect = false;
+        // stop here if form is invalid
+        console.log("hit");
+        if (this.loginForm.invalid) {
+            console.log("invalid");
+            return;
+        }
+        if (!this.loggedIn) {
+            this.loading = false;
+            this.userService.login(this.f.username.value, this.f.password.value).subscribe(
+                (res: HttpResponse<Object>) => {
+                    // this.data.csrf = res.headers.get("CSRF");
+                    if(res.status > 399) {
+                        alert('Account is blocked.');
+                    }
+                    this.loginUser = res.body;
+                    if (this.loginUser) {
+                        this.loading = false;
+                        this.incorrect = false;
+                        this.loggedIn = true;
+                        this.currentQuestion = this.loginUser.loginQuestion;
+                    }
+                    else {
+                        console.log("here");
+                        this.incorrect = true;
+                        this.loading = false;
+                    }
+                });
+        }
+        else {
+            this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
+                (res: HttpResponse<Object>) => {
+                    //var res: any;
+                    if(res.status > 399) {
+                        this.router.navigate(['']);
+                        alert('Security questions failed, account is now blocked. Please contact an administrator.');
+                    }
+                    let data: any = res.body;
+                    if (data.valid === true) {
+                        localStorage.setItem('user', JSON.stringify(this.loginUser));
+                        this.router.navigate(['main']);
+                    }
+                    else {
+                        console.log("false");
+                        this.currentQuestion = res.body;
+                        this.wrongAnswer = true;
+                    }
+                }
+            );
+            // this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
+            //     (data) => {
+            //         var res: any;
+            //         res = data;
+            //         if (res.valid === true) {
+            //             localStorage.setItem('user', JSON.stringify(this.loginUser));
+            //             this.router.navigate(['main']);
+            //         }
+            //         else {
+            //             console.log("false");
+            //             this.currentQuestion = res;
+            //             this.wrongAnswer = true;
+            //         }
+            //     }
+            // );
+        }
+
+
+    }
 }

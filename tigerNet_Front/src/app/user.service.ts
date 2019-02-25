@@ -14,11 +14,11 @@ export class UserService {
     return this.http.post('api/v1/login', JSON.stringify(loginUser), { observe : 'response' });
   }
 
-  answerQuestion(answer: string, userId: string, quesId: string): Observable<Object> {
+  answerQuestion(answer: string, userId: string, quesId: string): Observable<HttpResponse<Object>> {
     //var ansQues = {"answer" : answer, "userId" : userId, "quesId": quesId};
     var ansQues = { "answer" : answer };
     //return this.http.post('api/v1/login/',JSON.stringify(ansQues));
-    return this.http.post('api/v1/login/question',JSON.stringify(ansQues));
+    return this.http.post('api/v1/login/question',JSON.stringify(ansQues), { observe : 'response' });
   }
 
   isAuthenticated(){
