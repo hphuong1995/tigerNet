@@ -44,5 +44,6 @@ export class UserService {
 
   logout(){
     localStorage.setItem('user', null);
+    this.http.post('api/v1/logout', '');
   }
 }
