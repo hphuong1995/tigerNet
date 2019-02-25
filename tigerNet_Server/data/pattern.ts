@@ -10,11 +10,6 @@ export class Pattern {
         this.nodes = nodes;
         this.connections = connections;
     }
-    // public getConnectorNode(): Node {
-    //     return this.nodes.find( (node: Node) => {
-    //         return node.isConnector;
-    //     });
-    // }
     public static getConnectorNode(pattern: Pattern): Node {
         return pattern.nodes.find( (node: Node) => {
             return node.isConnector;

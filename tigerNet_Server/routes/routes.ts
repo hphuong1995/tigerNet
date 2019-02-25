@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 const router: any = express.Router();
 
 import { ClientQuestion } from "../data/clientQuestion";
+import { Node } from "../data/node";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
 import { User } from "../data/user";
@@ -211,7 +212,6 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
             }\
         ]\
     }';
-
     const examplePattern: any = JSON.parse(hardCodedPattern);
     res.send(examplePattern);
 } );

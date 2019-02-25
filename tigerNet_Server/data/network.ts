@@ -4,6 +4,7 @@ export class Network {
     public patternConnections: Connector[];
     public patterns: Pattern[];
     constructor(patterns: Pattern[], patternConnections: Connector[]) {
+        //add code to validate network
         this.patterns = patterns;
         this.patternConnections = patternConnections;
     }
