@@ -235,12 +235,10 @@ class DB {
             if (err) {
                 callback(new Err("MySQL Error trying to block or unblock user", -10));
                 return;
-            }
-            if (result.affectedRows < 1) {
+            } else if (result.affectedRows < 1) {
                 callback(new Err("Tried to block or unblock invalid userId: " + userId, -1));
                 return;
-            }
-            if (!block) {
+            } else if (!block) {
               this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
                   if (err1) {
                       callback(err1);
@@ -248,8 +246,9 @@ class DB {
                   callback(undefined);
                   return;
               });
+            } else {
+                callback(undefined);
             }
-            callback(undefined);
         });
     }
 

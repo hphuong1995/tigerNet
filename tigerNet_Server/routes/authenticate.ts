@@ -66,7 +66,7 @@ router.post( "/api/v1/login", ( req: Request, res: Response ) => {
 router.all( "/*", ( req: Request, res: Response, next: NextFunction ) => {
     const csrf: string = req.header( "X-CSRF" );
     const sid = req.session.id;
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, CSRF");
+    // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, CSRF");
     db.getSession(sid, csrf, (session: Session, err: Err) => {
         if (err) {
             endSession(req, res, (err_session) => {
