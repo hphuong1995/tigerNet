@@ -3,7 +3,7 @@ export class Node {
     public isActive: boolean;
     public isConnector: boolean;
     constructor(isActive: boolean, isConnector: boolean, id: string) {
-        //this.id = id;
+        this.id = id;
         this.isActive = isActive;
         this.isConnector = isConnector;
     }

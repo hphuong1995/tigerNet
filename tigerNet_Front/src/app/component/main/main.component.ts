@@ -6,6 +6,7 @@ import { Network } from 'src/app/data/network';
 import { Pattern } from 'src/app/data/pattern';
 import { Node } from 'src/app/data/node';
 import { UserService } from 'src/app/user.service';
+import { Connector } from 'src/app/data/connector';
 
 declare var cytoscape: any;
 
@@ -38,14 +39,15 @@ export class MainComponent implements OnInit, AfterViewInit {
                 return;
             }
             // this.network = new Network(res.body.patterns, res.body.patternConnections);
-            this.network = <Network>res.body
-            this.network.patterns.forEach( (pattern: any) => {
+            //this.network = <Network>res.body
+            this.network = new Network(res.body.patterns, res.body.patternConnections);
+            this.network.patterns.forEach( (pattern: Pattern) => {
                 elements.push({
                     data: {
                         id: pattern.id
                     }
                 })
-                pattern.nodes.forEach(( node: any) => {
+                pattern.nodes.forEach(( node: Node) => {
                     elements.push({
                         data: {
                             id: node.id,
@@ -62,32 +64,37 @@ export class MainComponent implements OnInit, AfterViewInit {
                         inactiveSelectors += "#" + node.id + ",";
                     }
                 });
-                pattern.connections.forEach(( connection: any) => {
+                pattern.connections.forEach(( connection: Connector) => {
                     elements.push({
+                        // data: {
+                        //     id: "" + connection.node + connection.other,
+                        //     source: "" + connection.node,
+                        //     target: "" + connection.other
+                        // }
                         data: {
-                            id: "" + connection.node + connection.other,
-                            source: "" + connection.node,
-                            target: "" + connection.other
+                            id: "" + connection.id + connection.targetId,
+                            source: "" + connection.id,
+                            target: "" + connection.targetId
                         }
                     });
                 });
             });
-            this.network.patternConnections.forEach((pConnection: any) => {
-                let pid: string = pConnection.pattern;
-                let otherPid: string = pConnection.other;
-                let pattern: Pattern = Network.getPatternById(this.network, pid);
+            this.network.patternConnections.forEach((pConnection: Connector) => {
+                let pid: string = pConnection.id;
+                let otherPid: string = pConnection.targetId;
+                let pattern: Pattern = this.network.getPatternById(pid);
                 if(!pattern) {
                     alert( "no connector node found in pattern" );
                 }
-                let otherPattern: Pattern = Network.getPatternById(this.network, otherPid);
+                let otherPattern: Pattern = this.network.getPatternById(otherPid);
                 if(!otherPattern) {
                     alert( "no connector node found in pattern" );
                 }
-                let connectorNode: Node = Pattern.getConnectorNode(pattern);
+                let connectorNode: Node = pattern.getConnectorNode();
                 if(!connectorNode) {
                     alert( "no connector node found in pattern" );
                 }
-                let otherConnectorNode: Node = Pattern.getConnectorNode(otherPattern);
+                let otherConnectorNode: Node = otherPattern.getConnectorNode();
                 if(!otherConnectorNode) {
                     alert( "no connector node found in pattern" );
                 }
