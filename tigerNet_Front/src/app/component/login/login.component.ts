@@ -91,9 +91,11 @@ export class LoginComponent implements OnInit {
                     }
                 }, ( error: any) => {
                     this.ngOnInit();
+                    this.submitted = false;
                     this.loggedIn = false;
                     this.loginUser = undefined;
-                    alert(error.error);                    
+                    this.wrongAnswer = false;
+                    alert(error.error);
                 }
             );
             // this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
@@ -112,7 +114,5 @@ export class LoginComponent implements OnInit {
             //     }
             // );
         }
-
-
     }
 }
