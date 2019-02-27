@@ -9,12 +9,25 @@ const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const initQueue = [];
 
-const ID_TABLE = 
-    "CREATE TABLE id (\
-        nodeId INT NOT NULL,\
-        patternId INT NOT NULL,\
-        messageId INT NOT NULL,\
-        PRIMARY KEY (nodeId)\
+const NODE_IDS_TABLE = 
+    "CREATE TABLE nodeIds (\
+        id VARCHAR(6) NOT NULL,\
+        isFree BIT NOT NULL,\
+        PRIMARY KEY (id)\
+    );";
+
+const PATTERN_IDS_TABLE = 
+    "CREATE TABLE patternIds (\
+        id VARCHAR(6) NOT NULL,\
+        isFree BIT NOT NULL,\
+        PRIMARY KEY (id)\
+    );";
+    
+const MESSAGE_IDS_TABLE = 
+    "CREATE TABLE messageIds (\
+        id VARCHAR(6) NOT NULL,\
+        isFree BIT NOT NULL,\
+        PRIMARY KEY (id)\
     );";
 
 const USERS_TABLE =
@@ -184,7 +197,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS id;";
+    let query = "DROP TABLE IF EXISTS ids";
     connection.query(query, (err, res, fields) => {
         if (err) {
             connection.rollback(() => connection.release());
@@ -197,7 +210,72 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = ID_TABLE;
+    let query = "DROP TABLE IF EXISTS nodeIds;";
+    connection.query(query, (err, res, fields) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = NODE_IDS_TABLE;
+    connection.query(query, (err, res, fields) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "DROP TABLE IF EXISTS patternIds;";
+    connection.query(query, (err, res, fields) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = PATTERN_IDS_TABLE;
+    connection.query(query, (err, res, fields) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "DROP TABLE IF EXISTS messageIds;";
+    connection.query(query, (err, res, fields) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = MESSAGE_IDS_TABLE;
     connection.query(query, (err, res, fields) => {
         if (err) {
             connection.rollback(() => connection.release());
@@ -482,26 +560,8 @@ initQueue.unshift((connection, initQueue) => {
 });
 
 initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    connection.commit((err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
-        connection.release();
-        next();
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    initializeValuesAndExit();
-});
-
-let executeQueue = initQueue.pop();
-executeQueue(undefined, initQueue);
-
-function initializeValuesAndExit() {
-    let adminUser = {
+    let params = {};
+    params.adminUser = {
         id: uuid(),
         username: 'Harrison',
         passHash: bcrypt.hashSync('tiger0485', 10),
@@ -509,7 +569,7 @@ function initializeValuesAndExit() {
         isBlocked: false
     }
 
-    let user = {
+    params.user = {
         id: uuid(),
         username: 'Horacio',
         passHash: bcrypt.hashSync('tiger0485', 10),
@@ -517,7 +577,7 @@ function initializeValuesAndExit() {
         isBlocked: false
     }
 
-    let questions = [
+    params.questions = [
         [uuid(), "What is your favorite class?"],
         [uuid(), "When was your first dog born?"],
         [uuid(), "What is your brother's name?"],
@@ -525,92 +585,176 @@ function initializeValuesAndExit() {
         [uuid(), "What is your favorite food?"],
     ];
 
-    let adminAnswers = [
+    params.adminAnswers = [
         {
             id: uuid(),
-            questionId: questions[0][0],
-            userId: adminUser.id,
+            questionId: params.questions[0][0],
+            userId: params.adminUser.id,
             answer: "CS 744"
         },
         {
             id: uuid(),
-            questionId: questions[1][0],
-            userId: adminUser.id,
+            questionId: params.questions[1][0],
+            userId: params.adminUser.id,
             answer: "2000"
         },
         {
             id: uuid(),
-            questionId: questions[2][0],
-            userId: adminUser.id,
+            questionId: params.questions[2][0],
+            userId: params.adminUser.id,
             answer: "Leeroy"
         }
     ];
 
-    let userAnswers = [
+    params.userAnswers = [
         {
             id: uuid(),
-            questionId: questions[2][0],
-            userId: user.id,
+            questionId: params.questions[2][0],
+            userId: params.user.id,
             answer: "Kevin"
         },
         {
             id: uuid(),
-            questionId: questions[3][0],
-            userId: user.id,
+            questionId: params.questions[3][0],
+            userId: params.user.id,
             answer: "green"
         },
         {
             id: uuid(),
-            questionId: questions[4][0],
-            userId: user.id,
+            questionId: params.questions[4][0],
+            userId: params.user.id,
             answer: "apple pie"
         }
     ];
-
+    let next = initQueue.pop();
     let query = "INSERT INTO questions(id, question) VALUES ?";
-    pool.query(query, [questions], (err, res, fields) => {
+    connection.query(query, [params.questions], (err, res, fields) => {
         if (err) {
             console.error("mysql error: " + err.message);
             throw err;
         }
-        // login_attempts INT NOT NULL,\
-        query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
-        let values = [
-            [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
-            [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
-        ];
-        pool.query(query, [values], (err, res, fields) => {
-            if (err) {
-                console.error("mysql error: " + err.message);
-                throw err;
-            }
-            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
-            values = [
-                [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
-                [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
-                [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
-                [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
-                [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
-                [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
-            ];
-            pool.query(query, [values], (err, res, fields) => {
-                if (err) {
-                    console.error("mysql error: " + err.message);
-                    throw err;
-                }
-                query = "INSERT INTO id (nodeId, patternId, messageId) VALUES ?";
-                values = [
-                    [0, 0, 0]
-                ]
-                pool.query(query, [values], (err, res, fields) => {
-                    if (err) {
-                        console.error("mysql error: " + err.message);
-                        throw err;
-                    }
-                    console.log("Database values initialized");
-                    process.exit(0);
-                });
-            });
-        });
+        next(connection, initQueue, params);
     });
-}
+});
+
+initQueue.unshift((connection, initQueue, params) => {
+    let adminUser = params.adminUser;
+    let user = params.user;
+    let next = initQueue.pop();
+    let query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
+    let values = [
+        [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
+        [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
+    ];
+    connection.query(query, [values], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue, params);
+    });
+});
+
+initQueue.unshift((connection, initQueue, params) => {
+    let next = initQueue.pop();
+    let adminAnswers = params.adminAnswers;
+    let userAnswers = params.userAnswers;
+    let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
+    let values = [
+        [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
+        [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
+        [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
+        [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
+        [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
+        [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
+    ];
+    connection.query(query, [values], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue, params) => {
+    let next = initQueue.pop();
+    let id = 0;
+    let idString = "";
+    let values = [];
+    for(id = 0; id < 100; id++) {
+        idString = '' + id;
+        while (idString.length < 2) {
+            idString = "0" + idString;
+        }
+        values.push(['N' + idString, true]);
+    }
+    let query = "INSERT INTO nodeIds (id, isFree) VALUES ?";
+    connection.query(query, [values], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue, params) => {
+    let next = initQueue.pop();
+    let id = 0;
+    let idString = "";
+    let values = [];
+    for(id = 0; id < 100; id++) {
+        idString = '' + id;
+        while (idString.length < 2) {
+            idString = "0" + idString;
+        }
+        values.push(['P' + idString, true]);
+    }
+    let query = "INSERT INTO patternIds (id, isFree) VALUES ?";
+    connection.query(query, [values], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue, params) => {
+    let next = initQueue.pop();
+    let id = 0;
+    let idString = "";
+    let values = [];
+    for(id = 0; id < 1000; id++) {
+        idString = '' + id;
+        while (idString.length < 3) {
+            idString = "0" + idString;
+        }
+        values.push(['M' + idString, true]);
+    }
+    let query = "INSERT INTO messageIds (id, isFree) VALUES ?";
+    connection.query(query, [values], (err, res, fields) => {
+        if (err) {
+            console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    connection.commit((err) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            throw err;
+        }
+        connection.release();
+        console.log("Database values initialized");
+        process.exit(0);
+    });
+});
+
+let executeQueue = initQueue.pop();
+executeQueue(undefined, initQueue);
+

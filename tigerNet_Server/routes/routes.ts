@@ -3,6 +3,7 @@ import express from "express";
 import { NextFunction, Request, Response } from "express";
 const router: any = express.Router();
 
+import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
@@ -92,7 +93,10 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      * The user object is validated in the authentication endpoints - no need to double check that
      */
 
-    const hardCodedPattern: string =     '{\
+     const nodes: Node[] = [
+         new Node(true, false, "0")
+     ];
+     const hardCodedPattern: string =     '{\
         "patterns": [\
             {\
                 "id": "P01",\
@@ -212,8 +216,8 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
             }\
         ]\
     }';
-    const examplePattern: any = JSON.parse(hardCodedPattern);
-    res.send(examplePattern);
+     const examplePattern: any = JSON.parse(hardCodedPattern);
+     res.send(examplePattern);
 } );
 
 export { router as routes };
