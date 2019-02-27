@@ -22,7 +22,11 @@ export class MainComponent implements OnInit, AfterViewInit {
     constructor(private data: DataService) { }
 
     ngOnInit() {
+      
     }
+    
+    
+
     ngAfterViewInit() {
         let elements: any[] = [];
         let nonConnectorSelectors = "";
