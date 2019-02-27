@@ -243,12 +243,13 @@ class DB {
             if (!block) {
               this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
                   if (err1) {
-                      return;
+                      callback(err1);
                   }
                   callback(undefined);
                   return;
               });
             }
+            callback(undefined);
         });
     }
 

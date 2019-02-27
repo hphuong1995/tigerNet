@@ -58,9 +58,6 @@ export class LoginComponent implements OnInit {
             this.userService.login(this.f.username.value, this.f.password.value).subscribe(
                 (res: HttpResponse<Object>) => {
                     // this.data.csrf = res.headers.get("CSRF");
-                    if(res.status > 399) {
-                        alert('Account is blocked.');
-                    }
                     this.loginUser = res.body;
                     if (this.loginUser) {
                         this.loading = false;
@@ -73,16 +70,15 @@ export class LoginComponent implements OnInit {
                         this.incorrect = true;
                         this.loading = false;
                     }
-                });
+                },
+                (error: any) => {
+                    alert(error.error);
+                }
+            );
         }
         else {
             this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
                 (res: HttpResponse<Object>) => {
-                    //var res: any;
-                    if(res.status > 399) {
-                        this.router.navigate(['']);
-                        alert('Security questions failed, account is now blocked. Please contact an administrator.');
-                    }
                     let data: any = res.body;
                     if (data.valid === true) {
                         localStorage.setItem('user', JSON.stringify(this.loginUser));
@@ -93,6 +89,11 @@ export class LoginComponent implements OnInit {
                         this.currentQuestion = res.body;
                         this.wrongAnswer = true;
                     }
+                }, ( error: any) => {
+                    this.ngOnInit();
+                    this.loggedIn = false;
+                    this.loginUser = undefined;
+                    alert(error.error);                    
                 }
             );
             // this.userService.answerQuestion(this.f.answer.value, this.loginUser.id, this.currentQuestion.id).subscribe(
