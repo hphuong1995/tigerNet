@@ -1,20 +1,84 @@
-<div #cy id="cy">
+<div #cy id="cy"></div>
+<mat-accordion id="controlPanel">
+    <!-- Add Pattern -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Add Pattern
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin:auto">
+            Add a new pattern
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p style="text-align:left;margin-right:200px">
+                <mat-form-field>
+                    <mat-select placeholder="Select a pattern"  class="selectLocation">
+                        <mat-option value="P01">P01</mat-option>
+                        <mat-option value="P02">P02</mat-option>
+                        <mat-option value="P03">P03</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </p>
+            <p><button mat-raised-button>Add Node</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
 
-</div>
-<div class="card" id="card">
-    <div class="card-content">
-      <span class="card-title activator grey-text text-darken-4">title of card
-          <i class="material-icons right">play_for_work</i></span>
-      <p><a href="#">this is a link</a></p>
-      <p><a href="#">this is a link</a></p>
-      <p><a href="#">this is a link</a></p>
-      <p><a href="#">this is a link</a></p>
-      <p><a href="#">this is a link</a></p>
-      
-    </div>
-    <div class="card-reveal">
-      <span class="card-title grey-text text-darken-4">title of card
-          <i class="material-icons right">close</i></span>
-      <p>detail</p>
-    </div>
-  </div>
+    <!-- Add Link -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Add Link
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Add a connection between two nodes
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+    </mat-expansion-panel>
+
+    <!-- Delete Node -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Node
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a node you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+    </mat-expansion-panel>
+    
+    <!-- Delete Link -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Link
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a connetcion you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+    </mat-expansion-panel>
+
+    <!-- Send Message -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Send Message
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Select nodes to communicate
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+    </mat-expansion-panel>
+</mat-accordion>

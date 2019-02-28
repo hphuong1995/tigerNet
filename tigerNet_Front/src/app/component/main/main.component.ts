@@ -7,6 +7,7 @@ import { Pattern } from 'src/app/data/pattern';
 import { Node } from 'src/app/data/node';
 import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
+import * as $ from 'jquery';
 
 declare var cytoscape: any;
 
@@ -23,7 +24,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     constructor(private data: DataService) { }
 
     ngOnInit() {
-      
+    
     }
     
     

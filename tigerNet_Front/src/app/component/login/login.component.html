@@ -1,39 +1,59 @@
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<div class="row">
-    <div class="col s6">
-        <img class="responsive-img" src="assets/images/network3.png">
-    </div>
-    <div class="col s6">
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="form-group" *ngIf="!loginUser">
-          <label for="username">Username</label>
-          <input ng-disable="loggedIn" type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
-          <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
+<mat-grid-list  cols = "2"  rowHeight ="1.5:1">
+    <mat-grid-tile>
+        <div >
+            <img class="responsive-img" src="assets/images/network3.png">
+        </div>
+    </mat-grid-tile>
+    <!-- <div> -->
+    <mat-grid-tile>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="example-form">
+        
+        <div class="form-group" *ngIf="!loginUser">
+          <!-- <label  for="username">Username</label> -->
+          <mat-form-field class="example-full-width" *ngIf="!loginUser">
+          <input matInput ng-disable="loggedIn" type="text" 
+          formControlName="username" class="form-control" 
+          [ngClass]="{ 'is-invalid': submitted && f.username.errors }"
+          placeholder="Username" autocomplete="off" />
+          <mat-error *ngIf="submitted && f.username.errors" class="invalid-feedback">
               <div *ngIf="f.username.errors.required">Username is required</div>
-          </div>
-      </div>
+          </mat-error>
+        </mat-form-field>
+        </div>
+        
       <div class="form-group" *ngIf="!loginUser">
-          <label for="password">Password</label>
-          <input ng-disable="loggedIn" type="password" formControlName="password" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }" />
-          <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
+          <!-- <label for="password">Password</label> -->
+          <mat-form-field class=" example-full-width">
+          <input matInput ng-disable="loggedIn" type="password" formControlName="password" 
+          class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }"
+          placeholder="Password" autocomplete="off" />
+          <mat-error *ngIf="submitted && f.password.errors" class="invalid-feedback">
               <div *ngIf="f.password.errors.required">Password is required</div>
-          </div>
+          </mat-error>
+          </mat-form-field>
       </div>
       <div *ngIf="submitted && incorrect" class="invalid-feedback" style="display: block;">
         Incorrect password or username.
       </div>
+
       <div class="form-group" *ngIf="loginUser">
-          <label for="question">{{currentQuestion.question}}</label>
-          <input type="text" formControlName="answer" class="form-control" placeholder="Answer" />
-          <div *ngIf="wrongAnswer" class="invalid-feedback" style="display: block;">
-              <div *ngIf="wrongAnswer">Incorrect answer, please try again.</div>
-          </div>
+        <mat-form-field class="example-full-width">
+          <!-- <label for="question">{{currentQuestion.question}}</label> -->
+          <input matInput type="text" formControlName="answer" class="form-control" 
+          placeholder="{{currentQuestion.question}}" />
+        </mat-form-field>
+        <div *ngIf="wrongAnswer" class="invalid-feedback" style="display: block;">
+            <div *ngIf="wrongAnswer">Incorrect answer, please try again.</div>
+        </div>
       </div>
+
       <div class="form-group">
-          <button [disabled]="loading" class="btn btn-primary">{{submitBtn}}</button>
+          <button mat-raised-button [disabled]="loading" color="primary">{{submitBtn}}</button>
           <img *ngIf="loading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
       </div>
+      
     </form>
-    </div>
-</div>
+    </mat-grid-tile>
+</mat-grid-list>
