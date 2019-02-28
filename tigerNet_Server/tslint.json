@@ -4,6 +4,7 @@
         "tslint:recommended"
     ],
     "rules": {
+        "align": [false, "parameters"],
         "no-console": false,
         "trailing-comma": [ false ],
         "object-literal-sort-keys": false,

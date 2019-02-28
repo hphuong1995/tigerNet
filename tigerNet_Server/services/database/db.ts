@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
 import { Err } from "../../data/err";
+import { Pattern } from "../../data/pattern";
 import { Question } from "../../data/question";
 import { SecurityAnswer } from "../../data/securityAnswer";
 import { Session } from "../../data/session";
@@ -67,7 +68,7 @@ class DB {
      * Callback arguments: (session: Session, error: Error)
      */
     public getSession(sessionId: string, csrfToken: string,
-                      callback: (session: Session, err: Err) => void): void {
+        callback: (session: Session, err: Err) => void): void {
         const query: string = "SELECT * from sessions WHERE id = '" + sessionId + "'";
         console.log(query);
         pool.query(query, (err: MysqlError, results: any[]) => {
@@ -174,7 +175,7 @@ class DB {
      * Callback argments: (user: User, error: Error)
      */
     public getUserByLogin(username: string, password: string,
-                          callback: (user: User, err: Err) => void): void {
+        callback: (user: User, err: Err) => void): void {
         const query: string = "SELECT * from users WHERE username ='" + username + "'";
         pool.query(query, (err: MysqlError, results: any) => {
             if (err) {
@@ -239,13 +240,13 @@ class DB {
                 callback(new Err("Tried to block or unblock invalid userId: " + userId, -1));
                 return;
             } else if (!block) {
-              this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
-                  if (err1) {
-                      callback(err1);
-                  }
-                  callback(undefined);
-                  return;
-              });
+                this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
+                    if (err1) {
+                        callback(err1);
+                    }
+                    callback(undefined);
+                    return;
+                });
             } else {
                 callback(undefined);
             }
@@ -336,8 +337,8 @@ class DB {
      * Callback argments: (error: Error)
      */
     public setUserQuestionAnswers(userId: string,
-                                  questionAnswers: Array<{ qid: string, answer: string, guessedWrong: boolean }>,
-                                  callback: (err: Err) => void): void {
+        questionAnswers: Array<{ qid: string, answer: string, guessedWrong: boolean }>,
+        callback: (err: Err) => void): void {
         if (questionAnswers.length !== 3) {
             callback(new Err("Attempted to set an invalid amount of questions: " + questionAnswers.length, -1));
             return;
@@ -400,7 +401,7 @@ class DB {
      * Callback argments: (answer: SecurityAnswer, error: Error)
      */
     public getAnswer(userId: string, questionId: string,
-                     callback: (answer: SecurityAnswer, err: Err) => void): void {
+        callback: (answer: SecurityAnswer, err: Err) => void): void {
         const query: string = "SELECT answer, security_answers.id FROM questions JOIN security_answers\
                         ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                         WHERE FK_USER_ID = '" + userId + "' AND FK_QUESTION_ID ='" + questionId + "'";
@@ -467,7 +468,7 @@ class DB {
             callback(undefined);
         });
     }
-    
+
     /*
      * Execute queries inside of a transaction protected by a lock
      * Parameters:
@@ -478,11 +479,12 @@ class DB {
      *      -10: MySQL error
      */
     public criticalTransaction(lockType: string, tableName: string, args: any,
-        criticalQueries: (connection: PoolConnection, args: any, callback: (err: Err, results: any) => void) => void,
+        criticalQueries: (connection: PoolConnection, args: any,
+            callback: (err: Err, results: any) => void) => void,
         transactionCallback: (results: any, err: Err) => void): void {
-        let criticalQueryResults: any = undefined;
-        if(lockType !== 'READ' && lockType !== 'WRITE') {
-            transactionCallback(undefined, new Err('Invalid lock type: ' + lockType, -1));
+        let criticalQueryResults: any;
+        if (lockType !== "READ" && lockType !== "WRITE") {
+            transactionCallback(undefined, new Err("Invalid lock type: " + lockType, -1));
         }
         pool.getConnection((err: MysqlError, connection: PoolConnection) => {
             if (err) {
@@ -496,16 +498,21 @@ class DB {
                     connection.rollback(() => connection.release());
                     return;
                 }
-                let query: string = "LOCK TABLE " + tableName + ' ' + lockType;
+                let query: string = "LOCK TABLE " + tableName + " " + lockType;
                 connection.query(query, (err2: MysqlError) => {
                     if (err2) {
                         transactionCallback(undefined, new Err(err2.message, -10));
                         connection.rollback(() => connection.release());
                         return;
                     }
-                    criticalQueries(connection, args, (err: Err, results: any) => {
+                    criticalQueries(connection, args, (err3: Err, results: any) => {
+                        if (err3) {
+                            transactionCallback(undefined, new Err(err2.message, -10));
+                            connection.rollback(() => connection.release());
+                            return;
+                        }
                         criticalQueryResults = results;
-                    });                   
+                    });
                     query = "UNLOCK TABLES";
                     connection.query(query, (err5: MysqlError) => {
                         if (err5) {
@@ -528,28 +535,36 @@ class DB {
         });
     }
 
-    // public reservePatternIds(amountToGenerate: number, callback: (id: string[], err: Err) => void): void {
-    //     let args: any;
-    //     args.amountToGenerate = amountToGenerate;
-    //     this.criticalTransaction('WRITE', 'nodeIds', args, this.reservePatternIdsTransaction, (results: any, err: Err) => {
-    //         if(err) {
-    //             callback(undefined, err);
-    //         }
+    //     public addPattern(pattern: Pattern, callback: (id: string[], err: Err) => void): void {
+    //         let args: any;
+    //         args.pattern = pattern;
+    //         this.criticalTransaction("WRITE", "nodeIds", args,
+    // this.addPatternTransaction, (results: any, err: Err) => {
+    //             if (err) {
+    //                 callback(undefined, err);
+    //             }
 
-    //     });
-    // }
+    //         });
+    //     }
 
-    // private reservePatternIdsTransaction(connection: PoolConnection, args: any,
-    //     callback: (err: Err, results: any) => void): void {
-    //     let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT " + args.amountToGenerate;
-    //     connection.query(query, (err: MysqlError, results: any) => {
-    //         //results[n].id
-    //         if(results.length < args.amountToGenerate) {
-    //             callback( new Err('Not enough free pattern ids', -1), undefined);
-    //         }
-    //         //SET IDS NOT FREE
-    //     });
-    // }
+    //     private addPatternTransaction(connection: PoolConnection, args: any,
+    //                                   callback: (err: Err, results: any) => void): void {
+    //         const pattern: Pattern = args.pattern as Pattern;
+    //         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1";
+    //         connection.query(query, (err: MysqlError, results: any) => {
+    //             // results[n].id
+    //             if (err) {
+    //                 callback(new Err(err.message, -10), undefined);
+    //             }
+    //             if (results.length < 1) {
+    //                 callback( new Err("Not enough free pattern ids", -1), undefined);
+    //             }
+    //             query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+
+    // //     const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
+
+    //         });
+    //     }
 
     /*
      * Generates a unique pattern id

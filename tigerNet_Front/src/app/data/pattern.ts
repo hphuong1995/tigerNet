@@ -1,5 +1,6 @@
 import { Node } from './node';
 import { Connector } from './connector'
+import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
 export class Pattern {
     public id: string;
     public nodes: Node[];
@@ -13,6 +14,11 @@ export class Pattern {
     public getConnectorNode(): Node {
         return this.nodes.find( (node: Node) => {
             return node.isConnector;
+        });
+    }
+    public getNodeById(id: string): Node {
+        return this.nodes.find( (node: Node) => {
+            return node.id === id;
         });
     }
     // public static getConnectorNode(pattern: Pattern): Node {
