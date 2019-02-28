@@ -7,17 +7,17 @@ export class Pattern {
     constructor(id: string, nodes: Node[], connections: Connector[]) {
         //add code to validate pattern
         this.id = id;
-        this.nodes = nodes;
-        this.connections = connections;
+        this.nodes = nodes.map( n => new Node(n.isActive, n.isConnector, n.id));
+        this.connections = connections.map( c => new Connector(c.id, c.targetId));
     }
-    // public getConnectorNode(): Node {
-    //     return this.nodes.find( (node: Node) => {
-    //         return node.isConnector;
-    //     });
-    // }
-    public static getConnectorNode(pattern: Pattern): Node {
-        return pattern.nodes.find( (node: Node) => {
+    public getConnectorNode(): Node {
+        return this.nodes.find( (node: Node) => {
             return node.isConnector;
         });
     }
+    // public static getConnectorNode(pattern: Pattern): Node {
+    //     return pattern.nodes.find( (node: Node) => {
+    //         return node.isConnector;
+    //     });
+    // }
 }

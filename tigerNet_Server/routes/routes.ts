@@ -3,6 +3,7 @@ import express from "express";
 import { NextFunction, Request, Response } from "express";
 const router: any = express.Router();
 
+import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
@@ -92,7 +93,10 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      * The user object is validated in the authentication endpoints - no need to double check that
      */
 
-    const hardCodedPattern: string =     '{\
+     const nodes: Node[] = [
+         new Node(true, false, "0")
+     ];
+     const hardCodedPattern: string =     '{\
         "patterns": [\
             {\
                 "id": "P01",\
@@ -115,16 +119,16 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
                 ],\
                 "connections": [\
                     {\
-                        "node": "N01",\
-                        "other": "N02"\
+                        "id": "N01",\
+                        "targetId": "N02"\
                     },\
                     {\
-                        "node": "N02",\
-                        "other": "N03"\
+                        "id": "N02",\
+                        "targetId": "N03"\
                     },\
                     {\
-                        "node": "N03",\
-                        "other": "N01"\
+                        "id": "N03",\
+                        "targetId": "N01"\
                     }\
                 ]\
             },\
@@ -149,16 +153,16 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
                 ],\
                 "connections": [\
                     {\
-                        "node": "N04",\
-                        "other": "N05"\
+                        "id": "N04",\
+                        "targetId": "N05"\
                     },\
                     {\
-                        "node": "N05",\
-                        "other": "N06"\
+                        "id": "N05",\
+                        "targetId": "N06"\
                     },\
                     {\
-                        "node": "N06",\
-                        "other": "N04"\
+                        "id": "N06",\
+                        "targetId": "N04"\
                     }\
                 ]\
             },\
@@ -183,37 +187,37 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
                 ],\
                 "connections": [\
                     {\
-                        "node": "N07",\
-                        "other": "N08"\
+                        "id": "N07",\
+                        "targetId": "N08"\
                     },\
                     {\
-                        "node": "N08",\
-                        "other": "N09"\
+                        "id": "N08",\
+                        "targetId": "N09"\
                     },\
                     {\
-                        "node": "N09",\
-                        "other": "N07"\
+                        "id": "N09",\
+                        "targetId": "N07"\
                     }\
                 ]\
             }\
         ],\
         "patternConnections": [\
             {\
-                "pattern": "P01",\
-                "other": "P02"\
+                "id": "P01",\
+                "targetId": "P02"\
             },\
             {\
-                "pattern": "P02",\
-                "other": "P03"\
+                "id": "P02",\
+                "targetId": "P03"\
             },\
             {\
-                "pattern": "P03",\
-                "other": "P01"\
+                "id": "P03",\
+                "targetId": "P01"\
             }\
         ]\
     }';
-    const examplePattern: any = JSON.parse(hardCodedPattern);
-    res.send(examplePattern);
+     const examplePattern: any = JSON.parse(hardCodedPattern);
+     res.send(examplePattern);
 } );
 
 export { router as routes };
