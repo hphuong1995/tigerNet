@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -16,6 +17,19 @@ import { CookieService } from 'ngx-cookie-service';
 import { PatternsComponent } from './component/patterns/patterns.component';
 import { NodesComponent } from './component/nodes/nodes.component';
 import { UsersComponent } from './component/users/users.component';
+import {
+  MatButtonModule,
+  MatMenuModule,
+  MatToolbarModule,
+  MatIconModule,
+  MatCardModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatGridListModule,
+  MatExpansionModule,
+  MatSelectModule
+} from '@angular/material';
+
 
 @NgModule({
   declarations: [
@@ -33,7 +47,18 @@ import { UsersComponent } from './component/users/users.component';
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    BrowserAnimationsModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatGridListModule,
+    MatExpansionModule,
+    MatSelectModule
   ],
   providers: [
     CSRFInterceptor,

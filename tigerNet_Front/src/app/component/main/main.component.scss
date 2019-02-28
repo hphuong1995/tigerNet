@@ -1,13 +1,18 @@
 #cy {
-    width: 80%;
+    width: 60%;
     height: 90%;
     position: fixed;
-    margin-right: 300px;
+    margin-right: 500px;
     //display: block;
   }
-  #card{
-    width: 300px;
-    height: 80%;
+  #controlPanel{
+    width: 500px;
     margin-right: 10px;
-    float: right
+    //margin-left: 500px;
+    float: right;
+    margin-top: 10px;
+  }
+  .selectLocation{
+    position:relative;
+	  //left:-20px;
   }

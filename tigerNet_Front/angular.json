@@ -27,12 +27,12 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss",
-              "./node_modules/materialize-css/dist/css/materialize.min.css"
+              "src/styles.scss"
+              
             ],
             "scripts": [
               "./node_modules/jquery/dist/jquery.min.js",
-              "./node_modules/materialize-css/dist/js/materialize.min.js",
+              "./node_modules/hammerjs/hammer.min.js",
               "./node_modules/cytoscape/dist/cytoscape.min.js"
             ]
           },
