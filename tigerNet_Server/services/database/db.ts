@@ -581,13 +581,13 @@ class DB {
      * Creates an empty pattern, stores it in the database,
      * and returns it in the callback
      */
-    public storeNewPattern(callback: (pattern: Pattern, err: Err) => void): void {
+    public storeNewPattern(callback: (patternId: string, err: Err) => void): void {
         this.transaction(undefined, this.storeNewPatternTransaction,
             (results: any, err: Err) => {
                 if (err) {
                     callback(undefined, err);
                 } else {
-                    callback(results as Pattern, undefined);
+                    callback(results as string, undefined);
                 }
             });
     }
@@ -637,7 +637,7 @@ class DB {
     private storeNewPatternTransaction(connection: PoolConnection, args: any,
         callback: (err: Err, results: any) => void): void {
         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
-        let pattern: Pattern;
+        let patternId: string;
         connection.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
@@ -647,21 +647,21 @@ class DB {
                 callback(new Err("Not enough free pattern ids", -1), undefined);
                 return;
             }
-            pattern = new Pattern(results[0].id, [], []);
-            query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+            patternId = results[0].id;
+            query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + patternId + "'";
             connection.query(query, (err: MysqlError) => {
                 if (err) {
                     callback(new Err(err.message, -10), undefined);
                     return;
                 }
                 query = "INSERT INTO patterns(id) VALUES ?";
-                const values: string[][] = [[results[0].id]];
+                const values: string[][] = [[patternId]];
                 connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
                         return;
                     }
-                    callback(undefined, pattern);
+                    callback(undefined, patternId);
                 });
             });
         });
@@ -710,7 +710,7 @@ class DB {
      *     -2: attempted to create connection fron non connector node to a node in a different pattern
      *     -10: MySQL error
      */
-    private addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void ): void {
+    public addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void ): void {
         let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
         console.log(query);
         pool.query(query, (err: MysqlError, results: IDbNode[]) => {
