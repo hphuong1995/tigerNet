@@ -21,169 +21,13 @@ export class MainComponent implements OnInit, AfterViewInit {
     private else: any;
     private i: any;
     private network: Network;
-<<<<<<< HEAD
-    private selectNode:any;
-=======
     private currentSelectedNode = "hello";
 
 
->>>>>>> 5056b7f172c90a2b74b24f7a8ed80051c89fc2d1
     constructor(private data: DataService) { }
    
    
     ngOnInit() {
-<<<<<<< HEAD
-        
-    }
-
-    ngAfterViewInit() {
-        let elements: any[] = [];
-        let nonConnectorSelectors = "";
-        let inactiveSelectors = "";
-        let isConnectorSelectors = "";
-        
-        this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
-            if (!res.ok) {
-                alert("Error loading the network");
-                return;
-            }
-            // this.network = new Network(res.body.patterns, res.body.patternConnections);
-            //this.network = <Network>res.body
-            this.network = new Network(res.body.patterns, res.body.patternConnections);
-            this.network.patterns.forEach( (pattern: Pattern) => {
-                elements.push({
-                    data: {
-                        id: pattern.id
-                    }
-                })
-                pattern.nodes.forEach(( node: Node) => {
-                    elements.push({
-                        data: {
-                            id: node.id,
-                            parent: pattern.id
-                        }
-                    });
-                    if(node.isActive) {
-                        if(node.isConnector) {
-                            isConnectorSelectors += "#" + node.id + ",";
-                        } else {
-                            nonConnectorSelectors += "#" + node.id + ",";
-                        }
-                    } else {
-                        inactiveSelectors += "#" + node.id + ",";
-                    }
-                });
-                pattern.connections.forEach(( connection: Connector) => {
-                    elements.push({
-                        // data: {
-                        //     id: "" + connection.node + connection.other,
-                        //     source: "" + connection.node,
-                        //     target: "" + connection.other
-                        // }
-                        data: {
-                            id: "" + connection.id + connection.targetId,
-                            source: "" + connection.id,
-                            target: "" + connection.targetId
-                        }
-                    });
-                });
-            });
-            this.network.patternConnections.forEach((pConnection: Connector) => {
-                let pid: string = pConnection.id;
-                let otherPid: string = pConnection.targetId;
-                let pattern: Pattern = this.network.getPatternById(pid);
-                if(!pattern) {
-                    alert( "no connector node found in pattern" );
-                }
-                let otherPattern: Pattern = this.network.getPatternById(otherPid);
-                if(!otherPattern) {
-                    alert( "no connector node found in pattern" );
-                }
-                let connectorNode: Node = pattern.getConnectorNode();
-                if(!connectorNode) {
-                    alert( "no connector node found in pattern" );
-                }
-                let otherConnectorNode: Node = otherPattern.getConnectorNode();
-                if(!otherConnectorNode) {
-                    alert( "no connector node found in pattern" );
-                }
-                elements.push({
-                    data: {
-                        id: connectorNode.id + otherConnectorNode.id,
-                        source: connectorNode.id,
-                        target: otherConnectorNode.id
-                    }
-                })
-            });
-            nonConnectorSelectors = nonConnectorSelectors.substr(0, nonConnectorSelectors.length - 1);
-            inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
-            isConnectorSelectors = isConnectorSelectors.substr(0, isConnectorSelectors.length - 1);
-            
-            this.cy = cytoscape({
-                container: document.getElementById('cy'), // container to render in
-                elements: elements,
-                style: [ // the stylesheet for the graph
-                    {
-                        selector: 'node',
-                        style: {
-                            //'background-color': '#1C86EE',
-                            'label': 'data(id)'
-                        }
-                    },
-                    {
-                        selector: 'edge',
-                        style: {
-                            'width': 2,
-                            'line-color': '#000'
-                        }
-                    },
-                    
-                    {
-                        selector: isConnectorSelectors,
-                        style: {
-                            'background-color': '#FFD700'
-                        }
-                    },
-                    {
-                        selector: nonConnectorSelectors,
-                        style: {
-                            'background-color': '#66CD00'
-                        }
-                    },
-                    {
-                        selector: inactiveSelectors,
-                        style: {
-                            'background-color': '#888888'
-                        }
-                    },
-                    {
-                        selector: ':selected',
-                        css: {
-                            'background-color': '#FF4500',
-                            'line-color': '#FF4500'
-                        }
-                    }
-                ],
-    
-                layout: {
-                    name: 'cose-bilkent',
-                    rows: 1
-                }
-            });     
-            // this.cy.on('tap', 'node', function(evt){
-            //     var node = evt.target;
-            //      this.selectNode=node.id();
-            //     console.log(this.selectNode);
-            //     });
-
-            // this.cy.on('tap', 'edge', function(evt){
-            //     var edge = evt.target;
-            //     console.log( 'tapped' + edge.id());
-            //     });
-            cytoscape.use(coseBilkent);
-        });
-        
-=======
       let elements: any[] = [];
       let nonConnectorSelectors = "";
       let inactiveSelectors = "";
@@ -346,7 +190,6 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     addNode = function(){
       console.log(this.data.selectedNodes);
->>>>>>> 5056b7f172c90a2b74b24f7a8ed80051c89fc2d1
 
       // check if a pattern is selected
       if(this.data.selectedPatterns.length !== 1){
@@ -380,18 +223,6 @@ export class MainComponent implements OnInit, AfterViewInit {
         }
       });
 
-<<<<<<< HEAD
-        //     layout: {
-        //         name: 'cose-bilkent',
-        //         rows: 1
-        //     }
-        //     //    ,
-        //     //    zoom: 3,
-        //     //    pan: { x: 0, y: 0 },
-        //     //    minZoom: 1e-50,
-        //     //    maxZoom: 1e50,
-        // });
-=======
       // Check if 3 nodes is selected, the connector node must be in the arr
       if(this.data.selectedNodes.length === 3){
         if(!this.data.selectedNodes.includes(currentPattern.getConnectorNode().id)){
@@ -417,7 +248,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.addNode(reqObject).subscribe( (data) =>{
         console.log(data);
       });
->>>>>>> 5056b7f172c90a2b74b24f7a8ed80051c89fc2d1
     }
 
 
