@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
+import { Connector } from "../../data/connector";
 import { Err } from "../../data/err";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
@@ -41,6 +42,13 @@ const MAX_LOGIN_ATTEMPTS: number = 3;
 //     setFailedGuessOnAnswer(answerId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void;
 //     setFailedGuessOnAllAnswers(userId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void;
 // }
+
+interface IDbNode {
+    is_active: boolean;
+    is_connector: boolean;
+    id: string;
+    fk_pattern_id: string;
+}
 
 class DB {
     constructor() { return; }
@@ -455,72 +463,72 @@ class DB {
         });
     }
 
-    /*
-     * Execute queries inside of a transaction protected by a lock
-     * Parameters:
-     *     lockType: string ( 'READ' | 'WRITE' )
-     *     tableName: string - table to lock
-     * Error codes:
-     *       -1: Invalid lock type
-     *      -10: MySQL error
-     */
-    public criticalTransaction(lockType: string, tableName: string, args: any,
-        criticalQueries: (connection: PoolConnection, args: any,
-            callback: (err: Err, results: any) => void) => void,
-        transactionCallback: (results: any, err: Err) => void): void {
-        let criticalQueryResults: any;
-        if (lockType !== "READ" && lockType !== "WRITE") {
-            transactionCallback(undefined, new Err("Invalid lock type: " + lockType, -1));
-            return;
-        }
-        pool.getConnection((err: MysqlError, connection: PoolConnection) => {
-            if (err) {
-                transactionCallback(undefined, new Err(err.message, -10));
-                connection.release();
-                return;
-            }
-            connection.beginTransaction((err: MysqlError) => {
-                if (err) {
-                    transactionCallback(undefined, new Err(err.message, -10));
-                    connection.rollback(() => connection.release());
-                    return;
-                }
-                let query: string = "LOCK TABLES " + tableName + " " + lockType;
-                connection.query(query, (err: MysqlError) => {
-                    if (err) {
-                        transactionCallback(undefined, new Err(err.message, -10));
-                        connection.rollback(() => connection.release());
-                        return;
-                    }
-                    criticalQueries(connection, args, (err: Err, results: any) => {
-                        if (err) {
-                            transactionCallback(undefined, new Err(err.message, -10));
-                            connection.rollback(() => connection.release());
-                            return;
-                        }
-                        criticalQueryResults = results;
-                        query = "UNLOCK TABLES";
-                        connection.query(query, (err: MysqlError) => {
-                            if (err) {
-                                transactionCallback(undefined, new Err(err.message, -10));
-                                connection.rollback(() => connection.release());
-                                return;
-                            }
-                            connection.commit((err: MysqlError) => {
-                                if (err) {
-                                    connection.rollback(() => connection.release());
-                                    transactionCallback(undefined, new Err(err.message, -10));
-                                    return;
-                                }
-                                transactionCallback(criticalQueryResults, undefined);
-                                connection.release();
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    }
+    // /*
+    //  * Execute queries inside of a transaction protected by a lock
+    //  * Parameters:
+    //  *     lockType: string ( 'READ' | 'WRITE' )
+    //  *     tableName: string - table to lock
+    //  * Error codes:
+    //  *       -1: Invalid lock type
+    //  *      -10: MySQL error
+    //  */
+    // public criticalTransaction(lockType: string, tableName: string, args: any,
+    //     criticalQueries: (connection: PoolConnection, args: any,
+    //         callback: (err: Err, results: any) => void) => void,
+    //     transactionCallback: (results: any, err: Err) => void): void {
+    //     let criticalQueryResults: any;
+    //     if (lockType !== "READ" && lockType !== "WRITE") {
+    //         transactionCallback(undefined, new Err("Invalid lock type: " + lockType, -1));
+    //         return;
+    //     }
+    //     pool.getConnection((err: MysqlError, connection: PoolConnection) => {
+    //         if (err) {
+    //             transactionCallback(undefined, new Err(err.message, -10));
+    //             connection.release();
+    //             return;
+    //         }
+    //         connection.beginTransaction((err: MysqlError) => {
+    //             if (err) {
+    //                 transactionCallback(undefined, new Err(err.message, -10));
+    //                 connection.rollback(() => connection.release());
+    //                 return;
+    //             }
+    //             let query: string = "LOCK TABLES " + tableName + " " + lockType;
+    //             connection.query(query, (err: MysqlError) => {
+    //                 if (err) {
+    //                     transactionCallback(undefined, new Err(err.message, -10));
+    //                     connection.rollback(() => connection.release());
+    //                     return;
+    //                 }
+    //                 criticalQueries(connection, args, (err: Err, results: any) => {
+    //                     if (err) {
+    //                         transactionCallback(undefined, new Err(err.message, -10));
+    //                         connection.rollback(() => connection.release());
+    //                         return;
+    //                     }
+    //                     criticalQueryResults = results;
+    //                     query = "UNLOCK TABLES";
+    //                     connection.query(query, (err: MysqlError) => {
+    //                         if (err) {
+    //                             transactionCallback(undefined, new Err(err.message, -10));
+    //                             connection.rollback(() => connection.release());
+    //                             return;
+    //                         }
+    //                         connection.commit((err: MysqlError) => {
+    //                             if (err) {
+    //                                 connection.rollback(() => connection.release());
+    //                                 transactionCallback(undefined, new Err(err.message, -10));
+    //                                 return;
+    //                             }
+    //                             transactionCallback(criticalQueryResults, undefined);
+    //                             connection.release();
+    //                         });
+    //                     });
+    //                 });
+    //             });
+    //         });
+    //     });
+    // }
 
     /*
  * Execute queries inside of a transaction protected by a lock
@@ -573,13 +581,13 @@ class DB {
      * Creates an empty pattern, stores it in the database,
      * and returns it in the callback
      */
-    public storeNewPattern(callback: (pattern: Pattern, err: Err) => void): void {
+    public storeNewPattern(callback: (patternId: string, err: Err) => void): void {
         this.transaction(undefined, this.storeNewPatternTransaction,
             (results: any, err: Err) => {
                 if (err) {
                     callback(undefined, err);
                 } else {
-                    callback(results as Pattern, undefined);
+                    callback(results as string, undefined);
                 }
             });
     }
@@ -587,6 +595,9 @@ class DB {
     /*
      * Create a new node from the given parameters and add it into the database.
      * The new node is returned in the callback
+     * Error codes:
+     *     -1: Invalid lock type
+     *     10: MySQL error
      */
     public addNode(isActive: boolean, isConnector: boolean, patternId: string,
         callback: (node: Node, err: Err) => void): void {
@@ -602,6 +613,86 @@ class DB {
                 }
                 callback(results as Node, undefined);
             });
+    }
+
+    /*
+     * Connects two nodes
+     * PRE: Node ids must be valid nodes
+     * Error codes:
+     *     -1: invalid node id(s)
+     *     -2: attempted to create connection fron non connector node to a node in a different pattern
+     *     -10: MySQL error
+     */
+    public addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void ): void {
+        let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
+        console.log(query);
+        pool.query(query, (err: MysqlError, results: IDbNode[]) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 2) {
+                callback(new Err("Attempted to add connection with invalid node id(s)", -1), undefined);
+                return;
+            }
+            const node: IDbNode = results[0];
+            const target: IDbNode = results[1];
+            // connected nodes must be in the same pattern unless they are both connector nodes
+            if (!node.is_connector || !target.is_connector) {
+                if (!(node.fk_pattern_id === target.fk_pattern_id)) {
+                    callback(new Err("attempted to create connection fron\
+                        non connector node to a node in a different pattern", -2), undefined);
+                    return;
+                }
+            }
+            const values: string[][] = [
+                [nodeId, targetId]
+            ];
+            query = "INSERT INTO node_connections (fk_node_id, fk_target_id) VALUES ?";
+            pool.query(query, [values], (err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10), undefined);
+                    return;
+                }
+                callback(undefined, new Connector(nodeId, targetId));
+            });
+        });
+    }
+
+    public getNode(nodeId: string, callback: (node: Node, err: Err) => void): void {
+        this.getNodes([nodeId], (nodes: Node[], err: Err) => {
+            if (err) {
+                callback(undefined, err);
+                return;
+            }
+            if (nodes.length < 1) {
+                callback(undefined, new Err("No nodes found", -1));
+                return;
+            }
+            callback(nodes[0], undefined);
+        });
+    }
+
+    /*
+     * Generates a unique pattern id
+     * Error codes:
+     *       -1: Invalid node id(s)
+     *      -10: MySQL error
+     */
+    public getNodes(nodeIds: string[], callback: (nodes: Node[], err: Err) => void): void {
+        if (nodeIds.length === 0) {
+            callback([], undefined);
+            return;
+        }
+        const query: string = "SELECT * FROM nodes WHERE id IN (?)";
+        pool.query(query, [nodeIds], (err: MysqlError, results: IDbNode[]) => {
+            if (results.length < nodeIds.length) {
+                callback(undefined, new Err("Invalid node id(s)", -1));
+                return;
+            }
+            const nodes: Node[] = results.map( (n) => new Node(n.is_active, n.is_connector, n.id));
+            callback(nodes, undefined);
+        });
     }
 
     private bit(bool: boolean): number {
@@ -626,7 +717,7 @@ class DB {
     private storeNewPatternTransaction(connection: PoolConnection, args: any,
         callback: (err: Err, results: any) => void): void {
         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
-        let pattern: Pattern;
+        let patternId: string;
         connection.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
@@ -636,21 +727,21 @@ class DB {
                 callback(new Err("Not enough free pattern ids", -1), undefined);
                 return;
             }
-            pattern = new Pattern(results[0].id, [], []);
-            query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+            patternId = results[0].id;
+            query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + patternId + "'";
             connection.query(query, (err: MysqlError) => {
                 if (err) {
                     callback(new Err(err.message, -10), undefined);
                     return;
                 }
                 query = "INSERT INTO patterns(id) VALUES ?";
-                const values: string[][] = [[results[0].id]];
+                const values: string[][] = [[patternId]];
                 connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
                         return;
                     }
-                    callback(undefined, pattern);
+                    callback(undefined, patternId);
                 });
             });
         });
@@ -679,230 +770,18 @@ class DB {
                 const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
                 query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
                 const values: string[][] = [[node.id, bit(node.isActive), bit(node.isConnector), args.patternId]];
-                connection.query(query, [values], (err: MysqlError) => {
+                const q: Query = connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
                         return;
                     }
                     callback(undefined, node);
                 });
+                // console.log(q.sql);
             });
         });
     }
 
-    // query = "INSERT INTO sessions(id, csrf) VALUES ?";
-    // const values: string[][] = [
-    //     [session.sid, session.csrf]
-    // ];
-    // pool.query(query, [values], (err: MysqlError, result: any) => {
-
-    /*
-     * Generates a unique pattern id
-     * Error codes:
-     *      -10: MySQL error
-     */
-    // public generatePatternId(amountToGenerate: number, callback: (id: string[], err: Err) => void): void {
-    //     pool.getConnection((err: MysqlError, connection: PoolConnection) => {
-    //         if (err) {
-    //             callback(undefined, new Err(err.message, -10));
-    //             connection.release();
-    //             return;
-    //         }
-    //         connection.beginTransaction((err: MysqlError) => {
-    //             if (err) {
-    //                 callback(undefined, new Err(err.message, -10));
-    //                 connection.rollback(() => connection.release());
-    //                 return;
-    //             }
-    //             let query: string = "LOCK TABLE id WRITE";
-    //             connection.query(query, (err: MysqlError) => {
-    //                 if (err) {
-    //                     callback(undefined, new Err(err.message, -10));
-    //                     connection.rollback(() => connection.release());
-    //                     return;
-    //                 }
-    //                 query = "SELECT patternId FROM id";
-    //                 connection.query(query, (err: MysqlError, results: any) => {
-    //                     if (err) {
-    //                         callback(undefined, new Err(err.message, -10));
-    //                         connection.rollback(() => connection.release());
-    //                         return;
-    //                     }
-    //                     let pid: string = "" + results[0].patternId;
-    //                     while (pid.length < 2) {
-    //                         pid = "0" + pid;
-    //                     }
-    //                     pid = "P" + pid;
-    //                     query = "UPDATE id SET patternId = patternId + 1";
-    //                     connection.query(query, (err: MysqlError) => {
-    //                         if (err) {
-    //                             callback(undefined, new Err(err.message, -10));
-    //                             connection.rollback(() => connection.release());
-    //                             return;
-    //                         }
-    //                         query = "UNLOCK TABLES";
-    //                         connection.query(query, (err: MysqlError) => {
-    //                             if (err) {
-    //                                 callback(undefined, new Err(err.message, -10));
-    //                                 connection.rollback(() => connection.release());
-    //                                 return;
-    //                             }
-    //                             connection.commit((err: MysqlError) => {
-    //                                 if (err) {
-    //                                     connection.rollback(() => connection.release());
-    //                                     callback(undefined, new Err(err.message, -10));
-    //                                     return;
-    //                                 }
-    //                                 callback([pid], undefined);
-    //                                 connection.release();
-    //                             });
-    //                         });
-    //                     });
-    //                 });
-    //             });
-    //         });
-    //     });
-    // }
-
-    // /*
-    //  * Generates a unique node id
-    //  * Arguments: (answerId: string, correctGuess: boolean, callback)
-    //  * Error codes:
-    //  *      -10: MySQL error
-    //  * Callback argments: (error: Error)
-    //  */
-    // public generateNodeId(callback: (id: string, err: Err) => void): void {
-    //     pool.getConnection((err: MysqlError, connection: PoolConnection) => {
-    //         if (err) {
-    //             callback(undefined, new Err(err.message, -10));
-    //             connection.release();
-    //             return;
-    //         }
-    //         connection.beginTransaction((err: MysqlError) => {
-    //             if (err) {
-    //                 callback(undefined, new Err(err.message, -10));
-    //                 connection.rollback(() => connection.release());
-    //                 return;
-    //             }
-    //             let query: string = "LOCK TABLE id WRITE";
-    //             connection.query(query, (err: MysqlError) => {
-    //                 if (err) {
-    //                     callback(undefined, new Err(err.message, -10));
-    //                     connection.rollback(() => connection.release());
-    //                     return;
-    //                 }
-    //                 query = "SELECT nodeId FROM id";
-    //                 connection.query(query, (err: MysqlError, results: any) => {
-    //                     if (err) {
-    //                         callback(undefined, new Err(err.message, -10));
-    //                         connection.rollback(() => connection.release());
-    //                         return;
-    //                     }
-    //                     let pid: string = "" + results[0].nodeId;
-    //                     while (pid.length < 2) {
-    //                         pid = "0" + pid;
-    //                     }
-    //                     pid = "P" + pid;
-    //                     query = "UPDATE id SET nodeId = nodeId + 1";
-    //                     connection.query(query, (err: MysqlError) => {
-    //                         if (err) {
-    //                             callback(undefined, new Err(err.message, -10));
-    //                             connection.rollback(() => connection.release());
-    //                             return;
-    //                         }
-    //                         query = "UNLOCK TABLES";
-    //                         connection.query(query, (err: MysqlError) => {
-    //                             if (err) {
-    //                                 callback(undefined, new Err(err.message, -10));
-    //                                 connection.rollback(() => connection.release());
-    //                                 return;
-    //                             }
-    //                             connection.commit((err: MysqlError) => {
-    //                                 if (err) {
-    //                                     connection.rollback(() => connection.release());
-    //                                     callback(undefined, new Err(err.message, -10));
-    //                                     return;
-    //                                 }
-    //                                 callback(pid, undefined);
-    //                                 connection.release();
-    //                             });
-    //                         });
-    //                     });
-    //                 });
-    //             });
-    //         });
-    //     });
-    // }
-
-    // /*
-    //  * Generates a unique message id
-    //  * Arguments: (answerId: string, correctGuess: boolean, callback)
-    //  * Error codes:
-    //  *      -10: MySQL error
-    //  * Callback argments: (error: Error)
-    //  */
-    // public generateMessageId(callback: (id: string, err: Err) => void): void {
-    //     pool.getConnection((err: MysqlError, connection: PoolConnection) => {
-    //         if (err) {
-    //             callback(undefined, new Err(err.message, -10));
-    //             connection.release();
-    //             return;
-    //         }
-    //         connection.beginTransaction((err: MysqlError) => {
-    //             if (err) {
-    //                 callback(undefined, new Err(err.message, -10));
-    //                 connection.rollback(() => connection.release());
-    //                 return;
-    //             }
-    //             let query: string = "LOCK TABLE id WRITE";
-    //             connection.query(query, (err: MysqlError) => {
-    //                 if (err) {
-    //                     callback(undefined, new Err(err.message, -10));
-    //                     connection.rollback(() => connection.release());
-    //                     return;
-    //                 }
-    //                 query = "SELECT messageId FROM id";
-    //                 connection.query(query, (err: MysqlError, results: any) => {
-    //                     if (err) {
-    //                         callback(undefined, new Err(err.message, -10));
-    //                         connection.rollback(() => connection.release());
-    //                         return;
-    //                     }
-    //                     let pid: string = "" + results[0].messageId;
-    //                     while (pid.length < 2) {
-    //                         pid = "0" + pid;
-    //                     }
-    //                     pid = "P" + pid;
-    //                     query = "UPDATE id SET messageId = messageId + 1";
-    //                     connection.query(query, (err: MysqlError) => {
-    //                         if (err) {
-    //                             callback(undefined, new Err(err.message, -10));
-    //                             connection.rollback(() => connection.release());
-    //                             return;
-    //                         }
-    //                         query = "UNLOCK TABLES";
-    //                         connection.query(query, (err: MysqlError) => {
-    //                             if (err) {
-    //                                 callback(undefined, new Err(err.message, -10));
-    //                                 connection.rollback(() => connection.release());
-    //                                 return;
-    //                             }
-    //                             connection.commit((err: MysqlError) => {
-    //                                 if (err) {
-    //                                     connection.rollback(() => connection.release());
-    //                                     callback(undefined, new Err(err.message, -10));
-    //                                     return;
-    //                                 }
-    //                                 callback(pid, undefined);
-    //                                 connection.release();
-    //                             });
-    //                         });
-    //                     });
-    //                 });
-    //             });
-    //         });
-    //     });
-    // }
 }
 
 const db: DB = new DB();
