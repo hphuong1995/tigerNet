@@ -8,6 +8,7 @@ const pool = require('./../../dist/services/database/connect');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const initQueue = [];
+const db = require('./../../dist/services/database/db').db;
 
 const NODE_IDS_TABLE = 
     "CREATE TABLE nodeIds (\
@@ -737,6 +738,89 @@ initQueue.unshift((connection, initQueue, params) => {
     connection.query(query, [values], (err, res, fields) => {
         if (err) {
             console.error("mysql error: " + err.message);
+            throw err;
+        }
+        next(connection, initQueue);
+    });
+});
+
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let patterns = [];
+//     db.storeNewPattern( (pattern, err) => {
+//         if (err) {
+//             connection.rollback(() => connection.release());
+//             throw err;
+//         }
+//         patterns.push(pattern);
+//         next(connection, initQueue, patterns);
+//     });
+// });
+
+// initQueue.unshift((connection, initQueue, patterns) => {
+//     let next = initQueue.pop();
+//     db.storeNewPattern( (pattern, err) => {
+//         if (err) {
+//             connection.rollback(() => connection.release());
+//             throw err;
+//         }
+//         patterns.push(pattern);
+//         next(connection, initQueue, patterns);
+//     });
+// });
+
+// initQueue.unshift((connection, initQueue, patterns) => {
+//     let next = initQueue.pop();
+//     db.storeNewPattern( (pattern, err) => {
+//         if (err) {
+//             connection.rollback(() => connection.release());
+//             throw err;
+//         }
+//         patterns.push(pattern);
+//         next(connection, initQueue, patterns);
+//     });
+// });
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let patterns = [];
+    db.storeNewPattern( (pattern, err) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            throw err;
+        }
+        patterns.push(pattern);
+        next(connection, initQueue, patterns);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns) => {
+    let next = initQueue.pop();
+    db.addNode(true, true, patterns[0].id, (node, err) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            throw err;
+        }
+        next(connection, initQueue, patterns);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[0].id, (node, err) => {
+        if (err) {
+            connection.rollback(() => connection.release());
+            throw err;
+        }
+        next(connection, initQueue, patterns);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[0].id, (node, err) => {
+        if (err) {
+            connection.rollback(() => connection.release());
             throw err;
         }
         next(connection, initQueue);

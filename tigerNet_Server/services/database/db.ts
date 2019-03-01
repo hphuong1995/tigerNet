@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
 import { Err } from "../../data/err";
+import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
 import { Question } from "../../data/question";
 import { SecurityAnswer } from "../../data/securityAnswer";
@@ -43,21 +44,6 @@ const MAX_LOGIN_ATTEMPTS: number = 3;
 
 class DB {
     constructor() { return; }
-
-    // public unblockUser(userId: string, callback: (err: Err) => void): void {
-    //     const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
-    //     pool.query(query, (err: MysqlError, results: any) => {
-    //         if (err) {
-    //             callback(new Err(err.message, -10));
-    //         }
-    //         this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
-    //             if (err1) {
-    //                 callback(new Err(err.message, -10));
-    //             }
-    //             callback(undefined);
-    //         });
-    //     });
-    // }
 
     /*
      * Returns an error or a session
@@ -485,6 +471,7 @@ class DB {
         let criticalQueryResults: any;
         if (lockType !== "READ" && lockType !== "WRITE") {
             transactionCallback(undefined, new Err("Invalid lock type: " + lockType, -1));
+            return;
         }
         pool.getConnection((err: MysqlError, connection: PoolConnection) => {
             if (err) {
@@ -498,7 +485,7 @@ class DB {
                     connection.rollback(() => connection.release());
                     return;
                 }
-                let query: string = "LOCK TABLE " + tableName + " " + lockType;
+                let query: string = "LOCK TABLES " + tableName + " " + lockType;
                 connection.query(query, (err2: MysqlError) => {
                     if (err2) {
                         transactionCallback(undefined, new Err(err2.message, -10));
@@ -507,27 +494,27 @@ class DB {
                     }
                     criticalQueries(connection, args, (err3: Err, results: any) => {
                         if (err3) {
-                            transactionCallback(undefined, new Err(err2.message, -10));
+                            transactionCallback(undefined, new Err(err3.message, -10));
                             connection.rollback(() => connection.release());
                             return;
                         }
                         criticalQueryResults = results;
-                    });
-                    query = "UNLOCK TABLES";
-                    connection.query(query, (err5: MysqlError) => {
-                        if (err5) {
-                            transactionCallback(undefined, new Err(err5.message, -10));
-                            connection.rollback(() => connection.release());
-                            return;
-                        }
-                        connection.commit((err6: MysqlError) => {
-                            if (err6) {
+                        query = "UNLOCK TABLES";
+                        connection.query(query, (err5: MysqlError) => {
+                            if (err5) {
+                                transactionCallback(undefined, new Err(err5.message, -10));
                                 connection.rollback(() => connection.release());
-                                transactionCallback(undefined, new Err(err6.message, -10));
                                 return;
                             }
-                            transactionCallback(criticalQueryResults, undefined);
-                            connection.release();
+                            connection.commit((err6: MysqlError) => {
+                                if (err6) {
+                                    connection.rollback(() => connection.release());
+                                    transactionCallback(undefined, new Err(err6.message, -10));
+                                    return;
+                                }
+                                transactionCallback(criticalQueryResults, undefined);
+                                connection.release();
+                            });
                         });
                     });
                 });
@@ -535,36 +522,179 @@ class DB {
         });
     }
 
-    //     public addPattern(pattern: Pattern, callback: (id: string[], err: Err) => void): void {
-    //         let args: any;
-    //         args.pattern = pattern;
-    //         this.criticalTransaction("WRITE", "nodeIds", args,
-    // this.addPatternTransaction, (results: any, err: Err) => {
-    //             if (err) {
-    //                 callback(undefined, err);
-    //             }
+    /*
+ * Execute queries inside of a transaction protected by a lock
+ * Parameters:
+ *     lockType: string ( 'READ' | 'WRITE' )
+ *     tableName: string - table to lock
+ * Error codes:
+ *       -1: Invalid lock type
+ *      -10: MySQL error
+ */
+    public transaction(args: any,
+        queries: (connection: PoolConnection, args: any,
+            callback: (err: Err, results: any) => void) => void,
+        transactionCallback: (results: any, err: Err) => void): void {
+        let queryResults: any;
+        pool.getConnection((err: MysqlError, connection: PoolConnection) => {
+            if (err) {
+                transactionCallback(undefined, new Err(err.message, -10));
+                connection.release();
+                return;
+            }
+            connection.beginTransaction((err1: MysqlError) => {
+                if (err1) {
+                    transactionCallback(undefined, new Err(err1.message, -10));
+                    connection.rollback(() => connection.release());
+                    return;
+                }
+                queries(connection, args, (err2: Err, results: any) => {
+                    if (err2) {
+                        transactionCallback(undefined, new Err(err2.message, -10));
+                        connection.rollback(() => connection.release());
+                        return;
+                    }
+                    queryResults = results;
+                    connection.commit((err6: MysqlError) => {
+                        if (err6) {
+                            connection.rollback(() => connection.release());
+                            transactionCallback(undefined, new Err(err6.message, -10));
+                            return;
+                        }
+                        transactionCallback(queryResults, undefined);
+                        connection.release();
+                    });
+                });
+            });
+        });
+    }
 
+    /*
+     * Creates an empty pattern, stores it in the database,
+     * and returns it in the callback
+     */
+    public storeNewPattern(callback: (pattern: Pattern, err: Err) => void): void {
+        this.transaction(undefined, this.storeNewPatternTransaction,
+            (results: any, err: Err) => {
+                if (err) {
+                    callback(undefined, err);
+                } else {
+                    callback(results as Pattern, undefined);
+                }
+            });
+    }
+
+    /*
+     * Create a new node from the given parameters and add it into the database.
+     * The new node is returned in the callback
+     */
+    public addNode(isActive: boolean, isConnector: boolean, patternId: string,
+        callback: (node: Node, err: Err) => void): void {
+        const args: any = {};
+        args.isActive = isActive;
+        args.isConnector = isConnector;
+        args.patternId = patternId;
+        this.transaction(args,
+            this.addNodeTransaction.bind(this), (results: any, err: Err) => {
+                if (err) {
+                    callback(undefined, err);
+                    return;
+                }
+                callback(results as Node, undefined);
+            });
+    }
+
+    private bit(bool: boolean): number {
+        return bool ? 1 : 0;
+    }
+
+    // public unblockUser(userId: string, callback: (err: Err) => void): void {
+    //     const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
+    //     pool.query(query, (err: MysqlError, results: any) => {
+    //         if (err) {
+    //             callback(new Err(err.message, -10));
+    //         }
+    //         this.setFailedGuessOnAllAnswers(userId, false, (err1: Err) => {
+    //             if (err1) {
+    //                 callback(new Err(err.message, -10));
+    //             }
+    //             callback(undefined);
     //         });
-    //     }
+    //     });
+    // }
 
-    //     private addPatternTransaction(connection: PoolConnection, args: any,
-    //                                   callback: (err: Err, results: any) => void): void {
-    //         const pattern: Pattern = args.pattern as Pattern;
-    //         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1";
-    //         connection.query(query, (err: MysqlError, results: any) => {
-    //             // results[n].id
-    //             if (err) {
-    //                 callback(new Err(err.message, -10), undefined);
-    //             }
-    //             if (results.length < 1) {
-    //                 callback( new Err("Not enough free pattern ids", -1), undefined);
-    //             }
-    //             query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+    private storeNewPatternTransaction(connection: PoolConnection, args: any,
+        callback: (err: Err, results: any) => void): void {
+        let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        let pattern: Pattern;
+        connection.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 1) {
+                callback(new Err("Not enough free pattern ids", -1), undefined);
+                return;
+            }
+            pattern = new Pattern(results[0].id, [], []);
+            query = "UPDATE patternIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+            connection.query(query, (err2: MysqlError) => {
+                if (err2) {
+                    callback(new Err(err2.message, -10), undefined);
+                    return;
+                }
+                query = "INSERT INTO patterns(id) VALUES ?";
+                const values: string[][] = [[results[0].id]];
+                connection.query(query, [values], (err3: MysqlError) => {
+                    if (err3) {
+                        callback(new Err(err3.message, -10), undefined);
+                        return;
+                    }
+                    callback(undefined, pattern);
+                });
+            });
+        });
+    }
 
-    // //     const query: string = "UPDATE users SET is_blocked = 0 WHERE id ='" + userId + "'";
+    private addNodeTransaction(connection: PoolConnection, args: any,
+        callback: (err: Err, results: any) => void): void {
+        const pattern: Pattern = args.pattern as Pattern;
+        let query: string = "SELECT id FROM nodeIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        const bit: (bool: boolean) => number = this.bit;
+        connection.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 1) {
+                callback(new Err("Not enough free node ids", -1), undefined);
+                return;
+            }
+            query = "UPDATE nodeIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+            connection.query(query, (err2: MysqlError) => {
+                if (err2) {
+                    callback(new Err(err2.message, -10), undefined);
+                    return;
+                }
+                const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
+                query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
+                const values: string[][] = [[node.id, bit(node.isActive), bit(node.isConnector), args.patternId]];
+                connection.query(query, [values], (err3: MysqlError) => {
+                    if (err3) {
+                        callback(new Err(err3.message, -10), undefined);
+                        return;
+                    }
+                    callback(undefined, node);
+                });
+            });
+        });
+    }
 
-    //         });
-    //     }
+    // query = "INSERT INTO sessions(id, csrf) VALUES ?";
+    // const values: string[][] = [
+    //     [session.sid, session.csrf]
+    // ];
+    // pool.query(query, [values], (err1: MysqlError, result: any) => {
 
     /*
      * Generates a unique pattern id
@@ -776,4 +906,5 @@ class DB {
 }
 
 const db: DB = new DB();
+module.exports.db = db; // javascript compatibility
 export { db };
