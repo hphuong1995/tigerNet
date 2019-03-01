@@ -1,22 +1,22 @@
 <div #cy id="cy"></div>
 <mat-accordion id="controlPanel">
-    <!-- Add Pattern -->
-    <mat-expansion-panel>
+    <!-- Add Node -->
+    <mat-expansion-panel  >
         <mat-expansion-panel-header>
         <mat-panel-title>
-            Add Pattern
+            Add Node
         </mat-panel-title>
         <mat-panel-description>
-            <p style="text-align:right;margin:auto">
-            Add a new pattern
+            <p style="text-align:right;margin: auto">
+            Select a pattern to add node
             </p>
         </mat-panel-description>
         </mat-expansion-panel-header>
         <mat-action-row >
-<!--            <p style="text-align:left;margin-right:200px">
-                    <input type="text" id="currentSelectedNode" [(ngModel)]="currentSelectedNode" ng-value = "currentSelectedNode" >
-            </p>
--->
+            <p style="text-align:left;margin-right:200px">
+                <mat-form-field>
+                    <input matInput [(ngModel)]="selectNode" autocomplete="off">
+                </mat-form-field>
             <p><button mat-raised-button (click)="addPattern()">Add Pattern</button></p>
         </mat-action-row>
     </mat-expansion-panel>
@@ -36,6 +36,20 @@
         <mat-action-row >
             <p><button mat-raised-button (click)="addNode()">Add Node</button></p>
         </mat-action-row>
+    </mat-expansion-panel>
+
+    <!-- Add Pattern -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Add Pattern
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin:auto">
+            Add a new pattern
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
     </mat-expansion-panel>
 
     <!-- Add Link -->
