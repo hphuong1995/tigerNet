@@ -6,6 +6,7 @@
     "rules": {
         "align": [false, "parameters"],
         "no-console": false,
+        "no-shadowed-variable": false,
         "trailing-comma": [ false ],
         "object-literal-sort-keys": false,
         "variable-name": [
