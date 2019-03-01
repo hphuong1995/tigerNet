@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
+import { Connector } from "../../data/connector";
 import { Err } from "../../data/err";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
@@ -41,6 +42,13 @@ const MAX_LOGIN_ATTEMPTS: number = 3;
 //     setFailedGuessOnAnswer(answerId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void;
 //     setFailedGuessOnAllAnswers(userId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void;
 // }
+
+interface IDbNode {
+    is_active: boolean;
+    is_connector: boolean;
+    id: string;
+    fk_pattern_id: string;
+}
 
 class DB {
     constructor() { return; }
@@ -587,6 +595,9 @@ class DB {
     /*
      * Create a new node from the given parameters and add it into the database.
      * The new node is returned in the callback
+     * Error codes:
+     *     -1: Invalid lock type
+     *     10: MySQL error
      */
     public addNode(isActive: boolean, isConnector: boolean, patternId: string,
         callback: (node: Node, err: Err) => void): void {
@@ -679,13 +690,58 @@ class DB {
                 const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
                 query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
                 const values: string[][] = [[node.id, bit(node.isActive), bit(node.isConnector), args.patternId]];
-                connection.query(query, [values], (err: MysqlError) => {
+                const q: Query = connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
                         return;
                     }
                     callback(undefined, node);
                 });
+                console.log(q.sql);
+            });
+        });
+    }
+
+    /*
+     * Connects two nodes
+     * PRE: Node ids must be valid nodes
+     * Error codes:
+     *     -1: invalid node id(s)
+     *     -2: attempted to create connection fron non connector node to a node in a different pattern
+     *     -10: MySQL error
+     */
+    private addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void ): void {
+        let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
+        console.log(query);
+        pool.query(query, (err: MysqlError, results: IDbNode[]) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 2) {
+                callback(new Err("Attempted to add connection with invalid node id(s)", -1), undefined);
+                return;
+            }
+            const node: IDbNode = results[0];
+            const target: IDbNode = results[1];
+            // connected nodes must be in the same pattern unless they are both connector nodes
+            if (!node.is_connector || !target.is_connector) {
+                if (!(node.fk_pattern_id === target.fk_pattern_id)) {
+                    callback(new Err("attempted to create connection fron\
+                        non connector node to a node in a different pattern", -2), undefined);
+                    return;
+                }
+            }
+            const values: string[][] = [
+                [nodeId, targetId]
+            ];
+            query = "INSERT INTO node_connections (fk_node_id, fk_target_id) VALUES ?";
+            pool.query(query, [values], (err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10), undefined);
+                    return;
+                }
+                callback(undefined, new Connector(nodeId, targetId));
             });
         });
     }

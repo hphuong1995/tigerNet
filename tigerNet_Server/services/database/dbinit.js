@@ -135,21 +135,21 @@ const NODE_CONNECTIONS_TABLE =
         PRIMARY KEY (id)\
     );";
     
-const PATTERN_CONNECTIONS_TABLE =
-    "CREATE TABLE pattern_connections (\
-        id INT NOT NULL AUTO_INCREMENT,\
-        fk_pattern_id VARCHAR(6),\
-        FOREIGN KEY (fk_pattern_id)\
-        REFERENCES patterns(id)\
-        ON UPDATE CASCADE\
-        ON DELETE CASCADE,\
-        fk_target_id VARCHAR(6),\
-        FOREIGN KEY (fk_target_id)\
-        REFERENCES patterns(id)\
-        ON UPDATE CASCADE\
-        ON DELETE CASCADE,\
-        PRIMARY KEY (id)\
-    );";
+// const PATTERN_CONNECTIONS_TABLE =
+//     "CREATE TABLE pattern_connections (\
+//         id INT NOT NULL AUTO_INCREMENT,\
+//         fk_pattern_id VARCHAR(6),\
+//         FOREIGN KEY (fk_pattern_id)\
+//         REFERENCES patterns(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE CASCADE,\
+//         fk_target_id VARCHAR(6),\
+//         FOREIGN KEY (fk_target_id)\
+//         REFERENCES patterns(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE CASCADE,\
+//         PRIMARY KEY (id)\
+//     );";
 
 const SESSIONS_TABLE =
     "CREATE TABLE sessions (\
@@ -165,7 +165,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     pool.getConnection((err, connection) => {
         if (err) {
-            connection.rollback(() => connection.release());
+            connection.release();
             console.error("DB initilization failed");
             process.exit(-1);
         }
@@ -187,11 +187,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "SET FOREIGN_KEY_CHECKS = 0;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -200,11 +196,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS ids";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -213,11 +205,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS nodeIds;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -226,11 +214,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODE_IDS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -239,11 +223,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS patternIds;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -252,11 +232,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = PATTERN_IDS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -265,11 +241,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS messageIds;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -278,11 +250,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = MESSAGE_IDS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -291,11 +259,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS users;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -304,11 +268,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = USERS_TABLE;
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -317,11 +277,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS messages;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -330,11 +286,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = MESSAGES_TABLE;
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -343,11 +295,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS nodes;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -356,11 +304,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODES_TABLE;
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -369,11 +313,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS questions;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -382,11 +322,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = QUESTIONS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -395,11 +331,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS node_messages;";
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -408,11 +340,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODE_MESSAGES_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -421,11 +349,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS security_answers;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -434,11 +358,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = SECURITY_ANSWERS_TABLE;
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -447,11 +367,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS patterns;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -460,11 +376,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = PATTERNS_TABLE;
     connection.query(query, (err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -473,11 +385,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS sessions;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -486,11 +394,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = SESSIONS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -499,11 +403,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS node_connections;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -512,11 +412,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODE_CONNECTIONS_TABLE;
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -525,24 +421,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "DROP TABLE IF EXISTS pattern_connections;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = PATTERN_CONNECTIONS_TABLE;
-    connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -551,11 +430,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "SET FOREIGN_KEY_CHECKS = 1;";
     connection.query(query, (err, res, fields) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -630,10 +505,7 @@ initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = "INSERT INTO questions(id, question) VALUES ?";
     connection.query(query, [params.questions], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue, params);
     });
 });
@@ -648,10 +520,7 @@ initQueue.unshift((connection, initQueue, params) => {
         [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
     ];
     connection.query(query, [values], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue, params);
     });
 });
@@ -670,10 +539,7 @@ initQueue.unshift((connection, initQueue, params) => {
         [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
     ];
     connection.query(query, [values], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -692,10 +558,7 @@ initQueue.unshift((connection, initQueue, params) => {
     }
     let query = "INSERT INTO nodeIds (id, isFree) VALUES ?";
     connection.query(query, [values], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -714,10 +577,7 @@ initQueue.unshift((connection, initQueue, params) => {
     }
     let query = "INSERT INTO patternIds (id, isFree) VALUES ?";
     connection.query(query, [values], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
@@ -736,59 +596,16 @@ initQueue.unshift((connection, initQueue, params) => {
     }
     let query = "INSERT INTO messageIds (id, isFree) VALUES ?";
     connection.query(query, [values], (err, res, fields) => {
-        if (err) {
-            console.error("mysql error: " + err.message);
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
-
-// initQueue.unshift((connection, initQueue) => {
-//     let next = initQueue.pop();
-//     let patterns = [];
-//     db.storeNewPattern( (pattern, err) => {
-//         if (err) {
-//             connection.rollback(() => connection.release());
-//             throw err;
-//         }
-//         patterns.push(pattern);
-//         next(connection, initQueue, patterns);
-//     });
-// });
-
-// initQueue.unshift((connection, initQueue, patterns) => {
-//     let next = initQueue.pop();
-//     db.storeNewPattern( (pattern, err) => {
-//         if (err) {
-//             connection.rollback(() => connection.release());
-//             throw err;
-//         }
-//         patterns.push(pattern);
-//         next(connection, initQueue, patterns);
-//     });
-// });
-
-// initQueue.unshift((connection, initQueue, patterns) => {
-//     let next = initQueue.pop();
-//     db.storeNewPattern( (pattern, err) => {
-//         if (err) {
-//             connection.rollback(() => connection.release());
-//             throw err;
-//         }
-//         patterns.push(pattern);
-//         next(connection, initQueue, patterns);
-//     });
-// });
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let patterns = [];
     db.storeNewPattern( (pattern, err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         patterns.push(pattern);
         next(connection, initQueue, patterns);
     });
@@ -796,36 +613,211 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue, patterns) => {
     let next = initQueue.pop();
+    db.storeNewPattern( (pattern, err) => {
+        if (err) rollbackAndExit(connection, err);
+        patterns.push(pattern);
+        next(connection, initQueue, patterns);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns) => {
+    let next = initQueue.pop();
+    db.storeNewPattern( (pattern, err) => {
+        if (err) rollbackAndExit(connection, err);
+        patterns.push(pattern);
+        next(connection, initQueue, patterns);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns) => {
+    let next = initQueue.pop();
+    let nodes = [];
     db.addNode(true, true, patterns[0].id, (node, err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
-        next(connection, initQueue, patterns);
+        if (err) rollbackAndExit(connection, err);
+        nodes.push([]);
+        nodes[0].push(node);
+        next(connection, initQueue, patterns, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns) => {
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
     let next = initQueue.pop();
     db.addNode(true, false, patterns[0].id, (node, err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
-        next(connection, initQueue, patterns);
+        if (err) rollbackAndExit(connection, err);
+        nodes[0].push(node);
+        next(connection, initQueue, patterns, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns) => {
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
     let next = initQueue.pop();
     db.addNode(true, false, patterns[0].id, (node, err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
-        next(connection, initQueue);
+        if (err) rollbackAndExit(connection, err);
+        nodes[0].push(node);
+        next(connection, initQueue, patterns, nodes);
     });
 });
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, true, patterns[1].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes.push([]);
+        nodes[1].push(node);
+        next(connection, initQueue, patterns, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[1].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes[1].push(node);
+        next(connection, initQueue, patterns, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[1].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes[1].push(node);
+        next(connection, initQueue, patterns, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, true, patterns[2].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes.push([]);
+        nodes[2].push(node);
+        next(connection, initQueue, patterns, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[2].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes[2].push(node);
+        next(connection, initQueue, patterns, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patterns, nodes) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, patterns[2].id, (node, err) => {
+        if (err) rollbackAndExit(connection, err);
+        nodes[2].push(node);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[0][0].id, nodes[1][0].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[2][0].id, nodes[1][0].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[2][0].id, nodes[0][0].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[0][0].id, nodes[0][1].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[0][0].id, nodes[0][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[0][1].id, nodes[0][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[1][0].id, nodes[1][1].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[1][0].id, nodes[1][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[1][1].id, nodes[1][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[2][0].id, nodes[2][1].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[2][0].id, nodes[2][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    db.addConnection(nodes[2][1].id, nodes[2][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, nodes);
+    });
+});
+
+function rollbackAndExit(connection, err) {
+    connection.rollback(() => {
+        console.error("Error: " + err.message);
+        connection.release();
+        throw err;
+    });
+}
+
 
 initQueue.unshift((connection, initQueue) => {
     connection.commit((err) => {
