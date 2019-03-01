@@ -810,6 +810,15 @@ initQueue.unshift((connection, initQueue, nodes) => {
     });
 });
 
+initQueue.unshift((connection, initQueue, nodes) => {
+    let next = initQueue.pop();
+    let nodeIds = nodes[2].map( n => n.id);
+    db.getNodes(nodeIds, (nodes, err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
 function rollbackAndExit(connection, err) {
     connection.rollback(() => {
         console.error("Error: " + err.message);
