@@ -13,16 +13,28 @@
         </mat-panel-description>
         </mat-expansion-panel-header>
         <mat-action-row >
-            <p style="text-align:left;margin-right:200px">
-                <mat-form-field>
-                    <mat-select placeholder="Select a pattern"  class="selectLocation">
-                        <mat-option value="P01">P01</mat-option>
-                        <mat-option value="P02">P02</mat-option>
-                        <mat-option value="P03">P03</mat-option>
-                    </mat-select>
-                </mat-form-field>
+<!--            <p style="text-align:left;margin-right:200px">
+                    <input type="text" id="currentSelectedNode" [(ngModel)]="currentSelectedNode" ng-value = "currentSelectedNode" >
             </p>
-            <p><button mat-raised-button>Add Node</button></p>
+-->
+            <p><button mat-raised-button (click)="addPattern()">Add Pattern</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+
+    <!-- Add Link -->
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Add Node
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Add a Node to a pattern
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="addNode()">Add Node</button></p>
         </mat-action-row>
     </mat-expansion-panel>
 
@@ -53,7 +65,7 @@
         </mat-panel-description>
         </mat-expansion-panel-header>
     </mat-expansion-panel>
-    
+
     <!-- Delete Link -->
     <mat-expansion-panel>
         <mat-expansion-panel-header>

@@ -99,7 +99,6 @@ router.get("/users", (req: Request, res: Response) => {
  * Unblocks the specified user
  */
 router.put("/users/:uid", (req: Request, res: Response) => {
-  console.log(req.params.uid);
   db.setUserBlocked(req.params.uid, false, (err: Err) => {
       if (err) {
           res.status(500).send(err.message);
@@ -116,4 +115,15 @@ router.put("/users/:uid", (req: Request, res: Response) => {
   });
 });
 
+/*
+ * add new pattern
+ */
+router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
+  console.log(req.params.body);
+  res.status(200).send({valid: true});
+});
+
+/*
+ * add new Node
+ */
 export { router as adminRoutes };

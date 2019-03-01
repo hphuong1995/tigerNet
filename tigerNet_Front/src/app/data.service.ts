@@ -9,6 +9,12 @@ import { Network } from './data/network';
 export class DataService {
   public csrf: string;
 
+  public selectedPatterns = [];
+
+  public selectedNodes = [];
+
+  public cy : any;
+
   constructor(private http: HttpClient) { }
 
   getAllUsers(): Observable<Object> {
@@ -21,5 +27,14 @@ export class DataService {
 
   getNetwork(): Observable<HttpResponse<Network>> {
     return this.http.get<Network>('api/v1/network', { observe: 'response'});
+  }
+
+  addPattern(connectorNodes : string[]){
+    return this.http.post('api/v1/admin/patterns', JSON.stringify(connectorNodes));
+  }
+
+  addNode(reqObject : any){
+    console.log(reqObject.pattern.id);
+    return this.http.post('api/v1/admin/patterns/' + reqObject.pattern.id + "/nodes", JSON.stringify(reqObject));
   }
 }
