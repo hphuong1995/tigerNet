@@ -659,6 +659,93 @@ class DB {
         });
     }
 
+    /*
+     * Gets a pattern by its id
+     * Error codes:
+     *       -1: Invalid pattern id(s)
+     *      -10: MySQL error
+     */
+    // public getPattern(patternId: string, callback: (pattern: Pattern, err: Err) => void): void {
+    //     this.getPatterns([patternId], (patterns: Pattern[], err: Err) => {
+    //         if (err) {
+    //             callback(undefined, err);
+    //             return;
+    //         }
+    //         if (patterns.length < 1) {
+    //             callback(undefined, new Err("Error retrieving pattern", -1));
+    //             return;
+    //         }
+    //         callback(patterns[0], undefined);
+    //     });
+    // }
+
+    /*
+     * Gets a list of patterns from a list of ids
+     * Error codes:
+     *       -1: Invalid pattern id(s)
+     *      -10: MySQL error
+     */
+    // public getPatterns(patternIds: string[], callback: (patterns: Pattern[], err: Err) => void): void {
+    //     let emptyPatterns: Pattern[];
+    //     emptyPatterns.forEach( (p: Pattern) => {
+    //         let query: string = "SELECT id FROM NODES WHERE fk_pattern_id = '" + p.id + "'";
+    //         pool.query(query, (err: MysqlError, res: any) => {
+
+    //         });
+    //     });
+    //     let fullPatterns: Pattern[];
+    //     let promises: Promise<any>[] = patterns.map( (p: Pattern) => {
+    //         return new Promise((resolve: (nodes: Node[]) => void, reject: (err: Err) => void) => {
+    //             this.getNodesByPatternId(p.id, (nodes: Node[], err: Err) => {
+    //                 if(err) {
+    //                     reject(err);
+    //                 }
+    //                 p.nodes = nodes;
+    //             })
+    //         });
+    //     });
+    //     Promise.all(promises).then(() => console.log("promise chain completed")).catch( );
+    //     return;
+    // }
+    // public getPatterns(patternIds: string[], callback: (patterns: Pattern[], err: Err) => void): void {
+    //     let emptyPatterns: Pattern[];
+    //     emptyPatterns.forEach( (p: Pattern) => {
+    //         const query: string = "SELECT id FROM NODES WHERE fk_pattern_id = '" + p.id + "'";
+    //         pool.query(query, (err: MysqlError, res: any) => {
+
+    //         });
+    //     });
+    //     let fullPatterns: Pattern[];
+    //     const promises: Array<Promise<any>> = patternIds.map( (pid: string) => {
+    //         return new Promise((resolve: (nodes: Node[]) => void, reject: (err: Err) => void) => {
+    //             this.getNodesByPatternId(pid, (nodes: Node[], err: Err) => {
+    //                 if (err) {
+    //                     reject(err);
+    //                 }
+    //                 // p.nodes = nodes;
+    //             });
+    //         });
+    //     });
+    //     Promise.all(promises).then(() => console.log("promise chain completed")).catch( );
+    //     return;
+    // }
+
+    /*
+     * Gets all patterns
+     * Error codes:
+     *       -1: Invalid node id(s)
+     *      -10: MySQL error
+     */
+    public getAllPatterns(callback: (patterns: Pattern[], err: Err) => void): void {
+        return;
+    }
+
+    /*
+     * Gets a node by its id
+     * Error codes:
+     *       -1: Invalid node id(s)
+     *      -10: MySQL error
+     */
     public getNode(nodeId: string, callback: (node: Node, err: Err) => void): void {
         this.getNodes([nodeId], (nodes: Node[], err: Err) => {
             if (err) {
@@ -674,7 +761,7 @@ class DB {
     }
 
     /*
-     * Generates a unique pattern id
+     * Gets a list of nodes from a list of ids
      * Error codes:
      *       -1: Invalid node id(s)
      *      -10: MySQL error
@@ -686,8 +773,30 @@ class DB {
         }
         const query: string = "SELECT * FROM nodes WHERE id IN (?)";
         pool.query(query, [nodeIds], (err: MysqlError, results: IDbNode[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
             if (results.length < nodeIds.length) {
                 callback(undefined, new Err("Invalid node id(s)", -1));
+                return;
+            }
+            const nodes: Node[] = results.map( (n) => new Node(n.is_active, n.is_connector, n.id));
+            callback(nodes, undefined);
+        });
+    }
+
+    /*
+     * Gets a list of nodes from a list of ids
+     * Error codes:
+     *       -1: Invalid node id(s)
+     *      -10: MySQL error
+     */
+    public getNodesByPatternId(patternId: string, callback: (nodes: Node[], err: Err) => void): void {
+        const query: string = "SELECT * FROM nodes WHERE fk_pattern_id = '" + patternId + "'";
+        pool.query(query, (err: MysqlError, results: IDbNode[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
                 return;
             }
             const nodes: Node[] = results.map( (n) => new Node(n.is_active, n.is_connector, n.id));
