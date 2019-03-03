@@ -5,6 +5,7 @@ const router: any = express.Router();
 
 import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
+import { Network } from "../data/network";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
@@ -84,7 +85,7 @@ router.get( "/exampleEndpoint/:pathparam", ( req: Request, res: Response, next: 
 } );
 
 /*
- * Get all patterns
+ * Retrieve the network
  */
 router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
     /*
@@ -92,132 +93,15 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      * This object persists until the user logs out or the session expires (a long timeout)
      * The user object is validated in the authentication endpoints - no need to double check that
      */
+    db.getNetwork( (err: Err, network: Network) => {
+        if (err) {
+            res.status(500).send(err.message);
+            return;
+        }
+        res.send(network);
+    });
 
-     const nodes: Node[] = [
-         new Node(true, false, "0")
-     ];
-     const hardCodedPattern: string =     '{\
-        "patterns": [\
-            {\
-                "id": "P01",\
-                "nodes": [\
-                    {\
-                        "id": "N01",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    },\
-                    {\
-                        "id": "N02",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    },\
-                    {\
-                        "id": "N03",\
-                        "isActive": true,\
-                        "isConnector": true\
-                    }\
-                ],\
-                "connections": [\
-                    {\
-                        "id": "N01",\
-                        "targetId": "N02"\
-                    },\
-                    {\
-                        "id": "N02",\
-                        "targetId": "N03"\
-                    },\
-                    {\
-                        "id": "N03",\
-                        "targetId": "N01"\
-                    }\
-                ]\
-            },\
-            {\
-                "id": "P02",\
-                "nodes": [\
-                    {\
-                        "id": "N04",\
-                        "isActive": true,\
-                        "isConnector": true\
-                    },\
-                    {\
-                        "id": "N05",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    },\
-                    {\
-                        "id": "N06",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    }\
-                ],\
-                "connections": [\
-                    {\
-                        "id": "N04",\
-                        "targetId": "N05"\
-                    },\
-                    {\
-                        "id": "N05",\
-                        "targetId": "N06"\
-                    },\
-                    {\
-                        "id": "N06",\
-                        "targetId": "N04"\
-                    }\
-                ]\
-            },\
-            {\
-                "id": "P03",\
-                "nodes": [\
-                    {\
-                        "id": "N07",\
-                        "isActive": true,\
-                        "isConnector": true\
-                    },\
-                    {\
-                        "id": "N08",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    },\
-                    {\
-                        "id": "N09",\
-                        "isActive": true,\
-                        "isConnector": false\
-                    }\
-                ],\
-                "connections": [\
-                    {\
-                        "id": "N07",\
-                        "targetId": "N08"\
-                    },\
-                    {\
-                        "id": "N08",\
-                        "targetId": "N09"\
-                    },\
-                    {\
-                        "id": "N09",\
-                        "targetId": "N07"\
-                    }\
-                ]\
-            }\
-        ],\
-        "patternConnections": [\
-            {\
-                "id": "P01",\
-                "targetId": "P02"\
-            },\
-            {\
-                "id": "P02",\
-                "targetId": "P03"\
-            },\
-            {\
-                "id": "P03",\
-                "targetId": "P01"\
-            }\
-        ]\
-    }';
-     const examplePattern: any = JSON.parse(hardCodedPattern);
-     res.send(examplePattern);
+     // res.send(examplePattern);
 } );
 
 export { router as routes };

@@ -3,6 +3,7 @@ import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
 import { Err } from "../../data/err";
+import { Network } from "../../data/network";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
 import { Question } from "../../data/question";
@@ -56,6 +57,7 @@ interface IDbConnector {
 }
 
 class DB {
+
     constructor() { return; }
 
     /*
@@ -703,34 +705,11 @@ class DB {
     }
 
     /*
-     * Gets a list of patterns from a list of ids
+     * Returns a list of patterns from a list of pattern ids
      * Error codes:
-     *       -1: Invalid pattern id(s)
+     *       -1: Invalid node id(s)
      *      -10: MySQL error
      */
-    // public getPatterns(patternIds: string[], callback: (patterns: Pattern[], err: Err) => void): void {
-    //     let emptyPatterns: Pattern[];
-    //     emptyPatterns.forEach( (p: Pattern) => {
-    //         let query: string = "SELECT id FROM NODES WHERE fk_pattern_id = '" + p.id + "'";
-    //         pool.query(query, (err: MysqlError, res: any) => {
-
-    //         });
-    //     });
-    //     let fullPatterns: Pattern[];
-    //     let promises: Promise<any>[] = patterns.map( (p: Pattern) => {
-    //         return new Promise((resolve: (nodes: Node[]) => void, reject: (err: Err) => void) => {
-    //             this.getNodesByPatternId(p.id, (nodes: Node[], err: Err) => {
-    //                 if(err) {
-    //                     reject(err);
-    //                 }
-    //                 p.nodes = nodes;
-    //             })
-    //         });
-    //     });
-    //     Promise.all(promises).then(() => console.log("promise chain completed")).catch( );
-    //     return;
-    // }
-
     public getPatterns(patternIds: string[], callback: (patterns: Pattern[], err: Err) => void): void {
         const fullPatterns: Pattern[] = [];
         const promises: Array<Promise<any>> = patternIds.map( (pid: string) => {
@@ -766,10 +745,18 @@ class DB {
     /*
      * Gets all patterns
      * Error codes:
-     *       -1: Invalid node id(s)
      *      -10: MySQL error
      */
     public getAllPatterns(callback: (patterns: Pattern[], err: Err) => void): void {
+        const query: string = "SELECT * FROM patterns";
+        pool.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const patternIds: string[] = results.map( (r) => r.id);
+            db.getPatterns(patternIds, callback);
+        });
         return;
     }
 
@@ -882,7 +869,27 @@ class DB {
             callback(connectors, undefined);
         });
     }
-
+    /*
+     * Returns the entire network
+     * Error codes:
+     *       -1: internal error
+     *      -10: MySQL error
+     */
+    public getNetwork(callback: (err: Err, network: Network) => void): void {
+        db.getAllPatterns( (patterns: Pattern[], err: Err) => {
+            if (err) {
+                callback(err, undefined);
+                return;
+            }
+            db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
+                if (err) {
+                    callback(err, undefined);
+                    return;
+                }
+                callback(undefined, new Network(patterns, connections));
+            });
+        });
+    }
     private bit(bool: boolean): number {
         return bool ? 1 : 0;
     }

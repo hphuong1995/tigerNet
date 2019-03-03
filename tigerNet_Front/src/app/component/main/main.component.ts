@@ -78,32 +78,66 @@ export class MainComponent implements OnInit, AfterViewInit {
                   });
               });
           });
+          // this.network.patternConnections.forEach((pConnection: Connector) => {
+          //     let pid: string = pConnection.id;
+          //     let otherPid: string = pConnection.targetId;
+          //     let pattern: Pattern = this.network.getPatternById(pid);
+          //     if(!pattern) {
+          //         alert( "no connector node found in pattern" );
+          //     }
+          //     let otherPattern: Pattern = this.network.getPatternById(otherPid);
+          //     if(!otherPattern) {
+          //         alert( "no connector node found in pattern" );
+          //     }
+          //     let connectorNode: Node = pattern.getConnectorNode();
+          //     if(!connectorNode) {
+          //         alert( "no connector node found in pattern" );
+          //     }
+          //     let otherConnectorNode: Node = otherPattern.getConnectorNode();
+          //     if(!otherConnectorNode) {
+          //         alert( "no connector node found in pattern" );
+          //     }
+          //     elements.push({
+          //         data: {
+          //             id: connectorNode.id + otherConnectorNode.id,
+          //             source: connectorNode.id,
+          //             target: otherConnectorNode.id
+          //         }
+          //     })
+          // });
           this.network.patternConnections.forEach((pConnection: Connector) => {
-              let pid: string = pConnection.id;
-              let otherPid: string = pConnection.targetId;
-              let pattern: Pattern = this.network.getPatternById(pid);
-              if(!pattern) {
-                  alert( "no connector node found in pattern" );
-              }
-              let otherPattern: Pattern = this.network.getPatternById(otherPid);
-              if(!otherPattern) {
-                  alert( "no connector node found in pattern" );
-              }
-              let connectorNode: Node = pattern.getConnectorNode();
-              if(!connectorNode) {
-                  alert( "no connector node found in pattern" );
-              }
-              let otherConnectorNode: Node = otherPattern.getConnectorNode();
-              if(!otherConnectorNode) {
-                  alert( "no connector node found in pattern" );
-              }
+              // let pid: string = pConnection.id;
+              // let otherPid: string = pConnection.targetId;
+              // let pattern: Pattern = this.network.getPatternById(pid);
+              // if(!pattern) {
+              //     alert( "no connector node found in pattern" );
+              // }
+              // let otherPattern: Pattern = this.network.getPatternById(otherPid);
+              // if(!otherPattern) {
+              //     alert( "no connector node found in pattern" );
+              // }
+              // let connectorNode: Node = pattern.getConnectorNode();
+              // if(!connectorNode) {
+              //     alert( "no connector node found in pattern" );
+              // }
+              // let otherConnectorNode: Node = otherPattern.getConnectorNode();
+              // if(!otherConnectorNode) {
+              //     alert( "no connector node found in pattern" );
+              // }
+              // elements.push({
+              //     data: {
+              //         id: connectorNode.id + otherConnectorNode.id,
+              //         source: connectorNode.id,
+              //         target: otherConnectorNode.id
+              //     }
+              // });
               elements.push({
                   data: {
-                      id: connectorNode.id + otherConnectorNode.id,
-                      source: connectorNode.id,
-                      target: otherConnectorNode.id
+                      id: pConnection.id + pConnection.targetId,
+                      source: pConnection.id,
+                      target: pConnection.targetId
                   }
-              })
+              });
           });
           nonConnectorSelectors = nonConnectorSelectors.substr(0, nonConnectorSelectors.length - 1);
           inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
