@@ -140,7 +140,7 @@ const PATTERNS_TABLE =
     "CREATE TABLE patterns (\
         id VARCHAR(6) NOT NULL,\
         PRIMARY KEY (id)\
-    ) ENGINE = InnoDB ;";
+    );";
     
 const NODE_CONNECTIONS_TABLE =
     "CREATE TABLE node_connections (\
@@ -156,7 +156,7 @@ const NODE_CONNECTIONS_TABLE =
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
         PRIMARY KEY (id)\
-    ) ENGINE = InnoDB ;";
+    );";
     
 // const PATTERN_CONNECTIONS_TABLE =
 //     "CREATE TABLE pattern_connections (\

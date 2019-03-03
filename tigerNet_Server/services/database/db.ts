@@ -860,13 +860,32 @@ class DB {
         });
     }
 
+    /*
+     * Gets all connections between connector nodes
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void ): void {
+        const query: string =
+        "SELECT DISTINCT fk_node_id, fk_target_id\
+            FROM node_connections JOIN NODES\
+            ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
+            AND nodes.is_connector = 1\
+            WHERE fk_target_id IN\
+                (SELECT id FROM nodes WHERE is_connector = 1)";
+        pool.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map( (res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
+    }
+
     private bit(bool: boolean): number {
         return bool ? 1 : 0;
     }
-
-    // public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void ): void {
-    //     const query: string = "";
-    // }
 
     private storeNewPatternTransaction(connection: PoolConnection, args: any,
         callback: (err: Err, results: any) => void): void {
