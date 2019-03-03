@@ -47,12 +47,12 @@ const MESSAGES_TABLE =
         id VARCHAR(45) NOT NULL,\
         content VARCHAR(500) NOT NULL,\
         fk_receiver_id VARCHAR(45) NOT NULL,\
-        FOREIGN KEY (fk_receiver_id)\
+        CONSTRAINT FOREIGN KEY (fk_receiver_id)\
         REFERENCES users(id)\
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
         fk_sender_id VARCHAR(45),\
-        FOREIGN KEY (fk_sender_id)\
+        CONSTRAINT FOREIGN KEY (fk_sender_id)\
         REFERENCES users(id)\
         ON UPDATE CASCADE\
         ON DELETE SET NULL,\
@@ -70,12 +70,12 @@ const NODE_MESSAGES_TABLE =
     "CREATE TABLE node_messages (\
         id VARCHAR(45) NOT NULL,\
         fk_connected_node_id VARCHAR(45),\
-        FOREIGN KEY (fk_connected_node_id)\
+        CONSTRAINT FOREIGN KEY (fk_connected_node_id)\
         REFERENCES nodes(id)\
         ON UPDATE CASCADE\
         ON DELETE SET NULL,\
         fk_connected_message_id VARCHAR(45),\
-        FOREIGN KEY (fk_connected_message_id)\
+        CONSTRAINT FOREIGN KEY (fk_connected_message_id)\
         REFERENCES messages(id)\
         ON UPDATE CASCADE\
         ON DELETE SET NULL,\
@@ -88,12 +88,12 @@ const SECURITY_ANSWERS_TABLE =
         answer VARCHAR(45) NOT NULL,\
         incorrect_guess BIT NOT NULL,\
         fk_user_id VARCHAR(45) NOT NULL,\
-        FOREIGN KEY (fk_user_id)\
+        CONSTRAINT FOREIGN KEY (fk_user_id)\
         REFERENCES users(id)\
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
         fk_question_id VARCHAR(45) NOT NULL,\
-        FOREIGN KEY (fk_question_id)\
+        CONSTRAINT FOREIGN KEY (fk_question_id)\
         REFERENCES questions(id)\
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
@@ -106,18 +106,37 @@ const NODES_TABLE =
         is_active BIT NOT NULL,\
         is_connector BIT NOT NULL,\
         fk_pattern_id VARCHAR(6),\
-        FOREIGN KEY (fk_pattern_id)\
+        CONSTRAINT FOREIGN KEY (fk_pattern_id)\
         REFERENCES patterns(id)\
         ON UPDATE CASCADE\
-        ON DELETE CASCADE,\
+        ON DELETE RESTRICT,\
         PRIMARY KEY (id)\
     );";
+
+const NODES_DELETE_TRIGGER = 
+    "CREATE TRIGGER nodes_delete\
+        BEFORE DELETE ON nodes\
+        FOR EACH ROW\
+        BEGIN\
+            UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
 
 const PATTERNS_TABLE =
     "CREATE TABLE patterns (\
         id VARCHAR(6) NOT NULL,\
         PRIMARY KEY (id)\
     );";
+
+const PATTERNS_DELETE_TRIGGER = 
+    "CREATE TRIGGER patterns_delete\
+        BEFORE DELETE ON patterns\
+        FOR EACH ROW\
+        BEGIN\
+            DELETE FROM nodes WHERE fk_pattern_id = OLD.id;\
+            UPDATE patternids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
     
 const NODE_CONNECTIONS_TABLE =
     "CREATE TABLE node_connections (\
@@ -128,28 +147,12 @@ const NODE_CONNECTIONS_TABLE =
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
         fk_target_id VARCHAR(6),\
-        FOREIGN KEY (fk_target_id)\
+        CONSTRAINT FOREIGN KEY (fk_target_id)\
         REFERENCES nodes(id)\
         ON UPDATE CASCADE\
         ON DELETE CASCADE,\
         PRIMARY KEY (id)\
     );";
-    
-// const PATTERN_CONNECTIONS_TABLE =
-//     "CREATE TABLE pattern_connections (\
-//         id INT NOT NULL AUTO_INCREMENT,\
-//         fk_pattern_id VARCHAR(6),\
-//         FOREIGN KEY (fk_pattern_id)\
-//         REFERENCES patterns(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE CASCADE,\
-//         fk_target_id VARCHAR(6),\
-//         FOREIGN KEY (fk_target_id)\
-//         REFERENCES patterns(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE CASCADE,\
-//         PRIMARY KEY (id)\
-//     );";
 
 const SESSIONS_TABLE =
     "CREATE TABLE sessions (\
@@ -194,7 +197,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS ids";
+    let query = "DROP TRIGGER IF EXISTS patterns_delete;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -203,7 +206,27 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS nodeIds;";
+    let query = "DROP TRIGGER IF EXISTS nodes_delete;";
+    connection.query(query, (err, res, fields) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "DROP TABLE IF EXISTS ids, nodeIds, patternIds, messageIds, users,\
+                    messages, nodes, questions, node_messages, security_answers,\
+                    patterns, sessions, node_connections, pattern_connections;";
+    connection.query(query, (err, res, fields) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "SET FOREIGN_KEY_CHECKS = 1;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -221,25 +244,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS patternIds;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
     let query = PATTERN_IDS_TABLE;
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS messageIds;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -257,26 +262,8 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS users;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
     let query = USERS_TABLE;
     connection.query(query, (err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS messages;";
-    connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
@@ -293,8 +280,8 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS nodes;";
-    connection.query(query, (err, res, fields) => {
+    let query = PATTERNS_TABLE;
+    connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
@@ -309,14 +296,14 @@ initQueue.unshift((connection, initQueue) => {
     });
 });
 
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS questions;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = NODES_TABLE_ALTER;
+//     connection.query(query, (err) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
@@ -329,25 +316,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS node_messages;";
-    connection.query(query, (err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
     let query = NODE_MESSAGES_TABLE;
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS security_answers;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -365,43 +334,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS patterns;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = PATTERNS_TABLE;
-    connection.query(query, (err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS sessions;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
     let query = SESSIONS_TABLE;
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS node_connections;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -417,10 +350,19 @@ initQueue.unshift((connection, initQueue) => {
     });
 });
 
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = "delimiter //";
+//     connection.query(query, (err) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
+
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS pattern_connections;";
-    connection.query(query, (err, res, fields) => {
+    let query = PATTERNS_DELETE_TRIGGER;
+    connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
@@ -428,12 +370,33 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "SET FOREIGN_KEY_CHECKS = 1;";
-    connection.query(query, (err, res, fields) => {
+    let query = NODES_DELETE_TRIGGER;
+    connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
     });
 });
+
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = "DELIMITER ;";
+//     connection.query(query, (err) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
+
+
+// const PATTERNS_DELETE_TRIGGER = 
+//     "DELIMITER //\
+//     CREATE TRIGGER patterns_delete\
+//         BEFORE DELETE ON patterns\
+//         FOR EACH ROW\
+//         BEGIN\
+//             DELETE FROM NODES;\
+//         END//\
+//     DELIMITER ;\
+//     ";
 
 initQueue.unshift((connection, initQueue) => {
     let params = {};
@@ -603,219 +566,237 @@ initQueue.unshift((connection, initQueue, params) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let patterns = [];
+    let patternIds = [];
     db.storeNewPattern( (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
-        patterns.push(pattern);
-        next(connection, initQueue, patterns);
+        patternIds.push(pattern);
+        next(connection, initQueue, patternIds);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns) => {
+initQueue.unshift((connection, initQueue, patternIds) => {
     let next = initQueue.pop();
     db.storeNewPattern( (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
-        patterns.push(pattern);
-        next(connection, initQueue, patterns);
+        patternIds.push(pattern);
+        next(connection, initQueue, patternIds);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns) => {
+initQueue.unshift((connection, initQueue, patternIds) => {
     let next = initQueue.pop();
     db.storeNewPattern( (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
-        patterns.push(pattern);
-        next(connection, initQueue, patterns);
+        patternIds.push(pattern);
+        next(connection, initQueue, patternIds);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns) => {
+initQueue.unshift((connection, initQueue, patternIds) => {
     let next = initQueue.pop();
     let nodes = [];
-    db.addNode(true, true, patterns[0].id, (node, err) => {
+    db.addNode(true, true, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[0].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[0].id, (node, err) => {
+    db.addNode(true, false, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[0].id, (node, err) => {
+    db.addNode(true, false, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, true, patterns[1].id, (node, err) => {
+    db.addNode(true, true, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[1].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[1].id, (node, err) => {
+    db.addNode(true, false, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[1].id, (node, err) => {
+    db.addNode(true, false, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, true, patterns[2].id, (node, err) => {
+    db.addNode(true, true, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[2].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[2].id, (node, err) => {
+    db.addNode(true, false, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[2].push(node);
-        next(connection, initQueue, patterns, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, patterns, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patterns[2].id, (node, err) => {
+    db.addNode(true, false, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[2].push(node);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[0][0].id, nodes[1][0].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][0].id, nodes[1][0].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][0].id, nodes[0][0].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[0][0].id, nodes[0][1].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[0][0].id, nodes[0][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[0][1].id, nodes[0][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[1][0].id, nodes[1][1].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[1][0].id, nodes[1][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[1][1].id, nodes[1][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][0].id, nodes[2][1].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][0].id, nodes[2][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][1].id, nodes[2][2].id, (err, connector) => {
         if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, nodes);
+        next(connection, initQueue, patternIds, nodes);
     });
 });
 
-initQueue.unshift((connection, initQueue, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     let nodeIds = nodes[2].map( n => n.id);
     db.getNodes(nodeIds, (nodes, err) => {
         if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.getPatterns(patternIds, (patterns, err) => {
+        if (err) rollbackAndExit(connection, err);
+        console.log(JSON.stringify(patterns));
         next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    connection.commit((err) => {
+        if (err) rollbackAndExit(connection, err);
+        connection.release();
+        console.log("Database values initialized");
+        process.exit(0);
     });
 });
 
@@ -827,19 +808,5 @@ function rollbackAndExit(connection, err) {
     });
 }
 
-
-initQueue.unshift((connection, initQueue) => {
-    connection.commit((err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
-        connection.release();
-        console.log("Database values initialized");
-        process.exit(0);
-    });
-});
-
 let executeQueue = initQueue.pop();
 executeQueue(undefined, initQueue);
-
