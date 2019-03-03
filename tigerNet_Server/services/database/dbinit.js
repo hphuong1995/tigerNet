@@ -100,29 +100,6 @@ const SECURITY_ANSWERS_TABLE =
         PRIMARY KEY (id)\
     );";
 
-// const NODES_TABLE =
-//     "CREATE TABLE nodes (\
-//         id VARCHAR(6) NOT NULL,\
-//         is_active BIT NOT NULL,\
-//         is_connector BIT NOT NULL,\
-//         fk_pattern_id VARCHAR(6),\
-//         PRIMARY KEY (id)\
-//     );"
-    // ALTER TABLE nodes\
-    //     ADD CONSTRAINT fk_blah\
-    //     FOREIGN KEY (fk_pattern_id)\
-    //     REFERENCES patterns(id)\
-    //     ON DELETE CASCADE\
-    //     ON UPDATE CASCADE\
-    // ;";
-// const NODES_TABLE_ALTER =
-//     "ALTER TABLE nodes\
-//         ADD CONSTRAINT fk_blah\
-//         FOREIGN KEY (fk_pattern_id)\
-//         REFERENCES patterns(id)\
-//         ON DELETE CASCADE\
-//         ON UPDATE CASCADE\
-//     ;"
 const NODES_TABLE =
     "CREATE TABLE nodes (\
         id VARCHAR(6) NOT NULL,\
@@ -132,15 +109,34 @@ const NODES_TABLE =
         CONSTRAINT FOREIGN KEY (fk_pattern_id)\
         REFERENCES patterns(id)\
         ON UPDATE CASCADE\
-        ON DELETE CASCADE,\
+        ON DELETE RESTRICT,\
         PRIMARY KEY (id)\
     );";
+
+const NODES_DELETE_TRIGGER = 
+    "CREATE TRIGGER nodes_delete\
+        BEFORE DELETE ON nodes\
+        FOR EACH ROW\
+        BEGIN\
+            UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
 
 const PATTERNS_TABLE =
     "CREATE TABLE patterns (\
         id VARCHAR(6) NOT NULL,\
         PRIMARY KEY (id)\
     );";
+
+const PATTERNS_DELETE_TRIGGER = 
+    "CREATE TRIGGER patterns_delete\
+        BEFORE DELETE ON patterns\
+        FOR EACH ROW\
+        BEGIN\
+            DELETE FROM nodes WHERE fk_pattern_id = OLD.id;\
+            UPDATE patternids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
     
 const NODE_CONNECTIONS_TABLE =
     "CREATE TABLE node_connections (\
@@ -157,22 +153,6 @@ const NODE_CONNECTIONS_TABLE =
         ON DELETE CASCADE,\
         PRIMARY KEY (id)\
     );";
-    
-// const PATTERN_CONNECTIONS_TABLE =
-//     "CREATE TABLE pattern_connections (\
-//         id INT NOT NULL AUTO_INCREMENT,\
-//         fk_pattern_id VARCHAR(6),\
-//         FOREIGN KEY (fk_pattern_id)\
-//         REFERENCES patterns(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE CASCADE,\
-//         fk_target_id VARCHAR(6),\
-//         FOREIGN KEY (fk_target_id)\
-//         REFERENCES patterns(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE CASCADE,\
-//         PRIMARY KEY (id)\
-//     );";
 
 const SESSIONS_TABLE =
     "CREATE TABLE sessions (\
@@ -217,7 +197,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS ids";
+    let query = "DROP TRIGGER IF EXISTS patterns_delete;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -226,7 +206,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS nodeIds;";
+    let query = "DROP TRIGGER IF EXISTS nodes_delete;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -235,106 +215,9 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS patternIds;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS messageIds;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS users;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS messages;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS nodes;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS questions;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS node_messages;";
-    connection.query(query, (err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS security_answers;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS patterns;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS sessions;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS node_connections;";
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = "DROP TABLE IF EXISTS pattern_connections;";
+    let query = "DROP TABLE IF EXISTS ids, nodeIds, patternIds, messageIds, users,\
+                    messages, nodes, questions, node_messages, security_answers,\
+                    patterns, sessions, node_connections, pattern_connections;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -466,6 +349,54 @@ initQueue.unshift((connection, initQueue) => {
         next(connection, initQueue);
     });
 });
+
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = "delimiter //";
+//     connection.query(query, (err) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = PATTERNS_DELETE_TRIGGER;
+    connection.query(query, (err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = NODES_DELETE_TRIGGER;
+    connection.query(query, (err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = "DELIMITER ;";
+//     connection.query(query, (err) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
+
+
+// const PATTERNS_DELETE_TRIGGER = 
+//     "DELIMITER //\
+//     CREATE TRIGGER patterns_delete\
+//         BEFORE DELETE ON patterns\
+//         FOR EACH ROW\
+//         BEGIN\
+//             DELETE FROM NODES;\
+//         END//\
+//     DELIMITER ;\
+//     ";
 
 initQueue.unshift((connection, initQueue) => {
     let params = {};
@@ -862,10 +793,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes) => {
 
 initQueue.unshift((connection, initQueue) => {
     connection.commit((err) => {
-        if (err) {
-            connection.rollback(() => connection.release());
-            throw err;
-        }
+        if (err) rollbackAndExit(connection, err);
         connection.release();
         console.log("Database values initialized");
         process.exit(0);
@@ -882,4 +810,3 @@ function rollbackAndExit(connection, err) {
 
 let executeQueue = initQueue.pop();
 executeQueue(undefined, initQueue);
-

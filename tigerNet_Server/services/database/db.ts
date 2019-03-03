@@ -416,7 +416,6 @@ class DB {
                 callback(undefined, new Err("Invalid user or question id", -1));
                 return;
             }
-            // callback(results[0].answer, undefined);
             callback(new SecurityAnswer(results[0].answer, userId, questionId, results[0].id), undefined);
         });
     }
@@ -470,82 +469,15 @@ class DB {
         });
     }
 
-    // /*
-    //  * Execute queries inside of a transaction protected by a lock
-    //  * Parameters:
-    //  *     lockType: string ( 'READ' | 'WRITE' )
-    //  *     tableName: string - table to lock
-    //  * Error codes:
-    //  *       -1: Invalid lock type
-    //  *      -10: MySQL error
-    //  */
-    // public criticalTransaction(lockType: string, tableName: string, args: any,
-    //     criticalQueries: (connection: PoolConnection, args: any,
-    //         callback: (err: Err, results: any) => void) => void,
-    //     transactionCallback: (results: any, err: Err) => void): void {
-    //     let criticalQueryResults: any;
-    //     if (lockType !== "READ" && lockType !== "WRITE") {
-    //         transactionCallback(undefined, new Err("Invalid lock type: " + lockType, -1));
-    //         return;
-    //     }
-    //     pool.getConnection((err: MysqlError, connection: PoolConnection) => {
-    //         if (err) {
-    //             transactionCallback(undefined, new Err(err.message, -10));
-    //             connection.release();
-    //             return;
-    //         }
-    //         connection.beginTransaction((err: MysqlError) => {
-    //             if (err) {
-    //                 transactionCallback(undefined, new Err(err.message, -10));
-    //                 connection.rollback(() => connection.release());
-    //                 return;
-    //             }
-    //             let query: string = "LOCK TABLES " + tableName + " " + lockType;
-    //             connection.query(query, (err: MysqlError) => {
-    //                 if (err) {
-    //                     transactionCallback(undefined, new Err(err.message, -10));
-    //                     connection.rollback(() => connection.release());
-    //                     return;
-    //                 }
-    //                 criticalQueries(connection, args, (err: Err, results: any) => {
-    //                     if (err) {
-    //                         transactionCallback(undefined, new Err(err.message, -10));
-    //                         connection.rollback(() => connection.release());
-    //                         return;
-    //                     }
-    //                     criticalQueryResults = results;
-    //                     query = "UNLOCK TABLES";
-    //                     connection.query(query, (err: MysqlError) => {
-    //                         if (err) {
-    //                             transactionCallback(undefined, new Err(err.message, -10));
-    //                             connection.rollback(() => connection.release());
-    //                             return;
-    //                         }
-    //                         connection.commit((err: MysqlError) => {
-    //                             if (err) {
-    //                                 connection.rollback(() => connection.release());
-    //                                 transactionCallback(undefined, new Err(err.message, -10));
-    //                                 return;
-    //                             }
-    //                             transactionCallback(criticalQueryResults, undefined);
-    //                             connection.release();
-    //                         });
-    //                     });
-    //                 });
-    //             });
-    //         });
-    //     });
-    // }
-
     /*
- * Execute queries inside of a transaction protected by a lock
- * Parameters:
- *     lockType: string ( 'READ' | 'WRITE' )
- *     tableName: string - table to lock
- * Error codes:
- *       -1: Invalid lock type
- *      -10: MySQL error
- */
+     * Execute queries inside of a transaction
+     * Parameters:
+     *     lockType: string ( 'READ' | 'WRITE' )
+     *     tableName: string - table to lock
+     * Error codes:
+     *       -1: Invalid lock type
+     *      -10: MySQL error
+     */
     public transaction(args: any,
         queries: (connection: PoolConnection, args: any,
             callback: (err: Err, results: any) => void) => void,
@@ -602,6 +534,9 @@ class DB {
     /*
      * Create a new node from the given parameters and add it into the database.
      * The new node is returned in the callback
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
      * Error codes:
      *     -1: Invalid lock type
      *     10: MySQL error
@@ -625,6 +560,9 @@ class DB {
     /*
      * Connects two nodes
      * PRE: Node ids must be valid nodes
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
      * Error codes:
      *     -1: invalid node id(s)
      *     -2: attempted to create connection fron non connector node to a node in a different pattern
@@ -657,7 +595,7 @@ class DB {
             }
 
             query =
-            "SELECT id FROM NODE_CONNECTIONS\
+            "SELECT id FROM node_connections\
                 WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
                 OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
             pool.query(query, (err: MysqlError, results: any) => {
@@ -855,7 +793,7 @@ class DB {
     public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void ): void {
         const query: string =
         "SELECT DISTINCT fk_node_id, fk_target_id\
-            FROM node_connections JOIN NODES\
+            FROM node_connections JOIN nodes\
             ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
             AND nodes.is_connector = 1\
             WHERE fk_target_id IN\
@@ -869,6 +807,7 @@ class DB {
             callback(connectors, undefined);
         });
     }
+
     /*
      * Returns the entire network
      * Error codes:
@@ -889,6 +828,71 @@ class DB {
                 callback(undefined, new Network(patterns, connections));
             });
         });
+    }
+
+    /*
+     * Deletes the specified pattern, deletes all nodes within the specified pattern,
+     *     deletes all connectors that touch any node on the pattern,
+     *     and adds the pattern id and all affected node ids to the free id lists.
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deletePattern(patternId: string, callback: (err: Err) => void): void {
+        const query: string = "DELETE FROM patterns WHERE id = '" + patternId + "'";
+        pool.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+                return;
+            }
+            callback(undefined);
+        });
+    }
+
+    /*
+     * Deletes the specified node, deletes all connectors that touch the node,
+     *     and adds the node id to the free nodeId list.
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deleteNode(nodeId: string, callback: (err: Err) => void): void {
+        const query: string = "DELETE FROM nodes WHERE id = '" + nodeId + "'";
+        pool.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+                return;
+            }
+            callback(undefined);
+        });
+    }
+
+    /*
+     * Deletes the specified connector between the given nodes
+
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deleteConnection(nodeId: string, targetId: string, callback: (err: Err) => void ): void {
+        let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
+        console.log(query);
+            query =
+            "DELETE FROM node_connections\
+                WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
+                OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
+            pool.query(query, (err: MysqlError, results: any) => {
+                if (err) {
+                    callback(new Err(err.message, -10));
+                    return;
+                }
+                callback(undefined);
+            });
     }
     private bit(bool: boolean): number {
         return bool ? 1 : 0;
