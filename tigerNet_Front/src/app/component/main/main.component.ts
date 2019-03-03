@@ -172,7 +172,12 @@ export class MainComponent implements OnInit, AfterViewInit {
               _this.data.selectedPatterns.push(clickedEle);
             else if(clickedEle.charAt(0) === 'N' && ! _this.data.selectedNodes.includes(clickedEle))
               _this.data.selectedNodes.push(clickedEle);
+          });
 
+          this.cy.on('tap','edge', function(e){
+            //let clickedNode : string;
+            var clickedEle = e.target.id();
+            _this.data.selectedLink.push();
           });
       });
     }
@@ -191,7 +196,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       console.log(this.data.selectedNodes);
 
       // check if a pattern is selected
-      if(this.data.selectedPatterns.length !== 1){
+      if(this.data.selectedPatterns.length !== 0){
         this.resetSelectedElement();
         alert("Please select only 1 Pattern that new node will be added to.");
         return;
@@ -203,7 +208,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         return;
       }
       let currentPattern : Pattern;
-      currentPattern = this.network.getPatternById(this.data.selectedPatterns[0]);
+      currentPattern = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]);
       console.log(currentPattern);
 
       // check if the pattern is full
@@ -217,7 +222,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.selectedNodes.forEach( (node : string) =>{
         if(!currentPattern.getNodeById(node)){
           this.resetSelectedElement();
-          alert("Please select nodes that inside the selected pattern.");
+          alert("Please select nodes that inside the only 1 patern pattern.");
           return;
         }
       });
@@ -235,6 +240,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       if(currentPattern.nodes.length >= 3){
         if(this.data.selectedNodes.length < 2){
           this.resetSelectedElement();
+          console.log("hit");
           alert("Selected pattern has more than 3 nodes, please select at least 2 nodes to maintain the ring.");
           return;
         }
@@ -249,25 +255,72 @@ export class MainComponent implements OnInit, AfterViewInit {
       });
     }
 
+    addConnection = function(){
+      if(this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2 ){
+        this.resetSelectedElement();
+        alert("Please select 2 nodes or 2 patterns to add a link");
+        return;
+      }
+      else{
+        if(this.data.selectedPatterns.length === 2){
+          if(this.data.selectedNodes.length !== 0){
+            this.resetSelectedElement();
+            alert("Please select 2 nodes OR 2 patterns to add a link, not both");
+            return;
+          }
+          else{
+            // Adding link between 2 connector nodes
+            var arrToSend = [];
+            this.data.selectedPatterns.forEach( (pat) =>{
+              //console.log(this.network.getPatternById(pat).getConnectorNode().id);
+              arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
+            });
+            this.resetSelectedElement();
+            this.data.addNewConnection(arrToSend).subscribe( (data) =>{
+              console.log(data);
+            });
+          }
+        }
+        else if(this.data.selectedNodes.length === 2){
+          if(this.data.selectedPatterns.length !== 0){
+            this.resetSelectedElement();
+            alert("Please select 2 nodes or 2 patterns to add a link, not both");
+            return;
+          }
+          else{
+            // check if selected Node is in the same pattern
+            if(this.network.getPatternByChildNodeId(this.data.selectedNodes[0]).id
+                !== this.network.getPatternByChildNodeId(this.data.selectedNodes[1]).id){
+                  this.resetSelectedElement();
+                  alert("Please select 2 nodes in the same pattern.");
+                  return;
+            }
+            else{
+              this.resetSelectedElement();
+              this.data.addNewConnection(this.data.selectedNodes).subscribe( (data) =>{
+                console.log(data);
+              });
+            }
+          }
+        }
+      }
+    }
 
     addPattern = function(){
       if(this.data.selectedNodes.length > 0){
-        this.data.selectedNodes = [];
-        this.data.selectedPatterns = [];
+        this.resetSelectedElement();
         alert("Please only select patterns for this operation.");
         return;
       }
       if(this.data.selectedPatterns.length === 0){
-        this.data.selectedNodes = [];
-        this.data.selectedPatterns = [];
+        this.resetSelectedElement();
         alert("Please select a pattern that new pattern connect to.");
         return;
       }
       else{
         console.log(this.data.selectedPatterns);
         var arrToSend = this.data.selectedPatterns;
-        this.data.selectedNodes = [];
-        this.data.selectedPatterns = [];
+        this.resetSelectedElement();
         this.data.addPattern(arrToSend).subscribe( (data) =>{
           console.log(data);
         });

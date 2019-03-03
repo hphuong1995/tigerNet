@@ -10,8 +10,9 @@ export class DataService {
   public csrf: string;
 
   public selectedPatterns = [];
-
+  public selectedLink = [];
   public selectedNodes = [];
+
 
   public cy : any;
 
@@ -34,7 +35,11 @@ export class DataService {
   }
 
   addNode(reqObject : any){
-    console.log(reqObject.pattern.id);
+    //console.log(reqObject.pattern.id);
     return this.http.post('api/v1/admin/patterns/' + reqObject.pattern.id + "/nodes", JSON.stringify(reqObject));
+  }
+
+  addNewConnection( reqObject : any){
+    return this.http.post('api/v1/admin/connections', JSON.stringify({nodes: reqObject}));
   }
 }

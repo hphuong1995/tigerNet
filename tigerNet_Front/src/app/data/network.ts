@@ -14,4 +14,16 @@ export class Network {
     // public static getPatternById(net: Network, id: string): Pattern {
     //     return net.patterns.find( p => p.id === id );
     // }
+
+    public getPatternByChildNodeId(id: string) : Pattern{
+      return this.patterns.find( p =>{
+        if(p.getNodeById(id)){
+          return true;
+        }
+        else{
+          return false;
+        }
+      })
+    }
+
 }
