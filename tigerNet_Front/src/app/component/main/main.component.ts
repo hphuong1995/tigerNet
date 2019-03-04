@@ -224,14 +224,12 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     resetSelectedElement = function(){
       this.data.selectedNodes.forEach( (selectedNode) =>{
-        var unSelect = this.cy.$('#' + selectedNode).animation({
-          style:{
-            'background-color': 'black'
-          },
-          duration : 10
-        })
-        unSelect.play();
-      })
+        this.cy.$('#'+selectedNode).json({ selected: false });
+      });
+      this.data.selectedPatterns.forEach( (selectedPattern) =>{
+        this.cy.$('#'+selectedPattern).json({ selected: false });
+      });
+
       this.data.selectedNodes = [];
       this.data.selectedPatterns = [];
     }
