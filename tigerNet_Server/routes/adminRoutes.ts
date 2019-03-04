@@ -118,12 +118,25 @@ router.put("/users/:uid", (req: Request, res: Response) => {
 /*
  * add new pattern
  */
-router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
+router.post("/patterns", (req: Request, res: Response) => {
   console.log(req.params.body);
-  res.status(200).send({valid: true});
+  res.status(200).send({valid: "hit add pattern"});
 });
 
 /*
  * add new Node
  */
+ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
+   console.log(req.params.body);
+   res.status(200).send({valid: "hit add Node"});
+ });
+
+ /*
+  * add new Node
+  */
+  router.post("/connections", (req: Request, res: Response) => {
+    console.log(req.params.body);
+    res.status(200).send({valid: "hit add connection"});
+  });
+
 export { router as adminRoutes };

@@ -9,7 +9,7 @@ import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
 
-declare var cytoscape: any; 
+declare var cytoscape: any;
 
 @Component({
     selector: 'app-main',
@@ -25,8 +25,8 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
     constructor(private data: DataService) { }
-   
-   
+
+
     ngOnInit() {
       let elements: any[] = [];
       let nonConnectorSelectors = "";
@@ -223,6 +223,15 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
     resetSelectedElement = function(){
+      this.data.selectedNodes.forEach( (selectedNode) =>{
+        var unSelect = this.cy.$('#' + selectedNode).animation({
+          style:{
+            'background-color': 'black'
+          },
+          duration : 10
+        })
+        unSelect.play();
+      })
       this.data.selectedNodes = [];
       this.data.selectedPatterns = [];
     }
