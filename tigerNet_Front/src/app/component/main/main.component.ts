@@ -162,9 +162,11 @@ export class MainComponent implements OnInit, AfterViewInit {
                   return;
             }
             else{
-              this.resetSelectedElement();
+
               this.data.addNewConnection(this.data.selectedNodes).subscribe( (data) =>{
                 console.log(data);
+                this.resetGraph(data.patterns, data.patternConnections);
+                this.resetSelectedElement();
               });
             }
           }

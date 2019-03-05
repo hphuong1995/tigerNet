@@ -218,8 +218,19 @@ router.post("/patterns", (req: Request, res: Response) => {
   * add new Node
   */
   router.post("/connections", (req: Request, res: Response) => {
-    console.log(req.params.body);
-    res.status(200).send({valid: "hit add connection"});
+    db.addConnection(req.body.nodes[0], req.body.nodes[1], (err: Err, connector: Connector) => {
+      if (err) {
+        res.status(400).send(err.message);
+      } else {
+        db.getNetwork( (err: Err, network: Network) => {
+          if (err) {
+            res.status(400).send(err.message);
+          } else {
+            res.status(200).send(network);
+          }
+        });
+      }
+    });
   });
 
 export { router as adminRoutes };
