@@ -621,6 +621,44 @@ class DB {
             });
         });
     }
+    
+
+    /*
+     * Adds many connections into the database. Same effect of calling addConnection for
+     * each connector.
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
+     * Error codes:
+     *     -1: invalid node id(s)
+     *     -2: attempted to create connection fron non connector node to a node in a different pattern
+     *     -3: attempted to create connection that already exists
+     *     -10: MySQL error
+     */    
+    public addConnections(connectors: Connector[], callback: (err: Err) => void): void {
+        const fullPatterns: Pattern[] = [];
+        const promises: Array<Promise<any>> = connectors.map( (connector: Connector) => {
+            return new Promise((resolve: (connector: Connector) => void, reject: (err: Err) => void) => {
+                this.addConnection(connector.id, connector.targetId, (err: Err, connector: Connector) => {
+                    if(err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve(connector);
+                });
+            });
+        });
+        Promise.all(promises).then((result: any[]) => {
+            console.log("promise chain completed");
+            callback(undefined);
+        }, (err: any) => {
+            console.log(JSON.stringify("reject: " + err));
+            callback(err);
+        }).catch( (err: any) => {
+            console.log(JSON.stringify("catch: " + err));
+            callback(err);
+        });
+    }
 
     /*
      * Gets a pattern by its id
@@ -880,19 +918,17 @@ class DB {
      *      -10: MySQL error
      */
     public deleteConnection(nodeId: string, targetId: string, callback: (err: Err) => void ): void {
-        let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
-        console.log(query);
-            query =
-            "DELETE FROM node_connections\
-                WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
-                OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
-            pool.query(query, (err: MysqlError, results: any) => {
-                if (err) {
-                    callback(new Err(err.message, -10));
-                    return;
-                }
-                callback(undefined);
-            });
+        const query: string =
+        "DELETE FROM node_connections\
+            WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
+            OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
+        pool.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+                return;
+            }
+            callback(undefined);
+        });
     }
     private bit(bool: boolean): number {
         return bool ? 1 : 0;

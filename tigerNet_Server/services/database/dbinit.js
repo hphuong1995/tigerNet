@@ -296,15 +296,6 @@ initQueue.unshift((connection, initQueue) => {
     });
 });
 
-// initQueue.unshift((connection, initQueue) => {
-//     let next = initQueue.pop();
-//     let query = NODES_TABLE_ALTER;
-//     connection.query(query, (err) => {
-//         if (err) rollbackAndExit(connection, err);
-//         next(connection, initQueue);
-//     });
-// });
-
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = QUESTIONS_TABLE;
@@ -350,15 +341,6 @@ initQueue.unshift((connection, initQueue) => {
     });
 });
 
-// initQueue.unshift((connection, initQueue) => {
-//     let next = initQueue.pop();
-//     let query = "delimiter //";
-//     connection.query(query, (err) => {
-//         if (err) rollbackAndExit(connection, err);
-//         next(connection, initQueue);
-//     });
-// });
-
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = PATTERNS_DELETE_TRIGGER;
@@ -376,27 +358,6 @@ initQueue.unshift((connection, initQueue) => {
         next(connection, initQueue);
     });
 });
-
-// initQueue.unshift((connection, initQueue) => {
-//     let next = initQueue.pop();
-//     let query = "DELIMITER ;";
-//     connection.query(query, (err) => {
-//         if (err) rollbackAndExit(connection, err);
-//         next(connection, initQueue);
-//     });
-// });
-
-
-// const PATTERNS_DELETE_TRIGGER = 
-//     "DELIMITER //\
-//     CREATE TRIGGER patterns_delete\
-//         BEFORE DELETE ON patterns\
-//         FOR EACH ROW\
-//         BEGIN\
-//             DELETE FROM NODES;\
-//         END//\
-//     DELIMITER ;\
-//     ";
 
 initQueue.unshift((connection, initQueue) => {
     let params = {};
