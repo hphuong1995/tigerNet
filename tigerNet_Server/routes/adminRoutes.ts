@@ -11,6 +11,7 @@ import { User } from "../data/user";
 import { Err } from "./../data/err";
 import { Session } from "./../data/session";
 import { db } from "./../services/database/db";
+import { Node } from "./../data/node";
 
 // var gamesDb = {};// userid : [games]
 
@@ -119,7 +120,8 @@ router.put("/users/:uid", (req: Request, res: Response) => {
  * add new pattern
  */
 router.post("/patterns", (req: Request, res: Response) => {
-  console.log(req.params.body);
+  console.log(req.body);
+  // storeNewPattern
   res.status(200).send({valid: "hit add pattern"});
 });
 
@@ -128,6 +130,16 @@ router.post("/patterns", (req: Request, res: Response) => {
  */
  router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
    console.log(req.params.body);
+   db.storeNewPattern( (pid : string, err: Err) =>{
+     if(err){
+       res.status(400).send(err.message);
+     }
+     else{
+       db.addNode(true, true, pid, (node : Node, err: Err) =>{
+
+       });
+     }
+   });
    res.status(200).send({valid: "hit add Node"});
  });
 

@@ -360,8 +360,12 @@ export class MainComponent implements OnInit, AfterViewInit {
         return;
       }
       else{
+        var arrToSend = [];
         console.log(this.data.selectedPatterns);
-        var arrToSend = this.data.selectedPatterns;
+        this.data.selectedPatterns.forEach( (pid) =>{
+          arrToSend.push(this.network.getPatternById(pid).getConnectorNode().id);
+        });
+        console.log(arrToSend);
         this.resetSelectedElement();
         this.data.addPattern(arrToSend).subscribe( (data) =>{
           console.log(data);
