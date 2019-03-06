@@ -1002,8 +1002,6 @@ class DB {
         });
     }
 
-
-
 }
 
 const db: DB = new DB();

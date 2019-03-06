@@ -305,14 +305,14 @@ initQueue.unshift((connection, initQueue) => {
     });
 });
 
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    let query = NODE_MESSAGES_TABLE;
-    connection.query(query, (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     let query = NODE_MESSAGES_TABLE;
+//     connection.query(query, (err, res, fields) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
