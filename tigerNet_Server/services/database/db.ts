@@ -622,7 +622,6 @@ class DB {
             });
         });
     }
-    
 
     /*
      * Adds many connections into the database. Same effect of calling addConnection for
@@ -635,13 +634,13 @@ class DB {
      *     -2: attempted to create connection fron non connector node to a node in a different pattern
      *     -3: attempted to create connection that already exists
      *     -10: MySQL error
-     */    
+     */
     public addConnections(connectors: Connector[], callback: (err: Err) => void): void {
         const fullPatterns: Pattern[] = [];
         const promises: Array<Promise<any>> = connectors.map( (connector: Connector) => {
             return new Promise((resolve: (connector: Connector) => void, reject: (err: Err) => void) => {
                 this.addConnection(connector.id, connector.targetId, (err: Err, connector: Connector) => {
-                    if(err) {
+                    if (err) {
                         reject(err);
                         return;
                     }

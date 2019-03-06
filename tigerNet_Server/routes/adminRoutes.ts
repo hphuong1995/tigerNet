@@ -8,10 +8,12 @@ import { ClientQuestion } from "../data/clientQuestion";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
 import { User } from "../data/user";
+import { Connector } from "./../data/connector";
 import { Err } from "./../data/err";
+import { Network } from "./../data/network";
+import { Node } from "./../data/node";
 import { Session } from "./../data/session";
 import { db } from "./../services/database/db";
-import { Node } from "./../data/node";
 
 // var gamesDb = {};// userid : [games]
 
@@ -122,33 +124,113 @@ router.put("/users/:uid", (req: Request, res: Response) => {
 router.post("/patterns", (req: Request, res: Response) => {
   console.log(req.body);
   // storeNewPattern
-  res.status(200).send({valid: "hit add pattern"});
+  db.storeNewPattern( (pid: string, err: Err) => {
+    if (err) {
+      res.status(400).send(err.message);
+    } else {
+      db.addNode(true, true, pid, (node: Node, err: Err) => {
+        let nodeIdList = [];
+        const connectorList: Connector[] = [];
+
+        nodeIdList = req.body;
+        nodeIdList.forEach( (nid: string) => {
+          const newConnector = new Connector(node.id, nid);
+          connectorList.push(newConnector);
+        });
+
+        db.addConnections(connectorList, (err: Err) => {
+          if ( err) {
+            res.status(400).send(err.message);
+          } else {
+            db.getNetwork( (err: Err, network: Network) => {
+              if (err) {
+                res.status(400).send(err.message);
+              } else {
+                res.status(200).send(network);
+              }
+            });
+          }
+        });
+      });
+    }
+  });
 });
 
 /*
  * add new Node
  */
  router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
-   console.log(req.params.body);
-   db.storeNewPattern( (pid : string, err: Err) =>{
-     if(err){
+   console.log(req.body);
+   db.addNode(true, false, req.body.pattern, (node: Node, err: Err) => {
+     if (err) {
        res.status(400).send(err.message);
-     }
-     else{
-       db.addNode(true, true, pid, (node : Node, err: Err) =>{
+     } else {
+       let nodeIdList: any[] = [];
+       const connectorList: Connector[] = [];
 
+       nodeIdList = req.body.nodes;
+
+       nodeIdList.forEach( (nid: string) => {
+         const newConnector = new Connector(node.id, nid);
+         connectorList.push(newConnector);
+       });
+
+       db.addConnections(connectorList, (err: Err) => {
+         if ( err) {
+           res.status(400).send(err.message);
+         } else {
+           const nonConNode: string[] = [];
+           nodeIdList.forEach( (nid: string) => {
+             if ( nid !== req.body.conNode) {
+               nonConNode.push(nid);
+             }
+           });
+           if (nonConNode.length !== 2 || req.body.currentNodeNum === 3) {
+             db.getNetwork( (err: Err, network: Network) => {
+               if (err) {
+                 res.status(400).send(err.message);
+               } else {
+                 res.status(200).send(network);
+               }
+             });
+           } else {
+             db.deleteConnection(nonConNode[0], nonConNode[1], ( err: Err) => {
+               if (err) {
+                 res.status(400).send(err.message);
+               } else {
+                 db.getNetwork( (err: Err, network: Network) => {
+                   if (err) {
+                     res.status(400).send(err.message);
+                   } else {
+                     res.status(200).send(network);
+                   }
+                 });
+               }
+             });
+           }
+         }
        });
      }
    });
-   res.status(200).send({valid: "hit add Node"});
  });
 
  /*
   * add new Node
   */
   router.post("/connections", (req: Request, res: Response) => {
-    console.log(req.params.body);
-    res.status(200).send({valid: "hit add connection"});
+    db.addConnection(req.body.nodes[0], req.body.nodes[1], (err: Err, connector: Connector) => {
+      if (err) {
+        res.status(400).send(err.message);
+      } else {
+        db.getNetwork( (err: Err, network: Network) => {
+          if (err) {
+            res.status(400).send(err.message);
+          } else {
+            res.status(200).send(network);
+          }
+        });
+      }
+    });
   });
 
 export { router as adminRoutes };
