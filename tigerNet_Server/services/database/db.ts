@@ -835,6 +835,8 @@ class DB {
             ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
             AND nodes.is_connector = 1\
             WHERE fk_target_id IN\
+                (SELECT id FROM nodes WHERE is_connector = 1)\
+            AND fk_node_id IN\
                 (SELECT id FROM nodes WHERE is_connector = 1)";
         pool.query(query, (err: MysqlError, results: IDbConnector[]) => {
             if (err) {
