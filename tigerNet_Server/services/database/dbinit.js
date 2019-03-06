@@ -66,21 +66,21 @@ const QUESTIONS_TABLE =
         PRIMARY KEY (id)\
     );";
 
-const NODE_MESSAGES_TABLE =
-    "CREATE TABLE node_messages (\
-        id VARCHAR(45) NOT NULL,\
-        fk_connected_node_id VARCHAR(45),\
-        CONSTRAINT FOREIGN KEY (fk_connected_node_id)\
-        REFERENCES nodes(id)\
-        ON UPDATE CASCADE\
-        ON DELETE SET NULL,\
-        fk_connected_message_id VARCHAR(45),\
-        CONSTRAINT FOREIGN KEY (fk_connected_message_id)\
-        REFERENCES messages(id)\
-        ON UPDATE CASCADE\
-        ON DELETE SET NULL,\
-        PRIMARY KEY (id)\
-    );";
+// const NODE_MESSAGES_TABLE =
+//     "CREATE TABLE node_messages (\
+//         id VARCHAR(45) NOT NULL,\
+//         fk_connected_node_id VARCHAR(45),\
+//         CONSTRAINT FOREIGN KEY (fk_connected_node_id)\
+//         REFERENCES nodes(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE SET NULL,\
+//         fk_connected_message_id VARCHAR(45),\
+//         CONSTRAINT FOREIGN KEY (fk_connected_message_id)\
+//         REFERENCES messages(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE SET NULL,\
+//         PRIMARY KEY (id)\
+//     );";
 
 const SECURITY_ANSWERS_TABLE =
     "CREATE TABLE security_answers (\

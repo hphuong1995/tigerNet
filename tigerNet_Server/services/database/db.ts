@@ -554,7 +554,8 @@ class DB {
                     return;
                 }
                 callback(results as Node, undefined);
-            });
+            }
+        );
     }
 
     /*
@@ -1001,6 +1002,8 @@ class DB {
             });
         });
     }
+
+
 
 }
 
