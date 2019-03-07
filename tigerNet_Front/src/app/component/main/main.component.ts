@@ -137,14 +137,21 @@ export class MainComponent implements OnInit, AfterViewInit {
           else{
             // Adding link between 2 connector nodes
             var arrToSend = [];
+
             this.data.selectedPatterns.forEach( (pat) =>{
               //console.log(this.network.getPatternById(pat).getConnectorNode().id);
               arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
             });
             this.resetSelectedElement();
-            this.data.addNewConnection(arrToSend).subscribe( (data) =>{
-              console.log(data);
-            });
+            if(this.checkConnectionExist(arrToSend,  this.network.patternConnections)){
+              alert("The connection between selected Pattern is already exist.");
+              return;
+            }else{
+              this.data.addNewConnection(arrToSend).subscribe( (data) =>{
+                console.log(data);
+                this.resetGraph(data.patterns, data.patternConnections);
+              });
+            }
           }
         }
         else if(this.data.selectedNodes.length === 2){
@@ -162,14 +169,66 @@ export class MainComponent implements OnInit, AfterViewInit {
                   return;
             }
             else{
-
-              this.data.addNewConnection(this.data.selectedNodes).subscribe( (data) =>{
-                console.log(data);
-                this.resetGraph(data.patterns, data.patternConnections);
+              //console.log(this.network.getPatternByChildNodeId(this.data.selectedNodes[0]));
+              //console.log(this.data.selectedNodes[0]));
+              if(this.checkConnectionExist(this.data.selectedNodes, this.network.getPatternByChildNodeId(this.data.selectedNodes[0]).connections)){
                 this.resetSelectedElement();
-              });
+                alert("The connection is already exist");
+                return;
+              }
+              else{
+                this.data.addNewConnection(this.data.selectedNodes).subscribe( (data) =>{
+                  console.log(data);
+                  this.resetGraph(data.patterns, data.patternConnections);
+                  this.resetSelectedElement();
+                });
+              }
             }
           }
+        }
+      }
+    }
+
+    deleteConnetion(){
+      if(this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2 ){
+        this.resetSelectedElement();
+        alert("Please select 2 nodes or 2 patterns to add a link");
+        return;
+      }
+      else{
+        if(this.data.selectedPatterns.length === 2){
+          if(this.data.selectedNodes.length !== 0){
+            this.resetSelectedElement();
+            alert("Please select 2 nodes OR 2 patterns to delete a connection, not both");
+            return;
+          }
+          else{
+            // get all Connection patterns
+            var arrToSend = [];
+            this.data.selectedPatterns.forEach( (pat) =>{
+              //console.log(this.network.getPatternById(pat).getConnectorNode().id);
+              arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
+            });
+
+            //console.log(arrToSend);
+
+            // flag = true then the connection between the 2 pattern is exist => can delete
+            if(this.checkConnectionExist(arrToSend, this.network.patternConnections)){
+              this.resetSelectedElement();
+              //this.data.deleteConnection(arrToSend).subscribe( (data) =>{
+              //  console.log(data);
+              //});
+            }
+            else{
+              this.resetSelectedElement();
+              alert("There is not connection to delete between the selected patterns");
+              return;
+            }
+            this.resetSelectedElement();
+          }
+        }
+        else{
+
         }
       }
     }
@@ -198,6 +257,24 @@ export class MainComponent implements OnInit, AfterViewInit {
           this.resetGraph(data.patterns, data.patternConnections);
         });
       }
+    }
+
+    checkConnectionExist(arrToSend : any[], arrayToCheck : any[]){
+      var flag : boolean = false;
+
+      arrayToCheck.forEach( (connector) =>{
+        if(connector.id === arrToSend[0] && connector.targetId === arrToSend[1] ){
+          flag = true;
+        }
+        else if(connector.id === arrToSend[1] && connector.targetId === arrToSend[0]){
+          flag = true;
+        }
+        else{
+          // skip
+        }
+      });
+
+      return flag;
     }
 
     resetGraph( patterns, connections){

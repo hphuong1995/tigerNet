@@ -42,4 +42,8 @@ export class DataService {
   addNewConnection( reqObject : any){
     return this.http.post('api/v1/admin/connections', JSON.stringify({nodes: reqObject}));
   }
+
+  deleteConnection( reqObject :any){
+    return this.http.delete('api/v1/admin/connections?id=' + reqObject[0] + '&targetId=' + reqObject[1]);
+  }
 }

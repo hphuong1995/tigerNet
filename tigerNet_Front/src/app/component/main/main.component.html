@@ -73,14 +73,18 @@
     <mat-expansion-panel>
         <mat-expansion-panel-header>
         <mat-panel-title>
-            Delete Link
+            Delete Connection
         </mat-panel-title>
         <mat-panel-description>
             <p style="text-align:right;margin: auto">
             Remove a connetcion you unwanted
             </p>
         </mat-panel-description>
+
         </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="deleteConnetion()">Delete Connection</button></p>
+        </mat-action-row>
     </mat-expansion-panel>
 
     <!-- Send Message -->
