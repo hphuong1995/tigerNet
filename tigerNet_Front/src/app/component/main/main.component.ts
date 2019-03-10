@@ -44,11 +44,17 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
     resetSelectedElement = function(){
+      // this.data.selectedNodes.forEach( (selectedNode) =>{
+      //   this.cy.$('#'+selectedNode).json({ selected: false });
+      // });
+      // this.data.selectedPatterns.forEach( (selectedPattern) =>{
+      //   this.cy.$('#'+selectedPattern).json({ selected: false });
+      // });
       this.data.selectedNodes.forEach( (selectedNode) =>{
-        this.cy.$('#'+selectedNode).json({ selected: false });
+        this.cy.$('#'+selectedNode).removeClass('highlighted');
       });
       this.data.selectedPatterns.forEach( (selectedPattern) =>{
-        this.cy.$('#'+selectedPattern).json({ selected: false });
+        this.cy.$('#'+selectedPattern).removeClass('highlighted');
       });
 
       this.data.selectedNodes = [];
@@ -372,7 +378,7 @@ export class MainComponent implements OnInit, AfterViewInit {
                   }
               },
               {
-                  selector:  ':selected',
+                  selector:  '.highlighted',
                   css :{
                     'background-color' : '#FF4500',
                   }
@@ -396,13 +402,35 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.cy.nodes().on('tap', function(e){
         //let clickedNode : string;
         var clickedEle = e.target.id();
-        //console.log();
-
+        e.preventDefault();
+        e.stopPropagation();
         //collector = collector.union(clickedNode);
-        if(clickedEle.charAt(0) === 'P' && ! _this.data.selectedPatterns.includes(clickedEle))
-          _this.data.selectedPatterns.push(clickedEle);
-        else if(clickedEle.charAt(0) === 'N' && ! _this.data.selectedNodes.includes(clickedEle))
-          _this.data.selectedNodes.push(clickedEle);
+        if(clickedEle.charAt(0) === 'P') {//pattern          
+
+          if(_this.data.selectedPatterns.includes(clickedEle)) {//pattern is selected, deselect it
+            _this.data.selectedPatterns = _this.data.selectedPatterns.filter( x => x !== clickedEle);
+            e.target.removeClass('highlighted');
+          } else {//pattern is not selected, select it
+            _this.data.selectedPatterns.push(clickedEle);
+            e.target.addClass('highlighted');
+          }
+
+        } else {//node
+
+          if(_this.data.selectedNodes.includes(clickedEle)) {//node is selected, deselect it
+            _this.data.selectedNodes = _this.data.selectedNodes.filter( x => x !== clickedEle);
+            e.target.removeClass('highlighted');
+          } else {//node is not selected, select it
+            _this.data.selectedNodes.push(clickedEle);
+            e.target.addClass('highlighted');
+          }
+
+        }
+        // if(clickedEle.charAt(0) === 'P' && ! _this.data.selectedPatterns.includes(clickedEle)) {
+        //   _this.data.selectedPatterns.push(clickedEle);
+        // } else if(clickedEle.charAt(0) === 'N' && ! _this.data.selectedNodes.includes(clickedEle)) {
+        //   _this.data.selectedNodes.push(clickedEle);
+        // }
       });
 
       this.cy.on('tap','edge', function(e){
