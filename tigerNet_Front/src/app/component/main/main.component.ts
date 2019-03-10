@@ -213,19 +213,11 @@ export class MainComponent implements OnInit, AfterViewInit {
       if(this.network.getPatternByChildNodeId(arrToSend[0]).id
           !== this.network.getPatternByChildNodeId(arrToSend[1]).id){
             // check isolate
-            if(this.checkPatternIsolate(arrToSend[0], arrToSend[1], this.network.patternConnections)){
-              this.data.deleteConnection(arrToSend).subscribe( data =>{
-                console.log(data);
-                var retData : any = data;
-                this.resetGraph(retData.patterns, retData.patternConnections);
-                this.resetSelectedElement();
-              });
-            }
-            else{
-              this.resetSelectedElement();
-              alert("Deleting this connection will isolate a pattern.");
-              return;
-            }
+            this.data.deleteConnection(arrToSend).subscribe (data =>{
+              var retData : any = data;
+              this.resetGraph(retData.patterns, retData.patternConnections);
+              this.checkPatternIsolate(this.network);
+            });
       }
       else{  // delete connection in the Pattern
 
@@ -289,7 +281,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert("Please only one node to delete");
         return;
       }
-
+      this.checkPatternIsolate(this.network);
       var selectedNodeId = this.data.selectedNodes[0];
       var pattern = this.network.getPatternByChildNodeId(selectedNodeId);
       var nodesNumber = pattern.nodes.length;
@@ -307,26 +299,47 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     }
 
-    
 
-    checkPatternIsolate(id: string, targetId :string, arrayToCheck : Connector[]){
-      var flagId : boolean = false;
-      var flagTarget : boolean = false;
-      var idx = 0;
-      var startId : string;
-      var targetId : string;
 
-      var arrayToCheckFiltered : Connector[] = [];
-      arrayToCheck.forEach( (connection : Connector) => {
-        // if it is not the connection
-        if( !(connection.id === id && connection.targetId === targetId) &&
-            !(connection.id === targetId && connection.targetId === id)){
-              arrayToCheckFiltered.push(connection);
+    checkPatternIsolate(network : Network){
+      var connectorNodeQueue : string[] = [];
+      var readList : string[] = [];
+
+      connectorNodeQueue.push(network.patterns[0].getConnectorNode().id);
+
+      while( connectorNodeQueue.length != readList.length){
+        var currentNode : string;
+        var i;
+        // Find a pattern that havent read
+        for (i = 0; i < connectorNodeQueue.length; i++){
+          if(!readList.includes(connectorNodeQueue[i])){
+            currentNode = connectorNodeQueue[i];
+            readList.push(currentNode);
+            break;
+          }
         }
-      });
 
+        network.patternConnections.forEach( (connection : Connector) =>{
+          if(connection.id === currentNode && !connectorNodeQueue.includes(connection.targetId)){
+            connectorNodeQueue.push(connection.targetId);
+          }
 
-      return flagId && flagTarget;
+          if(connection.targetId === currentNode && !connectorNodeQueue.includes(connection.id)){
+            connectorNodeQueue.push(connection.id);
+          }
+        });
+
+      }
+
+      if(connectorNodeQueue.length === network.patterns.length){
+        console.log("valid " + connectorNodeQueue);
+        return true;
+      }
+      else{
+        console.log("invalid " + connectorNodeQueue);
+        return false;
+      }
+
     }
 
     resetGraph( patterns, connections){
@@ -452,7 +465,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         e.preventDefault();
         e.stopPropagation();
         //collector = collector.union(clickedNode);
-        if(clickedEle.charAt(0) === 'P') {//pattern          
+        if(clickedEle.charAt(0) === 'P') {//pattern
 
           if(_this.data.selectedPatterns.includes(clickedEle)) {//pattern is selected, deselect it
             _this.data.selectedPatterns = _this.data.selectedPatterns.filter( x => x !== clickedEle);
