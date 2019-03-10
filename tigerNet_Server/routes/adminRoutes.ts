@@ -233,4 +233,21 @@ router.post("/patterns", (req: Request, res: Response) => {
     });
   });
 
+  router.delete("/connections", (req: Request, res: Response) => {
+    console.log(req.query);
+    db.deleteConnection(req.query.id, req.query.targetId, (err: Err) => {
+      if (err) {
+        res.status(400).send(err.message);
+      } else {
+        db.getNetwork( (err: Err, network: Network) => {
+          if (err) {
+            res.status(400).send(err.message);
+          } else {
+            res.status(200).send(network);
+          }
+        });
+      }
+    });
+  });
+
 export { router as adminRoutes };

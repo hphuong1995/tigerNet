@@ -50,7 +50,11 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.selectedPatterns.forEach( (selectedPattern) =>{
         this.cy.$('#'+selectedPattern).json({ selected: false });
       });
+      this.data.selectedLink.forEach( (selectedLink) =>{
+        this.cy.$('#'+selectedLink).json({ selected: false });
+      });
 
+      this.data.selectedLink = [];
       this.data.selectedNodes = [];
       this.data.selectedPatterns = [];
     }
@@ -190,48 +194,40 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
 
     deleteConnetion(){
-      if(this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2 ){
+      if(this.data.selectedPatterns.length !== 0 && this.data.selectedNodes.length !== 0 ){
         this.resetSelectedElement();
-        alert("Please select 2 nodes or 2 patterns to add a link");
+        alert("Please select only the connection to delete.");
         return;
       }
-      else{
-        if(this.data.selectedPatterns.length === 2){
-          if(this.data.selectedNodes.length !== 0){
-            this.resetSelectedElement();
-            alert("Please select 2 nodes OR 2 patterns to delete a connection, not both");
-            return;
-          }
-          else{
-            // get all Connection patterns
-            var arrToSend = [];
-            this.data.selectedPatterns.forEach( (pat) =>{
-              //console.log(this.network.getPatternById(pat).getConnectorNode().id);
-              arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
-            });
-
-            //console.log(arrToSend);
-
-            // flag = true then the connection between the 2 pattern is exist => can delete
-            if(this.checkConnectionExist(arrToSend, this.network.patternConnections)){
-              this.resetSelectedElement();
-              //this.data.deleteConnection(arrToSend).subscribe( (data) =>{
-              //  console.log(data);
-              //});
+      var arrToSend : any[] = [];
+      arrToSend.push(this.data.selectedLink[0]);
+      arrToSend.push(this.data.selectedLink[1]);
+      console.log(arrToSend);
+      // Delete Pattern connection
+      if(this.network.getPatternByChildNodeId(arrToSend[0]).id
+          !== this.network.getPatternByChildNodeId(arrToSend[1]).id){
+            // check isolate
+            if(this.checkPatternIsolate(arrToSend[0], arrToSend[1], this.network.patternConnections)){
+              this.data.deleteConnection(arrToSend).subscribe( data =>{
+                console.log(data);
+                var retData : any = data;
+                this.resetGraph(retData.patterns, retData.patternConnections);
+                this.resetSelectedElement();
+              });
             }
             else{
               this.resetSelectedElement();
-              alert("There is not connection to delete between the selected patterns");
+              alert("Deleting this connection will isolate a pattern.");
               return;
             }
-            this.resetSelectedElement();
-          }
-        }
-        else{
-
-        }
       }
+      else{  // delete connection in the Pattern
+
+      }
+
     }
+
+
 
     addPattern = function(){
       if(this.data.selectedNodes.length > 0){
@@ -273,8 +269,58 @@ export class MainComponent implements OnInit, AfterViewInit {
           // skip
         }
       });
-
       return flag;
+    }
+
+    deleteNode(){
+      if(this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0){
+        this.resetSelectedElement();
+        alert("Please select a node to delete");
+        return;
+      }
+      if(this.data.selectedNodes.length !== 1){
+        this.resetSelectedElement();
+        alert("Please only one node to delete");
+        return;
+      }
+
+      var selectedNodeId = this.data.selectedNodes[0];
+      var pattern = this.network.getPatternByChildNodeId(selectedNodeId);
+      var nodesNumber = pattern.nodes.length;
+
+      if(nodesNumber === 1 && selectedNodeId !== pattern.getConnectorNode().id){
+        this.resetSelectedElement();
+        alert("You can only delete connector node if it is the last node in the pattern");
+        return;
+      }
+
+      console.log(pattern);
+    }
+
+    checkValidNetwork(network : Network){
+
+    }
+
+    
+
+    checkPatternIsolate(id: string, targetId :string, arrayToCheck : Connector[]){
+      var flagId : boolean = false;
+      var flagTarget : boolean = false;
+      var idx = 0;
+      var startId : string;
+      var targetId : string;
+
+      var arrayToCheckFiltered : Connector[] = [];
+      arrayToCheck.forEach( (connection : Connector) => {
+        // if it is not the connection
+        if( !(connection.id === id && connection.targetId === targetId) &&
+            !(connection.id === targetId && connection.targetId === id)){
+              arrayToCheckFiltered.push(connection);
+        }
+      });
+
+
+      return flagId && flagTarget;
     }
 
     resetGraph( patterns, connections){
@@ -375,6 +421,7 @@ export class MainComponent implements OnInit, AfterViewInit {
                   selector:  ':selected',
                   css :{
                     'background-color' : '#FF4500',
+                    'line-color' : '#FF4500'
                   }
               },
 
@@ -407,8 +454,10 @@ export class MainComponent implements OnInit, AfterViewInit {
 
       this.cy.on('tap','edge', function(e){
         //let clickedNode : string;
+        //console.log(_this.network.patternConnections);
         var clickedEle = e.target.id();
-        _this.data.selectedLink.push();
+        _this.data.selectedLink.push(clickedEle.substring(0,3));
+        _this.data.selectedLink.push(clickedEle.substring(3,6));
       });
     }
 }

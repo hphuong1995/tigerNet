@@ -168,6 +168,7 @@ router.post("/api/v1/login/question", ( req: Request, res: Response ) => {
                             res.status(500).send(err2);
                             return;
                         }
+
                         db.setUserBlocked(req.session.user.id, true, (err3: Err) => {
                             if (err3) {
                                 res.status(500).send(err3.message);
