@@ -523,6 +523,12 @@ export class MainComponent implements OnInit, AfterViewInit {
                     'line-color' : '#FF4500'
                   }
               },
+              {
+                selector:  '.patternHighlighted',
+                css :{
+                  'background-color' : '#B03060'
+                }
+            }
 
           ],
 
@@ -549,13 +555,13 @@ export class MainComponent implements OnInit, AfterViewInit {
 
           if(_this.data.selectedPatterns.includes(clickedEle)) {//pattern is selected, deselect it
             _this.data.selectedPatterns = _this.data.selectedPatterns.filter( x => x !== clickedEle);
-            e.target.removeClass('highlighted');
+            e.target.removeClass('patternHighlighted');
           } else {//pattern is not selected, select it
             _this.data.selectedPatterns.push(clickedEle);
-            e.target.addClass('highlighted');
+            e.target.addClass('patternHighlighted');
           }
 
-        } else {//node
+        } else{//node
 
           if(_this.data.selectedNodes.includes(clickedEle)) {//node is selected, deselect it
             _this.data.selectedNodes = _this.data.selectedNodes.filter( x => x !== clickedEle);
@@ -571,6 +577,21 @@ export class MainComponent implements OnInit, AfterViewInit {
         // } else if(clickedEle.charAt(0) === 'N' && ! _this.data.selectedNodes.includes(clickedEle)) {
         //   _this.data.selectedNodes.push(clickedEle);
         // }
+      });
+
+      this.cy.edges().on('tap', function(e){
+        //let clickedNode : string;
+        var clickedEle = e.target.id();
+        e.preventDefault();
+        e.stopPropagation();
+        //collector = collector.union(clickedNode);
+          if(_this.data.selectedLink.includes(clickedEle)) {//pattern is selected, deselect it
+            _this.data.selectedLink = _this.data.selectedLink.filter( x => x !== clickedEle);
+            e.target.removeClass('highlighted');
+          } else {//pattern is not selected, select it
+            _this.data.selectedLink.push(clickedEle);
+            e.target.addClass('highlighted');
+          }
       });
 
       this.cy.on('tap','edge', function(e){
