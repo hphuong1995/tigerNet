@@ -27,7 +27,7 @@ app.use( cookieParser() );
 app.use( session( {
     cookie: {
         httpOnly: true,
-        maxAge: 10 * 60 * 1000
+        maxAge: 20 * 60 * 1000
     },
     resave: true,
     secret: "session string",
