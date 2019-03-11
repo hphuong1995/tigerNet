@@ -459,14 +459,21 @@ export class MainComponent implements OnInit, AfterViewInit {
       return retFlag;
     }
 
-    connectionWithinPattern(net : Network, connections : Connector[]){
+    connectionWithinPattern(pattern : Pattern){
+      var connections = pattern.connections;
+      var nodes = pattern.nodes;
       var flag : boolean = true;
+      var nodesId : string[] = [];
+
+      nodes.forEach (node =>{
+        nodesId.push(node.id);
+      });
 
       connections.forEach( con =>{
-        if(net.getPatternByChildNodeId(con.id).id !== net.getPatternByChildNodeId(con.targetId).id){
+        if(!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))){
           flag = false;
         }
-      })
+      });
 
       return flag;
     }
