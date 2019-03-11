@@ -34,9 +34,10 @@ export class DataService {
     return this.http.post('api/v1/admin/patterns', JSON.stringify(connectorNodes));
   }
 
-  addNode(reqObject : any){
+  addNode(reqObject : {pattern: string, nodes: string[], conNode: string, currentNodeNum: number}): Observable<HttpResponse<Network>> {
     //console.log(reqObject.pattern.id);
-    return this.http.post('api/v1/admin/patterns/' + reqObject.pattern.id + "/nodes", JSON.stringify(reqObject));
+    return this.http.post<Network>('api/v1/admin/patterns/' + reqObject.pattern + "/nodes",
+      JSON.stringify(reqObject), { observe: 'response'});
   }
 
   addNewConnection( reqObject : any){

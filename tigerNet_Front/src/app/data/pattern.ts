@@ -27,7 +27,7 @@ export class Pattern {
 
 
 
-    public checkPatternLogic(): boolean {
+    public isValid(): boolean {
         // If one noed - it must be a connector
         if (this.nodes.length === 1) {
             if (this.nodes[0].id !== this.getConnectorNode().id) {
@@ -151,23 +151,79 @@ export class Pattern {
         return retFlag;
     }
 
-    private connectionWithinPattern() {
-        var connections = this.connections;
-        var nodes = this.nodes;
-        var flag: boolean = true;
-        var nodesId: string[] = [];
-
-        nodes.forEach(node => {
-            nodesId.push(node.id);
-        });
-
-        connections.forEach(con => {
-            if (!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))) {
-                flag = false;
+    private connectionWithinPattern(): boolean {
+        var connections: Connector[] = this.connections;
+        var nodes: Node[] = this.nodes;
+        let nodeIds: string[] = nodes.map(n => n.id);
+        let connectorIds: string[] = [];
+        for (var i = 0; i < connections.length; i++) {
+            var connector = connections[i];
+            if (!connectorIds.includes(connector.id)) {
+                connectorIds.push(connector.id);
             }
-        });
-        return flag;
+            if (!connectorIds.includes(connector.targetId)) {
+                connectorIds.push(connector.targetId);
+            }
+            if (!nodeIds.includes(connector.id) || !nodeIds.includes(connector.targetId)) {
+                return false;
+            }
+        }
+
+        for (var i = 0; i < nodeIds.length; i++) {
+            if (!connectorIds.includes(nodeIds[i])) {
+                return false;
+            }
+        }
+
+        return true;
+
+        // for( var connector in connections) {
+        //     if(!connectorIds.includes(connector.id)) {
+        //         connectorIds.push(connector.id);
+        //     }
+        //     if(!connectorIds.includes(connector.targetId)) {
+        //         connectorIds.push(connector.targetId);
+        //     }
+        //     if(!nodeIds.includes(connector.id)) {
+
+        //     }
+        // }
+
+
+        // connections.forEach( (connector: Connector) => {
+        //     if(!connectorIds.includes(connector.id)) {
+        //         connectorIds.push(connector.id);
+        //     }
+        //     if(!connectorIds.includes(connector.targetId)) {
+        //         connectorIds.push(connector.targetId);
+        //     }
+        //     if(!nodeIds.includes(connector.id)) {
+
+        //     }
+        // });
+
+
+
+        // return false;
     }
+
+    // private connectionWithinPattern() {
+    //     var connections = this.connections;
+    //     var nodes = this.nodes;
+    //     var flag: boolean = true;
+    //     var nodesId: string[] = [];
+
+    //     nodes.forEach(node => {
+    //         nodesId.push(node.id);
+    //     });
+
+    //     connections.forEach(con => {
+    //         if (!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))) {
+    //             flag = false;
+    //         }
+    //     });
+    //     return flag;
+    // }
 
     // private checkDuplicateConnection(connections: Connector[]) {
     //     var retFlag: boolean = true;

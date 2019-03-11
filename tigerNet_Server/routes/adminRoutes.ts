@@ -17,7 +17,7 @@ import { db } from "./../services/database/db";
 
 // var gamesDb = {};// userid : [games]
 
-function validUid( userId: string, req: Request ) {
+function validUid(userId: string, req: Request) {
     return userId === req.session.user._id;
 }
 
@@ -35,7 +35,7 @@ function validUid( userId: string, req: Request ) {
  * body: cold
  * The endpoint also accepts a path parameter but that can be seen below
  */
-router.get( "/exampleEndpoint/:pathparam", ( req: Request, res: Response, next: NextFunction ) => {
+router.get("/exampleEndpoint/:pathparam", (req: Request, res: Response, next: NextFunction) => {
     /*
      * Grab the user object from the session.
      * This object persists until the user logs out or the session expires (a long timeout)
@@ -43,7 +43,7 @@ router.get( "/exampleEndpoint/:pathparam", ( req: Request, res: Response, next: 
      */
     const user: User = req.session.user;
     // access body parameters using req.body.<parameter name>
-    if (typeof req.body.cold  !== "boolean") {
+    if (typeof req.body.cold !== "boolean") {
         /*
          * Sends a response with a 400 (Bad Request) status code with a message
          */
@@ -86,10 +86,10 @@ router.get( "/exampleEndpoint/:pathparam", ( req: Request, res: Response, next: 
             res.status(404).send(err.message);
         }
     }
-} );
+});
 
 router.get("/users", (req: Request, res: Response) => {
-    db.getAllUsers( (users: User[], err: Err) => {
+    db.getAllUsers((users: User[], err: Err) => {
         if (err) {
             res.status(500).send(err.message);
         } else {
@@ -102,152 +102,166 @@ router.get("/users", (req: Request, res: Response) => {
  * Unblocks the specified user
  */
 router.put("/users/:uid", (req: Request, res: Response) => {
-  db.setUserBlocked(req.params.uid, false, (err: Err) => {
-      if (err) {
-          res.status(500).send(err.message);
-      } else {
-        // NEED TO RETURN NEW USER LIST TO UPDATE THE FRONT END
-        db.getAllUsers( (users: User[], err1: Err) => {
-            if (err1) {
-                res.status(500).send(err1.message);
-            } else {
-                res.send(users);
-            }
-        });
-      }
-  });
+    db.setUserBlocked(req.params.uid, false, (err: Err) => {
+        if (err) {
+            res.status(500).send(err.message);
+        } else {
+            // NEED TO RETURN NEW USER LIST TO UPDATE THE FRONT END
+            db.getAllUsers((users: User[], err1: Err) => {
+                if (err1) {
+                    res.status(500).send(err1.message);
+                } else {
+                    res.send(users);
+                }
+            });
+        }
+    });
 });
 
 /*
  * add new pattern
  */
 router.post("/patterns", (req: Request, res: Response) => {
-  console.log(req.body);
-  // storeNewPattern
-  db.storeNewPattern( (pid: string, err: Err) => {
-    if (err) {
-      res.status(400).send(err.message);
-    } else {
-      db.addNode(true, true, pid, (node: Node, err: Err) => {
-        let nodeIdList = [];
+    console.log(req.body);
+    // storeNewPattern
+    db.storeNewPattern((pid: string, err: Err) => {
+        if (err) {
+            res.status(400).send(err.message);
+        } else {
+            db.addNode(true, true, pid, (node: Node, err: Err) => {
+                let nodeIdList = [];
+                const connectorList: Connector[] = [];
+
+                nodeIdList = req.body;
+                nodeIdList.forEach((nid: string) => {
+                    const newConnector = new Connector(node.id, nid);
+                    connectorList.push(newConnector);
+                });
+
+                db.addConnections(connectorList, (err: Err) => {
+                    if (err) {
+                        res.status(400).send(err.message);
+                    } else {
+                        db.getNetwork((err: Err, network: Network) => {
+                            if (err) {
+                                res.status(400).send(err.message);
+                            } else {
+                                res.status(200).send(network);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+    });
+});
+
+/*
+ * add new Node
+ * Accepts parameter:
+ * {
+ *     pattern: string,             - id of the pattern
+ *     nodes: string[],             - list of nodes ids from which to form a connection
+ *     conNode: string,             - connector node id
+ *     currentNodeNum: string       - current number of nodes in the pattern
+ * }
+ */
+router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
+    console.log(req.body);
+    db.addNode(true, false, req.body.pattern, (node: Node, err: Err) => {
+        if (err) {
+            res.status(400).send(err.message);
+            return;
+        }
+        let nodeIdList: any[] = [];
         const connectorList: Connector[] = [];
 
-        nodeIdList = req.body;
-        nodeIdList.forEach( (nid: string) => {
-          const newConnector = new Connector(node.id, nid);
-          connectorList.push(newConnector);
+        nodeIdList = req.body.nodes;
+
+        nodeIdList.forEach((nid: string) => {
+            const newConnector = new Connector(node.id, nid);
+            connectorList.push(newConnector);
         });
 
         db.addConnections(connectorList, (err: Err) => {
-          if ( err) {
-            res.status(400).send(err.message);
-          } else {
-            db.getNetwork( (err: Err, network: Network) => {
-              if (err) {
+            if (err) {
                 res.status(400).send(err.message);
-              } else {
-                res.status(200).send(network);
-              }
+                return;
+            }
+            const nonConNodes: string[] = [];
+            nodeIdList.forEach((nid: string) => {
+                if (nid !== req.body.conNode) {
+                    nonConNodes.push(nid);
+                }
             });
-          }
+            if (nonConNodes.length !== 2 || req.body.currentNodeNum === 3) {
+                db.getNetwork((err: Err, network: Network) => {
+                    if (err) {
+                        res.status(400).send(err.message);
+                    }
+                    if (network.isValid()) {
+                        res.status(200).send(network);
+                    } else {
+                        res.status(400).send("Invalid network modification");
+                    }
+                });
+            } else {
+                db.deleteConnection(nonConNodes[0], nonConNodes[1], (err: Err) => {
+                    if (err) {
+                        res.status(400).send(err.message);
+                        return;
+                    }
+                    db.getNetwork((err: Err, network: Network) => {
+                        if (err) {
+                            res.status(400).send(err.message);
+                            return;
+                        }
+                        if (network.isValid()) {
+                            res.status(200).send(network);
+                        } else {
+                            res.status(400).send("Invalid network modification");
+                        }
+                    });
+                });
+            }
         });
-      });
-    }
-  });
+    });
 });
 
 /*
  * add new Node
  */
- router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
-   console.log(req.body);
-   db.addNode(true, false, req.body.pattern, (node: Node, err: Err) => {
-     if (err) {
-       res.status(400).send(err.message);
-     } else {
-       let nodeIdList: any[] = [];
-       const connectorList: Connector[] = [];
-
-       nodeIdList = req.body.nodes;
-
-       nodeIdList.forEach( (nid: string) => {
-         const newConnector = new Connector(node.id, nid);
-         connectorList.push(newConnector);
-       });
-
-       db.addConnections(connectorList, (err: Err) => {
-         if ( err) {
-           res.status(400).send(err.message);
-         } else {
-           const nonConNode: string[] = [];
-           nodeIdList.forEach( (nid: string) => {
-             if ( nid !== req.body.conNode) {
-               nonConNode.push(nid);
-             }
-           });
-           if (nonConNode.length !== 2 || req.body.currentNodeNum === 3) {
-             db.getNetwork( (err: Err, network: Network) => {
-               if (err) {
-                 res.status(400).send(err.message);
-               } else {
-                 res.status(200).send(network);
-               }
-             });
-           } else {
-             db.deleteConnection(nonConNode[0], nonConNode[1], ( err: Err) => {
-               if (err) {
-                 res.status(400).send(err.message);
-               } else {
-                 db.getNetwork( (err: Err, network: Network) => {
-                   if (err) {
-                     res.status(400).send(err.message);
-                   } else {
-                     res.status(200).send(network);
-                   }
-                 });
-               }
-             });
-           }
-         }
-       });
-     }
-   });
- });
-
- /*
-  * add new Node
-  */
-  router.post("/connections", (req: Request, res: Response) => {
+router.post("/connections", (req: Request, res: Response) => {
     db.addConnection(req.body.nodes[0], req.body.nodes[1], (err: Err, connector: Connector) => {
-      if (err) {
-        res.status(400).send(err.message);
-      } else {
-        db.getNetwork( (err: Err, network: Network) => {
-          if (err) {
+        if (err) {
             res.status(400).send(err.message);
-          } else {
-            res.status(200).send(network);
-          }
-        });
-      }
+        } else {
+            db.getNetwork((err: Err, network: Network) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    res.status(200).send(network);
+                }
+            });
+        }
     });
-  });
+});
 
-  router.delete("/connections", (req: Request, res: Response) => {
+router.delete("/connections", (req: Request, res: Response) => {
     console.log(req.query);
     db.deleteConnection(req.query.id, req.query.targetId, (err: Err) => {
-      if (err) {
-        res.status(400).send(err.message);
-      } else {
-        db.getNetwork( (err: Err, network: Network) => {
-          if (err) {
+        if (err) {
             res.status(400).send(err.message);
-          } else {
-            res.status(200).send(network);
-          }
-        });
-      }
+        } else {
+            db.getNetwork((err: Err, network: Network) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    res.status(200).send(network);
+                }
+            });
+        }
     });
-  });
+});
 
 export { router as adminRoutes };

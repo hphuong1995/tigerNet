@@ -20,6 +20,16 @@ export class Connector {
         return false;
     }
 
+    public static compare(conn: Connector, other: Connector) {
+        if (conn.id === other.id && conn.targetId === other.targetId) {
+            return true;
+        }
+        if (conn.id === other.targetId && conn.targetId === other.id) {
+            return true;
+        }
+        return false;
+    }
+
     public static checkDuplicateConnection(connections: Connector[]): boolean {
         var retFlag: boolean = true;
         connections.forEach(con => {

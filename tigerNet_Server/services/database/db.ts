@@ -10,17 +10,19 @@ import { Question } from "../../data/question";
 import { SecurityAnswer } from "../../data/securityAnswer";
 import { Session } from "../../data/session";
 import { User } from "../../data/user";
-// import { pool } from "./connect";
+// import { conn } from "./connect";
 import pool from "./connect";
 
 pool.getConnection((err: MysqlError, connection: PoolConnection) => {
     if (err) {
         throw err;
     }
-    pool.releaseConnection(connection);
+    conn.releaseConnection(connection);
 });
 
 const MAX_LOGIN_ATTEMPTS: number = 3;
+// let poolHolder: any = pool;
+let conn: any = pool;
 
 // interface IDB {
 //     getSession(sessionId: string, csrfToken: string,
@@ -72,7 +74,7 @@ class DB {
         callback: (session: Session, err: Err) => void): void {
         const query: string = "SELECT * from sessions WHERE id = '" + sessionId + "'";
         console.log(query);
-        pool.query(query, (err: MysqlError, results: any[]) => {
+        conn.query(query, (err: MysqlError, results: any[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -98,7 +100,7 @@ class DB {
      */
     public storeSession(session: Session, callback: (session: Session, err: Err) => void): void {
         let query: string = "SELECT * from sessions WHERE id = '" + session.sid + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -111,7 +113,7 @@ class DB {
             const values: string[][] = [
                 [session.sid, session.csrf]
             ];
-            pool.query(query, [values], (err: MysqlError, result: any) => {
+            conn.query(query, [values], (err: MysqlError, result: any) => {
                 if (err) {
                     callback(undefined, new Err(err.message, -10));
                     return;
@@ -134,11 +136,55 @@ class DB {
      */
     public deleteSession(sessionId: string, callback: (err: Err) => void): void {
         const query: string = "DELETE from sessions WHERE id = '" + sessionId + "'";
-        pool.query(query, (err: MysqlError) => {
+        conn.query(query, (err: MysqlError) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
             }
+            callback(undefined);
+        });
+    }
+
+    public startTransaction(callback: (err: Err) => void): void {
+        pool.getConnection((err: MysqlError, connection: PoolConnection) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+                connection.release();
+                return;
+            }
+            conn = connection;
+            connection.beginTransaction((err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10));
+                    connection.rollback(() => connection.release());
+                    return;
+                }
+                callback(undefined);
+            });
+        });
+    }
+
+    public rollBackTransaction(callback: (err: Err) => void): void {
+        conn.rollback((err: MysqlError) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+            }
+            conn.release();
+            conn = pool;
+            callback(undefined);
+        });
+    }
+
+    public commitTransaction(callback: (err: Err) => void): void {
+        conn.commit((err: MysqlError) => {
+            if (err) {
+                conn.rollback(() => conn.release());
+                conn = pool;
+                callback(new Err(err.message, -10));
+                return;
+            }
+            conn.release();
+            conn = pool;
             callback(undefined);
         });
     }
@@ -152,7 +198,7 @@ class DB {
      */
     public getUserById(userId: string, callback: (user: User, err: Err) => void): void {
         const query: string = "SELECT * from users WHERE id ='" + userId + "'";
-        pool.query(query, (err, results, fields) => {
+        conn.query(query, (err: MysqlError, results: any, fields: any[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -178,7 +224,7 @@ class DB {
     public getUserByLogin(username: string, password: string,
         callback: (user: User, err: Err) => void): void {
         const query: string = "SELECT * from users WHERE username ='" + username + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -212,7 +258,7 @@ class DB {
      */
     public getAllUsers(callback: (users: User[], err: Err) => void): void {
         const query: string = "SELECT * from users";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
             }
@@ -233,7 +279,7 @@ class DB {
      */
     public setUserBlocked(userId: string, block: boolean, callback: (err: Err) => void): void {
         const query = "UPDATE users SET is_blocked = " + block + " WHERE id = '" + userId + "'";
-        pool.query(query, (err: MysqlError, result: any) => {
+        conn.query(query, (err: MysqlError, result: any) => {
             if (err) {
                 callback(new Err("MySQL Error trying to block or unblock user", -10));
                 return;
@@ -267,7 +313,7 @@ class DB {
             throw new Error("Attempted to set an invalid number of login attempts: " + attempts);
         }
         const query: string = "UPDATE users SET login_attempts = " + attempts + " WHERE id = '" + userId + "'";
-        pool.query(query, (err: MysqlError, result: any) => {
+        conn.query(query, (err: MysqlError, result: any) => {
             if (err) {
                 callback(new Err("MySQL Error trying to set login attempts", -10));
                 return;
@@ -290,7 +336,7 @@ class DB {
         const query: string = "SELECT question, questions.id security_answers.incorrect_guess\
                         FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                         WHERE FK_USER_ID = '" + userId + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -315,7 +361,7 @@ class DB {
                         FROM questions JOIN security_answers ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                         WHERE FK_USER_ID = '" + userId + "'\
                         AND security_answers.incorrect_guess = 0";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -372,7 +418,7 @@ class DB {
                         values.push([uuid(), q.answer, userId, q.qid, q.guessedWrong]);
                     });
                     // console.log(JSON.stringify(values, null, 4));
-                    const queryVal: Query = connection.query(query, [values], (err) => {
+                    const queryVal: Query = connection.query(query, [values], (err: MysqlError) => {
                         if (err) {
                             callback(new Err(err.message, -10));
                             connection.rollback(() => connection.release());
@@ -407,7 +453,7 @@ class DB {
                         ON QUESTIONS.ID = SECURITY_ANSWERS.FK_QUESTION_ID\
                         WHERE FK_USER_ID = '" + userId + "' AND FK_QUESTION_ID ='" + questionId + "'";
         console.log(query);
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -432,7 +478,7 @@ class DB {
         const query: string = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess +
             " WHERE id = '" + answerId + "'";
         console.log(query);
-        pool.query(query, (err: MysqlError, result: any) => {
+        conn.query(query, (err: MysqlError, result: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
@@ -456,7 +502,7 @@ class DB {
     public setFailedGuessOnAllAnswers(userId: string, inCorrectGuess: boolean, callback: (err: Err) => void): void {
         const query: string = "UPDATE security_answers SET incorrect_guess = " + inCorrectGuess +
             " WHERE fk_user_id = '" + userId + "'";
-        pool.query(query, (err: MysqlError, result: any) => {
+        conn.query(query, (err: MysqlError, result: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
@@ -570,12 +616,12 @@ class DB {
      *     -3: attempted to create connection that already exists
      *     -10: MySQL error
      */
-    public addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void ): void {
+    public addConnection(nodeId: string, targetId: string, callback: (err: Err, connector: Connector) => void): void {
         // throw new Error("Make sure connection is not already added - this includes the inverse of the pattern.");
         // example nodeId = N06, targetId = N07 is equivalent to nodeId = N07, targetId = N06
         let query: string = "SELECT * FROM NODES WHERE id = '" + nodeId + "' OR id = '" + targetId + "'";
         console.log(query);
-        pool.query(query, (err: MysqlError, results: IDbNode[]) => {
+        conn.query(query, (err: MysqlError, results: IDbNode[]) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
                 return;
@@ -596,10 +642,10 @@ class DB {
             }
 
             query =
-            "SELECT id FROM node_connections\
+                "SELECT id FROM node_connections\
                 WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
                 OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
-            pool.query(query, (err: MysqlError, results: any) => {
+            conn.query(query, (err: MysqlError, results: any) => {
                 if (err) {
                     callback(new Err(err.message, -10), undefined);
                     return;
@@ -612,7 +658,7 @@ class DB {
                     [nodeId, targetId]
                 ];
                 query = "INSERT INTO node_connections (fk_node_id, fk_target_id) VALUES ?";
-                pool.query(query, [values], (err: MysqlError) => {
+                conn.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
                         return;
@@ -637,7 +683,7 @@ class DB {
      */
     public addConnections(connectors: Connector[], callback: (err: Err) => void): void {
         const fullPatterns: Pattern[] = [];
-        const promises: Array<Promise<any>> = connectors.map( (connector: Connector) => {
+        const promises: Array<Promise<any>> = connectors.map((connector: Connector) => {
             return new Promise((resolve: (connector: Connector) => void, reject: (err: Err) => void) => {
                 this.addConnection(connector.id, connector.targetId, (err: Err, connector: Connector) => {
                     if (err) {
@@ -654,7 +700,7 @@ class DB {
         }, (err: any) => {
             console.log(JSON.stringify("reject: " + err));
             callback(err);
-        }).catch( (err: any) => {
+        }).catch((err: any) => {
             console.log(JSON.stringify("catch: " + err));
             callback(err);
         });
@@ -688,7 +734,7 @@ class DB {
      */
     public getPatterns(patternIds: string[], callback: (patterns: Pattern[], err: Err) => void): void {
         const fullPatterns: Pattern[] = [];
-        const promises: Array<Promise<any>> = patternIds.map( (pid: string) => {
+        const promises: Array<Promise<any>> = patternIds.map((pid: string) => {
             return new Promise((resolve: (nodes: Node[]) => void, reject: (err: Err) => void) => {
                 this.getNodesByPatternId(pid, (nodes: Node[], err: Err) => {
                     if (err) {
@@ -712,7 +758,7 @@ class DB {
         }, (err: any) => {
             console.log(JSON.stringify("reject: " + err));
             callback(undefined, err);
-        }).catch( (err: any) => {
+        }).catch((err: any) => {
             console.log(JSON.stringify("catch: " + err));
             callback(undefined, err);
         });
@@ -725,12 +771,12 @@ class DB {
      */
     public getAllPatterns(callback: (patterns: Pattern[], err: Err) => void): void {
         const query: string = "SELECT * FROM patterns";
-        pool.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+        conn.query(query, (err: MysqlError, results: Array<{ id: string }>) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
-            const patternIds: string[] = results.map( (r) => r.id);
+            const patternIds: string[] = results.map((r) => r.id);
             db.getPatterns(patternIds, callback);
         });
         return;
@@ -768,7 +814,7 @@ class DB {
             return;
         }
         const query: string = "SELECT * FROM nodes WHERE id IN (?)";
-        pool.query(query, [nodeIds], (err: MysqlError, results: IDbNode[]) => {
+        conn.query(query, [nodeIds], (err: MysqlError, results: IDbNode[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
@@ -777,7 +823,7 @@ class DB {
                 callback(undefined, new Err("Invalid node id(s)", -1));
                 return;
             }
-            const nodes: Node[] = results.map( (n) => new Node(n.is_active, n.is_connector, n.id));
+            const nodes: Node[] = results.map((n) => new Node(n.is_active, n.is_connector, n.id));
             callback(nodes, undefined);
         });
     }
@@ -790,12 +836,12 @@ class DB {
      */
     public getNodesByPatternId(patternId: string, callback: (nodes: Node[], err: Err) => void): void {
         const query: string = "SELECT * FROM nodes WHERE fk_pattern_id = '" + patternId + "'";
-        pool.query(query, (err: MysqlError, results: IDbNode[]) => {
+        conn.query(query, (err: MysqlError, results: IDbNode[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
-            const nodes: Node[] = results.map( (n) => new Node(n.is_active, n.is_connector, n.id));
+            const nodes: Node[] = results.map((n) => new Node(n.is_active, n.is_connector, n.id));
             callback(nodes, undefined);
         });
     }
@@ -807,18 +853,18 @@ class DB {
      */
     public getConnectionsByPatternId(patternId: string, callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
-        "SELECT DISTINCT fk_node_id, fk_target_id\
+            "SELECT DISTINCT fk_node_id, fk_target_id\
             FROM nodes JOIN node_connections\
             ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
             AND nodes.is_connector = 0\
             WHERE fk_pattern_id = '" + patternId + "'";
         console.log(query);
-        pool.query(query, (err: MysqlError, results: IDbConnector[]) => {
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
-            const connectors: Connector[] = results.map( (c) => new Connector(c.fk_node_id, c.fk_target_id));
+            const connectors: Connector[] = results.map((c) => new Connector(c.fk_node_id, c.fk_target_id));
             callback(connectors, undefined);
         });
     }
@@ -828,9 +874,9 @@ class DB {
      * Error codes:
      *      -10: MySQL error
      */
-    public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void ): void {
+    public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
-        "SELECT DISTINCT fk_node_id, fk_target_id\
+            "SELECT DISTINCT fk_node_id, fk_target_id\
             FROM node_connections JOIN nodes\
             ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
             AND nodes.is_connector = 1\
@@ -838,12 +884,12 @@ class DB {
                 (SELECT id FROM nodes WHERE is_connector = 1)\
             AND fk_node_id IN\
                 (SELECT id FROM nodes WHERE is_connector = 1)";
-        pool.query(query, (err: MysqlError, results: IDbConnector[]) => {
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
-            const connectors: Connector[] = results.map( (res) => new Connector(res.fk_node_id, res.fk_target_id));
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
             callback(connectors, undefined);
         });
     }
@@ -855,7 +901,7 @@ class DB {
      *      -10: MySQL error
      */
     public getNetwork(callback: (err: Err, network: Network) => void): void {
-        db.getAllPatterns( (patterns: Pattern[], err: Err) => {
+        db.getAllPatterns((patterns: Pattern[], err: Err) => {
             if (err) {
                 callback(err, undefined);
                 return;
@@ -882,7 +928,7 @@ class DB {
      */
     public deletePattern(patternId: string, callback: (err: Err) => void): void {
         const query: string = "DELETE FROM patterns WHERE id = '" + patternId + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
@@ -902,7 +948,7 @@ class DB {
      */
     public deleteNode(nodeId: string, callback: (err: Err) => void): void {
         const query: string = "DELETE FROM nodes WHERE id = '" + nodeId + "'";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
@@ -919,12 +965,12 @@ class DB {
      * Error codes:
      *      -10: MySQL error
      */
-    public deleteConnection(nodeId: string, targetId: string, callback: (err: Err) => void ): void {
+    public deleteConnection(nodeId: string, targetId: string, callback: (err: Err) => void): void {
         const query: string =
-        "DELETE FROM node_connections\
+            "DELETE FROM node_connections\
             WHERE (fk_node_id = '" + nodeId + "' AND fk_target_id = '" + targetId + "')\
             OR (fk_node_id = '" + targetId + "' AND fk_target_id = '" + nodeId + "')";
-        pool.query(query, (err: MysqlError, results: any) => {
+        conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
