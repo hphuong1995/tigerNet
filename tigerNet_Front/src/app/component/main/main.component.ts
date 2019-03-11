@@ -118,6 +118,29 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert("Selected pattern has more than 3 nodes, please select at least 2 nodes to maintain the ring.");
         return;
       }
+
+      var flag : boolean = true;
+
+      var nonNodes : string[] = [];
+
+      this.data.selectedNodes.forEach( node =>{
+        if( node.id !== currentPattern.getConnectorNode().id){
+          nonNodes.push(node);
+        }
+      });
+
+      currentPattern.connections.forEach( con =>{
+        if( con.id === nonNodes[0] && con.targetId === nonNodes[1])
+          flag = false;
+        if( con.id === nonNodes[1] && con.targetId === nonNodes[0])
+          flag = false;
+      });
+
+      if(flag){
+        this.resetSelectedElement();
+        alert("You can not add a connection there.");
+        return;
+      }
     }
 
     var reqObject = {
