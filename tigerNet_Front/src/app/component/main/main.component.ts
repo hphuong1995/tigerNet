@@ -222,9 +222,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       else{  // delete connection in the Pattern
 
       }
-
     }
-
 
 
     addPattern = function(){
@@ -328,7 +326,6 @@ export class MainComponent implements OnInit, AfterViewInit {
             connectorNodeQueue.push(connection.id);
           }
         });
-
       }
 
       if(connectorNodeQueue.length === network.patterns.length){
@@ -339,7 +336,90 @@ export class MainComponent implements OnInit, AfterViewInit {
         console.log("invalid " + connectorNodeQueue);
         return false;
       }
+    }
 
+    checkPatternLogic(network: Network, pattern : Pattern){
+      // If one noed - it must be a connector
+      if(pattern.nodes.length === 1){
+        if(pattern.nodes[0].id !== pattern.getConnectorNode().id){
+          alert("If pattern have 1 node, it must be connectorNode");
+          return false;
+        }
+        //    If one node - no connectors
+        if(pattern.connections.length !== 0){
+          alert("If pattern have 1 node, There must not be any connection");
+          return false;
+        }
+      }
+      // If two nodes - one connector, one not connector
+      if(pattern.nodes.length === 2){
+        //    If two nodes - exactly one connector connecting the nodes
+        if(pattern.connections.length !== 1){
+          alert("If pattern have 2 node, There must 1 connection");
+          return false;
+        }
+        var tempCon : Connector = new Connector(pattern.nodes[0].id,pattern.nodes[1].id);
+        if(!tempCon.compareTo(pattern.connections[0])){
+          alert("If pattern have 2 node, There must 1 connection that connect 2 node");
+          return false;
+        }
+      }
+      // If 3 to 7 nodes - exactly 1 connector node
+      if(pattern.nodes.length > 3 && pattern.nodes.length < 7){
+        // No duplicate connections
+        if(!this.checkDuplicateConnection(pattern.connections)){
+          alert("There is duplicate connection in the pattern");
+          return false;
+        }
+
+        if(!this.connectionWithinPattern(network, pattern.connections)){
+          alert("All connection must connect to a node within that pattern");
+          return false;
+        }
+        //If three nodes - connectors and nodes must form a triangle
+      }
+
+      //4 to 7 nodes
+      if(pattern.nodes.length > 4 && pattern.nodes.length < 7){
+        //  All non connector nodes must have exactly two connections to other non connector nodes
+
+      }
+
+    }
+
+    maxTwoConnectorEachNode(nodes : Node[], connections : Connector[], pid : string){
+      var retFlag : boolean = true;
+
+      nodes.forEach( node =>{
+        connections.forEach( con =>{
+        });
+      });
+
+      return retFlag;
+    }
+
+    connectionWithinPattern(net : Network, connections : Connector[]){
+      var flag : boolean = true;
+
+      connections.forEach( con =>{
+        if(net.getPatternByChildNodeId(con.id).id !== net.getPatternByChildNodeId(con.targetId).id){
+          flag = false;
+        }
+      })
+
+      return flag;
+    }
+
+    checkDuplicateConnection( connections : Connector[]){
+      var retFlag : boolean = true;
+      connections.forEach( con =>{
+        connections.forEach( conToCheck =>{
+          if(con.compareTo(conToCheck)){
+            retFlag = false;
+          }
+        });
+      });
+      return retFlag;
     }
 
     resetGraph( patterns, connections){
