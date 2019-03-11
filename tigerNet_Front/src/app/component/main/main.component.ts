@@ -363,6 +363,10 @@ export class MainComponent implements OnInit, AfterViewInit {
           alert("If pattern have 2 node, There must 1 connection that connect 2 node");
           return false;
         }
+
+        if(!this.connectorNodeConnectionCheck(pattern)){
+          return false;
+        }
       }
       // If 3 to 7 nodes - exactly 1 connector node
       if(pattern.nodes.length > 3 && pattern.nodes.length < 7){
@@ -376,23 +380,80 @@ export class MainComponent implements OnInit, AfterViewInit {
           alert("All connection must connect to a node within that pattern");
           return false;
         }
+
+        if(!this.connectorNodeConnectionCheck(pattern)){
+          return false;
+        }
         //If three nodes - connectors and nodes must form a triangle
       }
 
       //4 to 7 nodes
       if(pattern.nodes.length > 4 && pattern.nodes.length < 7){
         //  All non connector nodes must have exactly two connections to other non connector nodes
+        if(!this.maxTwoConnectorEachNode(pattern.nodes, pattern.connections, pattern.getConnectorNode().id)){
+          alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
+          return false;
+        }
 
+        if(!this.connectorNodeConnectionCheck(pattern)){
+          return false;
+        }
       }
 
+      return true;
     }
 
-    maxTwoConnectorEachNode(nodes : Node[], connections : Connector[], pid : string){
+    connectorNodeConnectionCheck(pattern : Pattern){
+      var connectorId = pattern.getConnectorNode().id;
+      var count = 0;
+
+      pattern.connections.forEach( con =>{
+        if ( con.id === connectorId || con.targetId === connectorId){
+          count ++;
+        }
+      });
+
+      if(pattern.nodes.length === 1){
+        if( count !== 0){
+          alert("There is only one node, cant have any connection");
+          return false;
+        }
+      }
+      else if( pattern.nodes.length === 2){
+        if( count !== 1){
+          alert("There is 2 node, there must be only 1 connection between the connector to the nonConnector node");
+          return false;
+        }
+      }
+      else if( pattern.nodes.length > 2){
+        if( count === 0){
+          alert("There must be at least 1 connector between connector node to non connector node");
+          return false;
+        }
+        else if( count > 3){
+          alert("There must be at most 3 connector between connector node to non connector node");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    maxTwoConnectorEachNode(nodes : Node[], connections : Connector[], connectorId : string){
       var retFlag : boolean = true;
 
       nodes.forEach( node =>{
+        var count = 0;
         connections.forEach( con =>{
+          if(con.id !== connectorId && con.targetId !== connectorId){
+            if(con.id === node.id || con.targetId === node.id){
+              count++;
+            }
+          }
         });
+        if(count !== 2){
+          retFlag = false;
+        }
       });
 
       return retFlag;
@@ -413,11 +474,15 @@ export class MainComponent implements OnInit, AfterViewInit {
     checkDuplicateConnection( connections : Connector[]){
       var retFlag : boolean = true;
       connections.forEach( con =>{
+        var count = 0;
         connections.forEach( conToCheck =>{
           if(con.compareTo(conToCheck)){
-            retFlag = false;
+            count ++;
           }
         });
+        if(count === 2){
+          retFlag = false;
+        }
       });
       return retFlag;
     }
