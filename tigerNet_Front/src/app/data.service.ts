@@ -9,9 +9,9 @@ import { Network } from './data/network';
 export class DataService {
   public csrf: string;
 
-  public selectedPatterns = [];
-  public selectedLink = [];
-  public selectedNodes = [];
+  public selectedPatterns: string[] = [];
+  public selectedLink: string[] = [];
+  public selectedNodes: string[] = [];
 
 
   public cy : any;

@@ -244,7 +244,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         });
         console.log(arrToSend);
         this.resetSelectedElement();
-        this.data.addPattern(arrToSend).subscribe( (data) =>{
+        this.data.addPattern(arrToSend).subscribe( (data: Network) =>{
           console.log(data);
           this.resetGraph(data.patterns, data.patternConnections);
         });
@@ -293,9 +293,9 @@ export class MainComponent implements OnInit, AfterViewInit {
       console.log(pattern);
     }
 
-    checkValidNetwork(network : Network){
+    // checkValidNetwork(network : Network){
 
-    }
+    // }
 
 
 
@@ -338,161 +338,161 @@ export class MainComponent implements OnInit, AfterViewInit {
       }
     }
 
-    checkPatternLogic(network: Network, pattern : Pattern){
-      // If one noed - it must be a connector
-      if(pattern.nodes.length === 1){
-        if(pattern.nodes[0].id !== pattern.getConnectorNode().id){
-          alert("If pattern have 1 node, it must be connectorNode");
-          return false;
-        }
-        //    If one node - no connectors
-        if(pattern.connections.length !== 0){
-          alert("If pattern have 1 node, There must not be any connection");
-          return false;
-        }
-      }
-      // If two nodes - one connector, one not connector
-      if(pattern.nodes.length === 2){
-        //    If two nodes - exactly one connector connecting the nodes
-        if(pattern.connections.length !== 1){
-          alert("If pattern have 2 node, There must 1 connection");
-          return false;
-        }
-        var tempCon : Connector = new Connector(pattern.nodes[0].id,pattern.nodes[1].id);
-        if(!tempCon.compareTo(pattern.connections[0])){
-          alert("If pattern have 2 node, There must 1 connection that connect 2 node");
-          return false;
-        }
+    // checkPatternLogic(network: Network, pattern : Pattern){
+    //   // If one noed - it must be a connector
+    //   if(pattern.nodes.length === 1){
+    //     if(pattern.nodes[0].id !== pattern.getConnectorNode().id){
+    //       alert("If pattern have 1 node, it must be connectorNode");
+    //       return false;
+    //     }
+    //     //    If one node - no connectors
+    //     if(pattern.connections.length !== 0){
+    //       alert("If pattern have 1 node, There must not be any connection");
+    //       return false;
+    //     }
+    //   }
+    //   // If two nodes - one connector, one not connector
+    //   if(pattern.nodes.length === 2){
+    //     //    If two nodes - exactly one connector connecting the nodes
+    //     if(pattern.connections.length !== 1){
+    //       alert("If pattern have 2 node, There must 1 connection");
+    //       return false;
+    //     }
+    //     var tempCon : Connector = new Connector(pattern.nodes[0].id,pattern.nodes[1].id);
+    //     if(!tempCon.compareTo(pattern.connections[0])){
+    //       alert("If pattern have 2 node, There must 1 connection that connect 2 node");
+    //       return false;
+    //     }
 
-        if(!this.connectorNodeConnectionCheck(pattern)){
-          return false;
-        }
-      }
-      // If 3 to 7 nodes - exactly 1 connector node
-      if(pattern.nodes.length > 3 && pattern.nodes.length < 7){
-        // No duplicate connections
-        if(!this.checkDuplicateConnection(pattern.connections)){
-          alert("There is duplicate connection in the pattern");
-          return false;
-        }
+    //     if(!this.connectorNodeConnectionCheck(pattern)){
+    //       return false;
+    //     }
+    //   }
+    //   // If 3 to 7 nodes - exactly 1 connector node
+    //   if(pattern.nodes.length > 3 && pattern.nodes.length < 7){
+    //     // No duplicate connections
+    //     if(!this.checkDuplicateConnection(pattern.connections)){
+    //       alert("There is duplicate connection in the pattern");
+    //       return false;
+    //     }
 
-        if(!this.connectionWithinPattern(pattern)){
-          alert("All connection must connect to a node within that pattern");
-          return false;
-        }
+    //     if(!this.connectionWithinPattern(pattern)){
+    //       alert("All connection must connect to a node within that pattern");
+    //       return false;
+    //     }
 
-        if(!this.connectorNodeConnectionCheck(pattern)){
-          return false;
-        }
-        //If three nodes - connectors and nodes must form a triangle
-      }
+    //     if(!this.connectorNodeConnectionCheck(pattern)){
+    //       return false;
+    //     }
+    //     //If three nodes - connectors and nodes must form a triangle
+    //   }
 
-      //4 to 7 nodes
-      if(pattern.nodes.length > 4 && pattern.nodes.length < 7){
-        //  All non connector nodes must have exactly two connections to other non connector nodes
-        if(!this.maxTwoConnectorEachNode(pattern.nodes, pattern.connections, pattern.getConnectorNode().id)){
-          alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
-          return false;
-        }
+    //   //4 to 7 nodes
+    //   if(pattern.nodes.length > 4 && pattern.nodes.length < 7){
+    //     //  All non connector nodes must have exactly two connections to other non connector nodes
+    //     if(!this.maxTwoConnectorEachNode(pattern.nodes, pattern.connections, pattern.getConnectorNode().id)){
+    //       alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
+    //       return false;
+    //     }
 
-        if(!this.connectorNodeConnectionCheck(pattern)){
-          return false;
-        }
-      }
+    //     if(!this.connectorNodeConnectionCheck(pattern)){
+    //       return false;
+    //     }
+    //   }
 
-      return true;
-    }
+    //   return true;
+    // }
 
-    connectorNodeConnectionCheck(pattern : Pattern){
-      var connectorId = pattern.getConnectorNode().id;
-      var count = 0;
+    // connectorNodeConnectionCheck(pattern : Pattern){
+    //   var connectorId = pattern.getConnectorNode().id;
+    //   var count = 0;
 
-      pattern.connections.forEach( con =>{
-        if ( con.id === connectorId || con.targetId === connectorId){
-          count ++;
-        }
-      });
+    //   pattern.connections.forEach( con =>{
+    //     if ( con.id === connectorId || con.targetId === connectorId){
+    //       count ++;
+    //     }
+    //   });
 
-      if(pattern.nodes.length === 1){
-        if( count !== 0){
-          alert("There is only one node, cant have any connection");
-          return false;
-        }
-      }
-      else if( pattern.nodes.length === 2){
-        if( count !== 1){
-          alert("There is 2 node, there must be only 1 connection between the connector to the nonConnector node");
-          return false;
-        }
-      }
-      else if( pattern.nodes.length > 2){
-        if( count === 0){
-          alert("There must be at least 1 connector between connector node to non connector node");
-          return false;
-        }
-        else if( count > 3){
-          alert("There must be at most 3 connector between connector node to non connector node");
-          return false;
-        }
-      }
+    //   if(pattern.nodes.length === 1){
+    //     if( count !== 0){
+    //       alert("There is only one node, cant have any connection");
+    //       return false;
+    //     }
+    //   }
+    //   else if( pattern.nodes.length === 2){
+    //     if( count !== 1){
+    //       alert("There is 2 node, there must be only 1 connection between the connector to the nonConnector node");
+    //       return false;
+    //     }
+    //   }
+    //   else if( pattern.nodes.length > 2){
+    //     if( count === 0){
+    //       alert("There must be at least 1 connector between connector node to non connector node");
+    //       return false;
+    //     }
+    //     else if( count > 3){
+    //       alert("There must be at most 3 connector between connector node to non connector node");
+    //       return false;
+    //     }
+    //   }
 
-      return true;
-    }
+    //   return true;
+    // }
 
-    maxTwoConnectorEachNode(nodes : Node[], connections : Connector[], connectorId : string){
-      var retFlag : boolean = true;
+    // maxTwoConnectorEachNode(nodes : Node[], connections : Connector[], connectorId : string){
+    //   var retFlag : boolean = true;
 
-      nodes.forEach( node =>{
-        var count = 0;
-        connections.forEach( con =>{
-          if(con.id !== connectorId && con.targetId !== connectorId){
-            if(con.id === node.id || con.targetId === node.id){
-              count++;
-            }
-          }
-        });
-        if(count !== 2){
-          retFlag = false;
-        }
-      });
+    //   nodes.forEach( node =>{
+    //     var count = 0;
+    //     connections.forEach( con =>{
+    //       if(con.id !== connectorId && con.targetId !== connectorId){
+    //         if(con.id === node.id || con.targetId === node.id){
+    //           count++;
+    //         }
+    //       }
+    //     });
+    //     if(count !== 2){
+    //       retFlag = false;
+    //     }
+    //   });
 
-      return retFlag;
-    }
+    //   return retFlag;
+    // }
 
-    connectionWithinPattern(pattern : Pattern){
-      var connections = pattern.connections;
-      var nodes = pattern.nodes;
-      var flag : boolean = true;
-      var nodesId : string[] = [];
+    // connectionWithinPattern(pattern : Pattern){
+    //   var connections = pattern.connections;
+    //   var nodes = pattern.nodes;
+    //   var flag : boolean = true;
+    //   var nodesId : string[] = [];
 
-      nodes.forEach (node =>{
-        nodesId.push(node.id);
-      });
+    //   nodes.forEach (node =>{
+    //     nodesId.push(node.id);
+    //   });
 
-      connections.forEach( con =>{
-        if(!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))){
-          flag = false;
-        }
-      });
+    //   connections.forEach( con =>{
+    //     if(!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))){
+    //       flag = false;
+    //     }
+    //   });
 
-      return flag;
-    }
+    //   return flag;
+    // }
 
-    checkDuplicateConnection( connections : Connector[]){
-      var retFlag : boolean = true;
-      connections.forEach( con =>{
-        var count = 0;
-        connections.forEach( conToCheck =>{
-          if(con.compareTo(conToCheck)){
-            count ++;
-          }
-        });
-        if(count === 2){
-          retFlag = false;
-        }
-      });
-      return retFlag;
-    }
+    // checkDuplicateConnection( connections : Connector[]){
+    //   var retFlag : boolean = true;
+    //   connections.forEach( con =>{
+    //     var count = 0;
+    //     connections.forEach( conToCheck =>{
+    //       if(con.compareTo(conToCheck)){
+    //         count ++;
+    //       }
+    //     });
+    //     if(count === 2){
+    //       retFlag = false;
+    //     }
+    //   });
+    //   return retFlag;
+    // }
 
     resetGraph( patterns, connections){
       let elements: any[] = [];
