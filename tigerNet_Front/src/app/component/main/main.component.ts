@@ -376,7 +376,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           return false;
         }
 
-        if(!this.connectionWithinPattern(network, pattern.connections)){
+        if(!this.connectionWithinPattern(pattern)){
           alert("All connection must connect to a node within that pattern");
           return false;
         }
