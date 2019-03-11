@@ -199,11 +199,11 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                     if (err) {
                         res.status(400).send(err.message);
                     }
-                    if (network.isValid()) {
+                    // if (network.isValid()) {
                         res.status(200).send(network);
-                    } else {
-                        res.status(400).send("Invalid network modification");
-                    }
+                    // } else {
+                    //     res.status(400).send("Invalid network modification");
+                    // }
                 });
             } else {
                 db.deleteConnection(nonConNodes[0], nonConNodes[1], (err: Err) => {
@@ -216,11 +216,11 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                             res.status(400).send(err.message);
                             return;
                         }
-                        if (network.isValid()) {
+                        // if (network.isValid()) {
                             res.status(200).send(network);
-                        } else {
-                            res.status(400).send("Invalid network modification");
-                        }
+                        // } else {
+                        //     res.status(400).send("Invalid network modification");
+                        // }
                     });
                 });
             }

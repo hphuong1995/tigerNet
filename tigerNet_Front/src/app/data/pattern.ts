@@ -77,9 +77,13 @@ export class Pattern {
         }
 
         //4 to 7 nodes
-        if (this.nodes.length > 4 && this.nodes.length < 7) {
+        if (this.nodes.length >= 4 && this.nodes.length < 7) {
             //  All non connector nodes must have exactly two connections to other non connector nodes
-            if (!this.maxTwoConnectorEachNode(this.getConnectorNode().id)) {
+            // if (!this.maxTwoConnectorEachNode(this.getConnectorNode().id)) {
+            //     alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
+            //     return false;
+            // }
+            if (!this.maxTwoEdgesPerNode()) {
                 alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
                 return false;
             }
@@ -131,24 +135,45 @@ export class Pattern {
 
 
 
-    private maxTwoConnectorEachNode(connectorId: string): boolean {
-        var retFlag: boolean = true;
+    private maxTwoEdgesPerNode(): boolean {
+        // var retFlag: boolean = true;
 
-        this.nodes.forEach(node => {
-            var count = 0;
-            this.connections.forEach(con => {
-                if (con.id !== connectorId && con.targetId !== connectorId) {
-                    if (con.id === node.id || con.targetId === node.id) {
-                        count++;
-                    }
-                }
-            });
-            if (count !== 2) {
-                retFlag = false;
-            }
+        // this.nodes.forEach(node => {
+        //     var count = 0;
+        //     this.connections.forEach(con => {
+        //         if (con.id !== connectorId && con.targetId !== connectorId) {
+        //             if (con.id === node.id || con.targetId === node.id) {
+        //                 count++;
+        //             }
+        //         }
+        //     });
+        //     if (count !== 2) {
+        //         retFlag = false;
+        //     }
+        // });
+
+        // return retFlag;
+        var connectorId = this.getConnectorNode().id;
+        var edgeConnectors = this.connections.filter( (conn: Connector) => {
+            return conn.id !== connectorId && conn.targetId !== connectorId;
         });
 
-        return retFlag;
+        for( let i = 0; i < this.nodes.length; i++) {
+            let count = 0;
+            let node = this.nodes[i];
+            if(node.id === connectorId) {
+                continue;
+            }
+            edgeConnectors.forEach( (edge: Connector) => {
+                if(edge.id === node.id || edge.targetId === node.id) {
+                    count++;
+                }
+            })
+            if(count !== 2) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private connectionWithinPattern(): boolean {
