@@ -250,6 +250,25 @@ export class MainComponent implements OnInit, AfterViewInit {
               return;
             }
             else {
+              var connectorNodeId = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]).getConnectorNode().id;
+              if(!this.data.selectedNodes.includes(connectorNodeId)){
+                this.resetSelectedElement();
+                alert("User only can add connection between connector and non-connector node within the pattern.");
+                return;
+              }
+
+              var count = 0;
+              this.network.getPatternByChildNodeId(connectorNodeId).connections.forEach(con =>{
+                if( con.id === connectorNodeId || con.targetId === connectorNodeId)
+                  count ++;
+              });
+
+              if(count >= 3){
+                this.resetSelectedElement();
+                alert("Connector node only can connect to maximum of 3 non-connector node");
+                return;
+              }
+
               this.data.addNewConnection(this.data.selectedNodes).subscribe((data) => {
                 console.log(data);
                 this.resetGraph(data.patterns, data.patternConnections);
