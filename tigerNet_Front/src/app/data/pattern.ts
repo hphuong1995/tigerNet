@@ -84,7 +84,8 @@ export class Pattern {
             //     return false;
             // }
             if (!this.maxTwoEdgesPerNode()) {
-                alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
+                // alert("With 4-7 nodes, each node will connect to exact 2 nodes.");
+                alert("Invalid network modification");
                 return false;
             }
 
