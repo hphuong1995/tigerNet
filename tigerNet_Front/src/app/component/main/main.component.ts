@@ -25,7 +25,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private currentSelectedNode = "hello";
 
 
-  constructor(private data: DataService) { }
+  constructor(private data: DataService, private user: UserService) { }
 
 
   ngOnInit() {
@@ -68,6 +68,11 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   addNode = function () {
     console.log(this.data.selectedNodes);
+
+    if(!this.user.isAdmAccount()) {
+      alert("Only administrators can modify the network");
+      return;
+    }
 
     // check if a pattern is selected
     if (this.data.selectedPatterns.length !== 0) {
