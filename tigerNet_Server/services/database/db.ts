@@ -587,12 +587,13 @@ class DB {
      *     -1: Invalid lock type
      *     10: MySQL error
      */
-    public addNode(isActive: boolean, isConnector: boolean, patternId: string,
+    public addNode(isActive: boolean, isConnector: boolean, patternId: string, isDomainNode: boolean,
         callback: (node: Node, err: Err) => void): void {
         const args: any = {};
         args.isActive = isActive;
         args.isConnector = isConnector;
         args.patternId = patternId;
+        args.isDomainNode = isDomainNode;
         this.transaction(args,
             this.addNodeTransaction.bind(this), (results: any, err: Err) => {
                 if (err) {
@@ -1015,10 +1016,17 @@ class DB {
         });
     }
 
-    private addNodeTransaction(connection: PoolConnection, args: any,
+    private addNodeTransaction(connection: PoolConnection,
+        // args: {pattern: Pattern, isActive: boolean, isConnector: boolean, patternId: string, isDomainNode: boolean},
+        args: any,
         callback: (err: Err, results: any) => void): void {
         const pattern: Pattern = args.pattern as Pattern;
-        let query: string = "SELECT id FROM nodeIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        let query: string = "";
+        if (args.isDomainNode) {
+            query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'D%' LIMIT 1 FOR UPDATE";
+        } else {
+            query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'N%' LIMIT 1 FOR UPDATE";
+        }
         const bit: (bool: boolean) => number = this.bit;
         connection.query(query, (err: MysqlError, results: any) => {
             if (err) {
@@ -1037,7 +1045,11 @@ class DB {
                 }
                 const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
                 query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
-                const values: string[][] = [[node.id, bit(node.isActive), bit(node.isConnector), args.patternId]];
+                const values: string[][] = [[
+                    node.id, bit(node.isActive),
+                    bit(node.isConnector),
+                    args.patternId
+                ]];
                 const q: Query = connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
