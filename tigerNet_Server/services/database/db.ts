@@ -566,8 +566,23 @@ class DB {
      * Creates an empty pattern, stores it in the database,
      * and returns it in the callback
      */
-    public storeNewPattern(callback: (patternId: string, err: Err) => void): void {
-        this.transaction(undefined, this.storeNewPatternTransaction,
+    public storeNewDomain(callback: (patternId: string, err: Err) => void): void {
+        this.transaction(undefined, this.storeNewDomainTransaction,
+            (results: any, err: Err) => {
+                if (err) {
+                    callback(undefined, err);
+                } else {
+                    callback(results as string, undefined);
+                }
+            });
+    }
+
+    /*
+     * Creates an empty pattern, stores it in the database,
+     * and returns it in the callback
+     */
+    public storeNewPattern(domainId: string, callback: (patternId: string, err: Err) => void): void {
+        this.transaction({domainId}, this.storeNewPatternTransaction,
             (results: any, err: Err) => {
                 if (err) {
                     callback(undefined, err);
@@ -983,6 +998,39 @@ class DB {
         return bool ? 1 : 0;
     }
 
+    private storeNewDomainTransaction(connection: PoolConnection, args: any,
+        callback: (err: Err, results: any) => void): void {
+        let query: string = "SELECT id FROM domainIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        let domainId: string;
+        connection.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 1) {
+                callback(new Err("Not enough free domain ids", -1), undefined);
+                return;
+            }
+            domainId = results[0].id;
+            query = "UPDATE domainIds SET isFree = 0 WHERE id = '" + domainId + "'";
+            connection.query(query, (err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10), undefined);
+                    return;
+                }
+                query = "INSERT INTO domains(id) VALUES ?";
+                const values: string[][] = [[domainId]];
+                connection.query(query, [values], (err: MysqlError) => {
+                    if (err) {
+                        callback(new Err(err.message, -10), undefined);
+                        return;
+                    }
+                    callback(undefined, domainId);
+                });
+            });
+        });
+    }
+
     private storeNewPatternTransaction(connection: PoolConnection, args: any,
         callback: (err: Err, results: any) => void): void {
         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
@@ -1003,8 +1051,8 @@ class DB {
                     callback(new Err(err.message, -10), undefined);
                     return;
                 }
-                query = "INSERT INTO patterns(id) VALUES ?";
-                const values: string[][] = [[patternId]];
+                query = "INSERT INTO patterns(id, fk_domain_id) VALUES ?";
+                const values: string[][] = [[patternId, args.domainId]];
                 connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);

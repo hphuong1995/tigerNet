@@ -630,26 +630,34 @@ initQueue.unshift((connection, initQueue, params) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
+    db.storeNewDomain((domainId, err) => {
+        if(err) rollbackAndExit(connection, err);
+        next(connection, initQueue, domainId);
+    })
+});
+
+initQueue.unshift((connection, initQueue, domainId) => {
+    let next = initQueue.pop();
     let patternIds = [];
-    db.storeNewPattern( (pattern, err) => {
+    db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
-        next(connection, initQueue, patternIds);
+        next(connection, initQueue, patternIds, domainId);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds) => {
+initQueue.unshift((connection, initQueue, patternIds, domainId) => {
     let next = initQueue.pop();
-    db.storeNewPattern( (pattern, err) => {
+    db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
-        next(connection, initQueue, patternIds);
+        next(connection, initQueue, patternIds, domainId);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds) => {
+initQueue.unshift((connection, initQueue, patternIds, domainId) => {
     let next = initQueue.pop();
-    db.storeNewPattern( (pattern, err) => {
+    db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
         next(connection, initQueue, patternIds);

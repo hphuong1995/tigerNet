@@ -123,8 +123,8 @@ router.put("/users/:uid", (req: Request, res: Response) => {
  */
 router.post("/patterns", (req: Request, res: Response) => {
     console.log(req.body);
-    // storeNewPattern
-    db.storeNewPattern((pid: string, err: Err) => {
+    // #FIXME: must give a domain id
+    db.storeNewPattern("", (pid: string, err: Err) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
