@@ -5,7 +5,7 @@ const router: any = express.Router();
 
 import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
-import { Network } from "../data/network";
+import { Domain } from "../data/domain";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
@@ -93,7 +93,7 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      * This object persists until the user logs out or the session expires (a long timeout)
      * The user object is validated in the authentication endpoints - no need to double check that
      */
-    db.getNetwork( (err: Err, network: Network) => {
+    db.getDomainById("DN00", (err: Err, network: Domain) => {
         if (err) {
             res.status(500).send(err.message);
             return;

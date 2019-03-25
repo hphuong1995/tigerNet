@@ -2,8 +2,8 @@ import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
 import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
+import { Domain } from "../../data/domain";
 import { Err } from "../../data/err";
-import { Network } from "../../data/network";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
 import { Question } from "../../data/question";
@@ -566,7 +566,7 @@ class DB {
      * Creates an empty pattern, stores it in the database,
      * and returns it in the callback
      */
-    public storeNewDomain(callback: (patternId: string, err: Err) => void): void {
+    public storeNewDomain(callback: (domainId: string, err: Err) => void): void {
         this.transaction(undefined, this.storeNewDomainTransaction,
             (results: any, err: Err) => {
                 if (err) {
@@ -799,6 +799,24 @@ class DB {
     }
 
     /*
+     * Gets all patterns in domain
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getAllPatternsInDomain(domainId: string, callback: (patterns: Pattern[], err: Err) => void): void {
+        const query: string = "SELECT * FROM patterns WHERE fk_domain_id = '" + domainId + "'";
+        conn.query(query, (err: MysqlError, results: Array<{ id: string }>) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const patternIds: string[] = results.map((r) => r.id);
+            db.getPatterns(patternIds, callback);
+        });
+        return;
+    }
+
+    /*
      * Gets a node by its id
      * Error codes:
      *       -1: Invalid node id(s)
@@ -893,13 +911,13 @@ class DB {
     public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
             "SELECT DISTINCT fk_node_id, fk_target_id\
-            FROM node_connections JOIN nodes\
-            ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
-            AND nodes.is_connector = 1\
-            WHERE fk_target_id IN\
-                (SELECT id FROM nodes WHERE is_connector = 1)\
-            AND fk_node_id IN\
-                (SELECT id FROM nodes WHERE is_connector = 1)";
+                FROM node_connections JOIN nodes\
+                ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
+                AND nodes.is_connector = 1\
+                WHERE fk_target_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_node_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)";
         conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
@@ -911,26 +929,71 @@ class DB {
     }
 
     /*
-     * Returns the entire network
+     * Gets all connections between connector nodes
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getPatternToPatternConnectionsInDomain(domainId: string,
+        callback: (connectors: Connector[], err: Err) => void): void {
+        const query: string =
+            "SELECT DISTINCT fk_node_id, fk_target_id\
+                FROM node_connections JOIN nodes\
+                ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
+                AND nodes.is_connector = 1\
+                WHERE fk_target_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_node_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_pattern_id IN\
+                    (SELECT id FROM patterns WHERE fk_domain_id = '" + domainId + "')";
+        console.log(query);
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
+    }
+
+    /*
+     * Returns a domain from the given Id
      * Error codes:
      *       -1: internal error
      *      -10: MySQL error
      */
-    public getNetwork(callback: (err: Err, network: Network) => void): void {
-        db.getAllPatterns((patterns: Pattern[], err: Err) => {
+    public getDomainById(id: string, callback: (err: Err, network: Domain) => void): void {
+        db.getAllPatternsInDomain(id, (patterns: Pattern[], err: Err) => {
             if (err) {
                 callback(err, undefined);
                 return;
             }
-            db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
+            db.getPatternToPatternConnectionsInDomain(id, (connections: Connector[], err: Err) => {
                 if (err) {
                     callback(err, undefined);
                     return;
                 }
-                callback(undefined, new Network(patterns, connections));
+                // #FIXME: domain node needs to be returned
+                callback(undefined, new Domain(id, patterns, undefined, connections));
             });
         });
     }
+    // public getNetwork(callback: (err: Err, network: Domain) => void): void {
+    //     db.getAllPatterns((patterns: Pattern[], err: Err) => {
+    //         if (err) {
+    //             callback(err, undefined);
+    //             return;
+    //         }
+    //         db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
+    //             if (err) {
+    //                 callback(err, undefined);
+    //                 return;
+    //             }
+    //             callback(undefined, new Domain(patterns, connections));
+    //         });
+    //     });
+    // }
 
     /*
      * Deletes the specified pattern, deletes all nodes within the specified pattern,

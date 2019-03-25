@@ -5,12 +5,12 @@ const router: any = express.Router();
 
 import { Result } from "range-parser";
 import { ClientQuestion } from "../data/clientQuestion";
+import { Domain } from "../data/domain";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
 import { User } from "../data/user";
 import { Connector } from "./../data/connector";
 import { Err } from "./../data/err";
-import { Network } from "./../data/network";
 import { Node } from "./../data/node";
 import { Session } from "./../data/session";
 import { db } from "./../services/database/db";
@@ -142,7 +142,7 @@ router.post("/patterns", (req: Request, res: Response) => {
                     if (err) {
                         res.status(400).send(err.message);
                     } else {
-                        db.getNetwork((err: Err, network: Network) => {
+                        db.getDomainById("DN00", (err: Err, network: Domain) => {
                             if (err) {
                                 res.status(400).send(err.message);
                             } else {
@@ -195,7 +195,7 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                 }
             });
             if (nonConNodes.length !== 2 || req.body.currentNodeNum === 3) {
-                db.getNetwork((err: Err, network: Network) => {
+                db.getDomainById("DN00", (err: Err, network: Domain) => {
                     if (err) {
                         res.status(400).send(err.message);
                     }
@@ -211,7 +211,7 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                         res.status(400).send(err.message);
                         return;
                     }
-                    db.getNetwork((err: Err, network: Network) => {
+                    db.getDomainById("DN00", (err: Err, network: Domain) => {
                         if (err) {
                             res.status(400).send(err.message);
                             return;
@@ -236,7 +236,7 @@ router.post("/connections", (req: Request, res: Response) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-            db.getNetwork((err: Err, network: Network) => {
+            db.getDomainById("DN00", (err: Err, network: Domain) => {
                 if (err) {
                     res.status(400).send(err.message);
                 } else {
@@ -253,7 +253,7 @@ router.delete("/connections", (req: Request, res: Response) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-            db.getNetwork((err: Err, network: Network) => {
+            db.getDomainById("DN00", (err: Err, network: Domain) => {
                 if (err) {
                     res.status(400).send(err.message);
                 } else {
