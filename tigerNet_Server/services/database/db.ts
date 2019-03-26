@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
+import { resolve } from "url";
 import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
 import { Domain } from "../../data/domain";
@@ -699,7 +700,6 @@ class DB {
      *     -10: MySQL error
      */
     public addConnections(connectors: Connector[], callback: (err: Err) => void): void {
-        const fullPatterns: Pattern[] = [];
         const promises: Array<Promise<any>> = connectors.map((connector: Connector) => {
             return new Promise((resolve: (connector: Connector) => void, reject: (err: Err) => void) => {
                 this.addConnection(connector.id, connector.targetId, (err: Err, connector: Connector) => {
@@ -983,25 +983,69 @@ class DB {
      *       -1: internal error
      *      -10: MySQL error
      */
+    // public getDomainById(id: string, callback: (err: Err, domain: Domain) => void): void {
+    //     db.getAllPatternsInDomain(id, (patterns: Pattern[], err: Err) => {
+    //         if (err) {
+    //             callback(err, undefined);
+    //             return;
+    //         }
+    //         db.getPatternToPatternConnectionsInDomain(id, (connections: Connector[], err: Err) => {
+    //             if (err) {
+    //                 callback(err, undefined);
+    //                 return;
+    //             }
+    //             db.getDomainNode(id, (err: Err, node: Node) => {
+    //                 if (err) {
+    //                     callback(err, undefined);
+    //                     return;
+    //                 }
+    //                 callback(undefined, new Domain(id, patterns, node, connections));
+    //             });
+    //         });
+    //     });
+    // }
     public getDomainById(id: string, callback: (err: Err, domain: Domain) => void): void {
-        db.getAllPatternsInDomain(id, (patterns: Pattern[], err: Err) => {
+        db.getDomainsByIds([id], (err: Err, domains: Domain[]) => {
             if (err) {
                 callback(err, undefined);
                 return;
             }
-            db.getPatternToPatternConnectionsInDomain(id, (connections: Connector[], err: Err) => {
-                if (err) {
-                    callback(err, undefined);
-                    return;
-                }
-                db.getDomainNode(id, (err: Err, node: Node) => {
+            callback(undefined, domains[0]);
+        });
+    }
+
+    public getDomainsByIds(ids: string[], callback: (err: Err, domains: Domain[]) => void): void {
+        const getDomainPromises: Array<Promise<Domain>> = ids.map((domainId: string) => {
+            return new Promise((resolve: (domain: Domain) => void, reject: (err: Err) => void) => {
+                this.getAllPatternsInDomain(domainId, (patterns: Pattern[], err: Err) => {
                     if (err) {
-                        callback(err, undefined);
+                        reject(err);
                         return;
                     }
-                    callback(undefined, new Domain(id, patterns, node, connections));
+                    this.getPatternToPatternConnectionsInDomain(domainId, (connections: Connector[], err: Err) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        db.getDomainNode(domainId, (err: Err, node: Node) => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+                            resolve(new Domain(domainId, patterns, node, connections));
+                        });
+                    });
                 });
             });
+        });
+        Promise.all(getDomainPromises).then((domains: Domain[]) => {
+            callback(undefined, domains);
+        }, (err: any) => {
+            console.log(JSON.stringify("reject: " + err));
+            callback(err, undefined);
+        }).catch((err: any) => {
+            console.log(JSON.stringify("catch: " + err));
+            callback(err, undefined);
         });
     }
 
