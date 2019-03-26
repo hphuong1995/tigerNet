@@ -176,6 +176,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     });
     if (nonConNodes.length !== 2 || reqObject.currentNodeNum === 3) {
       if (!this.network.isValid()) {
+        this.resetSelectedElement();
         this.network = this.oldNetwork;
         return;
       }
@@ -184,6 +185,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         return !Connector.compare(conn, new Connector(nonConNodes[0], nonConNodes[1]));
       });
       if (!this.network.isValid()) {
+        this.resetSelectedElement();
         this.network = this.oldNetwork;
         return;
       }
@@ -293,21 +295,57 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
     var arrToSend: any[] = [];
-    arrToSend.push(this.data.selectedLink[0]);
-    arrToSend.push(this.data.selectedLink[1]);
+    arrToSend.push(this.data.selectedLink[0].substr(0,3));
+    arrToSend.push(this.data.selectedLink[0].substr(3,5));
     console.log(arrToSend);
     // Delete Pattern connection
     if (this.network.getPatternByChildNodeId(arrToSend[0]).id
       !== this.network.getPatternByChildNodeId(arrToSend[1]).id) {
       // check isolate
+      this.resetSelectedElement();
       this.data.deleteConnection(arrToSend).subscribe(data => {
         var retData: any = data;
         this.resetGraph(retData.patterns, retData.patternConnections);
-        this.checkPatternIsolate(this.network);
       });
     }
     else {  // delete connection in the Pattern
+      let currentPat = this.network.getPatternByChildNodeId(arrToSend[0]);
 
+      if(arrToSend[0] !== currentPat.getConnectorNode().id && arrToSend[1] !== currentPat.getConnectorNode().id){
+        this.resetSelectedElement();
+        alert("You can only delete connection from connector Node to non-connector Node");
+        return;
+      }
+      else{
+        this.oldNetwork = this.network;
+        this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+        let pattern: Pattern = this.network.getPatternById(currentPat.id);
+        console.log(pattern.connections);
+
+        // Remove the connections
+        pattern.connections = pattern.connections.filter( connection =>{
+          return !(connection.id === arrToSend[0] && connection.targetId === arrToSend[1]);
+        });
+
+        pattern.connections = pattern.connections.filter( connection =>{
+          return !(connection.id === arrToSend[1] && connection.targetId === arrToSend[0]);
+        });
+
+        console.log(pattern.connections);
+        this.resetSelectedElement();
+
+        if (!this.network.isValid()) {
+          this.network = this.oldNetwork;
+          alert("Operation will break the network");
+          return;
+        }
+        else{
+          this.data.deleteConnection(arrToSend).subscribe(data => {
+            var retData: any = data;
+            this.resetGraph(retData.patterns, retData.patternConnections);
+          });
+        }
+      }
     }
   }
 
@@ -363,29 +401,150 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
     if (this.data.selectedNodes.length !== 1) {
       this.resetSelectedElement();
-      alert("Please only one node to delete");
+      alert("Please choose only one node to delete");
       return;
     }
-    this.checkPatternIsolate(this.network);
+
     var selectedNodeId = this.data.selectedNodes[0];
-    var pattern = this.network.getPatternByChildNodeId(selectedNodeId);
-    var nodesNumber = pattern.nodes.length;
 
-    if (nodesNumber === 1 && selectedNodeId !== pattern.getConnectorNode().id) {
-      this.resetSelectedElement();
-      alert("You can only delete connector node if it is the last node in the pattern");
+    var reqObject = {
+      pattern: this.network.getPatternByChildNodeId(selectedNodeId).id,
+      node: selectedNodeId,
+      conNode: this.network.getPatternByChildNodeId(selectedNodeId).getConnectorNode().id,
+      currentNodeNum: this.network.getPatternByChildNodeId(selectedNodeId).nodes.length
+    };
+    this.resetSelectedElement();
+
+    if(reqObject.currentNodeNum === 1 && reqObject.node !== reqObject.conNode){
+      alert("Something wrong");
       return;
     }
 
-    console.log(pattern);
+    if(reqObject.currentNodeNum !== 1 && reqObject.node === reqObject.conNode){
+      alert("Connector Node is the last node you can delete");
+      return;
+    }
+
+
+    if(reqObject.currentNodeNum === 1 && reqObject.node === reqObject.conNode){
+      let sendObj = { node : reqObject.node,
+                   pid : reqObject.pattern};
+
+      this.data.deleteNode(sendObj).subscribe( data =>{
+        console.log(data);
+        var resData : any = data;
+        this.resetGraph(resData.patterns, resData.patternConnections);
+      });
+    }
+    else if(reqObject.currentNodeNum > 1 && reqObject.currentNodeNum < 4 && reqObject.node !== reqObject.conNode){
+
+      this.oldNetwork = this.network;
+      this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
+
+      // Remove the node
+      pattern.nodes = pattern.nodes.filter( node =>{
+        return node.id !== reqObject.node;
+      });
+      // Remove the connections
+      pattern.connections = pattern.connections.filter( connection =>{
+        return connection.id !== reqObject.node && connection.targetId !== reqObject.node;
+      });
+
+      if (!this.network.isValid()) {
+        this.network = this.oldNetwork;
+        this.resetSelectedElement();
+        console.log("not valid");
+        alert("Operation will break the network");
+        return;
+      }
+      else{
+        let sendObj = { node : reqObject.node };
+        this.data.deleteNode( sendObj ).subscribe( data => {
+          console.log(data);
+          var resData : any = data;
+          this.resetGraph(resData.patterns, resData.patternConnections);
+        });
+      }
+    }
+    else if(reqObject.currentNodeNum > 3 && reqObject.currentNodeNum < 8 && reqObject.node !== reqObject.conNode){
+      this.oldNetwork = this.network;
+      this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
+      var joinNodes : string[] = [];
+
+      // Remove the node
+      pattern.nodes = pattern.nodes.filter( node =>{
+        return node.id !== reqObject.node;
+      });
+      // Remove the connections
+      pattern.connections = pattern.connections.filter( connection =>{
+        if(connection.id === reqObject.node && connection.targetId !== reqObject.conNode){
+          joinNodes.push(connection.targetId);
+        }
+        if(connection.targetId === reqObject.node && connection.id !== reqObject.conNode){
+          joinNodes.push(connection.id);
+        }
+        return connection.id !== reqObject.node && connection.targetId !== reqObject.node;
+      });
+
+      var flag : boolean = true;
+      /**
+      if(joinNodes.length === 2 && reqObject.currentNodeNum === 4){
+        if(!this.checkConnectionExist ( [joinNodes[0], reqObject.conNode], pattern.connections)){
+          let tempArr = [];
+          tempArr.push( reqObject.conNode);
+          tempArr.push( joinNodes[0] );
+          joinNodes = tempArr;
+        }
+        else if (!this.checkConnectionExist ( [joinNodes[1], reqObject.conNode], pattern.connections)){
+          let tempArr = [];
+          tempArr.push( reqObject.conNode);
+          tempArr.push( joinNodes[1] );
+          joinNodes = tempArr;
+        }
+      }
+      **/
+
+      if(joinNodes.length === 2){
+        if(!this.checkConnectionExist( joinNodes, pattern.connections))
+          pattern.connections.push(new Connector(joinNodes[0], joinNodes[1]));
+        else
+          flag = false;
+      }
+
+
+      console.log(joinNodes);
+      console.log(pattern);
+      if (!this.network.isValid()) {
+        this.network = this.oldNetwork;
+        this.resetSelectedElement();
+        console.log("not valid");
+        alert("Operation will break the network");
+        return;
+      }
+      else{
+        let sendObj : any;
+        if( flag){
+           sendObj = { node : reqObject.node,
+                        id : joinNodes[0],
+                        targetId : joinNodes[1]};
+        }
+        else{
+          sendObj = { node : reqObject.node};
+        }
+        this.data.deleteNode( sendObj ).subscribe( data => {
+          console.log(data);
+          var resData : any = data;
+          this.resetGraph(resData.patterns, resData.patternConnections);
+        });
+      }
+    }
   }
 
   // checkValidNetwork(network : Network){
 
   // }
-
-
-
   checkPatternIsolate(network: Network) {
     var connectorNodeQueue: string[] = [];
     var readList: string[] = [];

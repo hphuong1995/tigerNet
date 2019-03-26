@@ -58,7 +58,7 @@ export class Pattern {
             }
         }
         // If 3 to 7 nodes - exactly 1 connector node
-        if (this.nodes.length > 3 && this.nodes.length < 7) {
+        if (this.nodes.length >= 3 && this.nodes.length < 7) {
             // No duplicate connections
             if (!Connector.checkDuplicateConnection(this.connections)) {
                 alert("There is duplicate connection in the pattern");
@@ -74,6 +74,9 @@ export class Pattern {
                 return false;
             }
             //If three nodes - connectors and nodes must form a triangle
+            if(this.nodes.length === 3){
+               return this.connections.length === 3
+            }
         }
 
         //4 to 7 nodes

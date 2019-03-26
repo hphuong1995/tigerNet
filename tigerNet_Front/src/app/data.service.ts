@@ -47,4 +47,13 @@ export class DataService {
   deleteConnection( reqObject :any){
     return this.http.delete('api/v1/admin/connections?id=' + reqObject[0] + '&targetId=' + reqObject[1]);
   }
+
+  deleteNode( reqObject : any){
+    if(reqObject.id && reqObject.targetId)
+      return this.http.delete('api/v1/admin/nodes?nid=' + reqObject.node + '&id=' + reqObject.id + '&targetId=' + reqObject.targetId);
+    else if(reqObject.pid)
+      return this.http.delete('api/v1/admin/nodes?nid=' + reqObject.node + '&pid=' + reqObject.pid);
+    else
+      return this.http.delete('api/v1/admin/nodes?nid=' + reqObject.node);
+  }
 }
