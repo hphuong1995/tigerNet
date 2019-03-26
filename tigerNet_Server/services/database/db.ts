@@ -889,7 +889,7 @@ class DB {
      */
     public getDomainNode(domainId: string, callback: (err: Err, node: Node) => void): void {
         const query: string = "SELECT * FROM nodes WHERE fk_domain_id = '" + domainId + "'";
-        conn.query(query, (err: MysqlError, results: any[]) => {
+        conn.query(query, (err: MysqlError, results: IDbNode[]) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
             } else if (results.length === 0) {
@@ -977,7 +977,12 @@ class DB {
         });
     }
 
-    //pass in domainId
+    /*
+     * Gets all connections between connector nodes and the domain
+     * node in the given domainId
+     * Error codes:
+     *      -10: MySQL error
+     */
     public getPatternToDomainNodeConnectionsByDomain(domainId: string,
         callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
@@ -989,10 +994,21 @@ class DB {
             AND (fk_node_id in (SELECT id FROM nodes WHERE is_connector = 1)\
                 XOR fk_target_id IN (SELECT id FROM nodes WHERE is_connector = 1))\
         ";
-        throw "not implemented yet";
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
     }
 
-    //pass in domainNodeId
+    /*
+     * Gets all connections between connector nodes and the given domain node
+     * Error codes:
+     *      -10: MySQL error
+     */
     public getPatternToDomainNodeConnections(domainNodeId: string,
         callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
@@ -1004,11 +1020,37 @@ class DB {
             AND (fk_node_id in (SELECT id FROM nodes WHERE is_connector = 1)\
                 XOR fk_target_id IN (SELECT id FROM nodes WHERE is_connector = 1))\
         ";
-        throw "not implemented yet";
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
     }
 
-    public getDomainToDomainConnections() {
-        return;
+
+    /*
+     * Gets all connections between domain nodes
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getDomainToDomainConnections(callback: (connectors: Connector[], err: Err) => void): void {
+        const query: string =
+        "SELECT fk_node_id, fk_target_id\
+            FROM node_connections\
+            WHERE fk_node_id like 'D%'\
+            AND fk_target_id like 'D%'\
+        ";
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if(err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map( (res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
     }
 
     /*
@@ -1084,6 +1126,9 @@ class DB {
     }
 
     public getNetwork(callback: (err: Err, network: Network) => void): void {
+        //get all domains
+        //get all domainConnections
+        
         throw new Error("not implemented");
     }
 

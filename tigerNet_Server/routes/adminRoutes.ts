@@ -6,6 +6,7 @@ const router: any = express.Router();
 import { Result } from "range-parser";
 import { ClientQuestion } from "../data/clientQuestion";
 import { Domain } from "../data/domain";
+import { Network } from "../data/network";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
 import { User } from "../data/user";

@@ -19,14 +19,18 @@ export class Domain {
     }
 
     public getPatternByChildNodeId(id: string): Pattern {
-        return this.patterns.find((p) => {
-            if (p.getNodeById(id)) {
-                return true;
-            } else {
-                return false;
-            }
-        });
+        return this.patterns.find((p) => p.getNodeById(id) !== undefined);
     }
+
+    // public getPatternByChildNodeId(id: string): Pattern {
+    //     return this.patterns.find((p) => {
+    //         if (p.getNodeById(id)) {
+    //             return true;
+    //         } else {
+    //             return false;
+    //         }
+    //     });
+    // }
 
     public isValid(): boolean {
         for (const pattern of this.patterns) {
