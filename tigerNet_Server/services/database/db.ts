@@ -1,7 +1,9 @@
 import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
+import { resolve } from "url";
 import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
+import { Domain } from "../../data/domain";
 import { Err } from "../../data/err";
 import { Network } from "../../data/network";
 import { Node } from "../../data/node";
@@ -566,8 +568,23 @@ class DB {
      * Creates an empty pattern, stores it in the database,
      * and returns it in the callback
      */
-    public storeNewPattern(callback: (patternId: string, err: Err) => void): void {
-        this.transaction(undefined, this.storeNewPatternTransaction,
+    public storeNewDomain(callback: (domainId: string, err: Err) => void): void {
+        this.transaction(undefined, this.storeNewDomainTransaction,
+            (results: any, err: Err) => {
+                if (err) {
+                    callback(undefined, err);
+                } else {
+                    callback(results as string, undefined);
+                }
+            });
+    }
+
+    /*
+     * Creates an empty pattern, stores it in the database,
+     * and returns it in the callback
+     */
+    public storeNewPattern(domainId: string, callback: (patternId: string, err: Err) => void): void {
+        this.transaction({domainId}, this.storeNewPatternTransaction,
             (results: any, err: Err) => {
                 if (err) {
                     callback(undefined, err);
@@ -587,12 +604,13 @@ class DB {
      *     -1: Invalid lock type
      *     10: MySQL error
      */
-    public addNode(isActive: boolean, isConnector: boolean, patternId: string,
+    public addNode(isActive: boolean, isConnector: boolean, patternId: string, domainId: string,
         callback: (node: Node, err: Err) => void): void {
         const args: any = {};
         args.isActive = isActive;
         args.isConnector = isConnector;
         args.patternId = patternId;
+        args.domainId = domainId;
         this.transaction(args,
             this.addNodeTransaction.bind(this), (results: any, err: Err) => {
                 if (err) {
@@ -682,7 +700,6 @@ class DB {
      *     -10: MySQL error
      */
     public addConnections(connectors: Connector[], callback: (err: Err) => void): void {
-        const fullPatterns: Pattern[] = [];
         const promises: Array<Promise<any>> = connectors.map((connector: Connector) => {
             return new Promise((resolve: (connector: Connector) => void, reject: (err: Err) => void) => {
                 this.addConnection(connector.id, connector.targetId, (err: Err, connector: Connector) => {
@@ -783,6 +800,24 @@ class DB {
     }
 
     /*
+     * Gets all patterns in domain
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getAllPatternsInDomain(domainId: string, callback: (patterns: Pattern[], err: Err) => void): void {
+        const query: string = "SELECT * FROM patterns WHERE fk_domain_id = '" + domainId + "'";
+        conn.query(query, (err: MysqlError, results: Array<{ id: string }>) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const patternIds: string[] = results.map((r) => r.id);
+            db.getPatterns(patternIds, callback);
+        });
+        return;
+    }
+
+    /*
      * Gets a node by its id
      * Error codes:
      *       -1: Invalid node id(s)
@@ -847,6 +882,25 @@ class DB {
     }
 
     /*
+     * Gets the domain node of a domain
+     * Error codes:
+     *       -1: domain node not found
+     *      -10: MySQL error
+     */
+    public getDomainNode(domainId: string, callback: (err: Err, node: Node) => void): void {
+        const query: string = "SELECT * FROM nodes WHERE fk_domain_id = '" + domainId + "'";
+        conn.query(query, (err: MysqlError, results: any[]) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+            } else if (results.length === 0) {
+                callback(new Err("domain node not found for the specified domain: " + domainId, -1), undefined);
+            } else {
+                callback(undefined, new Node(results[0].is_active, results[0].is_connector, results[0].id));
+            }
+        });
+    }
+
+    /*
      * Gets all INTERNAL connections within a pattern
      * Error codes:
      *      -10: MySQL error
@@ -877,13 +931,13 @@ class DB {
     public getPatternToPatternConnections(callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
             "SELECT DISTINCT fk_node_id, fk_target_id\
-            FROM node_connections JOIN nodes\
-            ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
-            AND nodes.is_connector = 1\
-            WHERE fk_target_id IN\
-                (SELECT id FROM nodes WHERE is_connector = 1)\
-            AND fk_node_id IN\
-                (SELECT id FROM nodes WHERE is_connector = 1)";
+                FROM node_connections JOIN nodes\
+                ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
+                AND nodes.is_connector = 1\
+                WHERE fk_target_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_node_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)";
         conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
             if (err) {
                 callback(undefined, new Err(err.message, -10));
@@ -895,26 +949,125 @@ class DB {
     }
 
     /*
-     * Returns the entire network
+     * Gets all connections between connector nodes
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getPatternToPatternConnectionsInDomain(domainId: string,
+        callback: (connectors: Connector[], err: Err) => void): void {
+        const query: string =
+            "SELECT DISTINCT fk_node_id, fk_target_id\
+                FROM node_connections JOIN nodes\
+                ON (nodes.id = fk_node_id OR nodes.id = fk_target_id)\
+                AND nodes.is_connector = 1\
+                WHERE fk_target_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_node_id IN\
+                    (SELECT id FROM nodes WHERE is_connector = 1)\
+                AND fk_pattern_id IN\
+                    (SELECT id FROM patterns WHERE fk_domain_id = '" + domainId + "')";
+        console.log(query);
+        conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
+            callback(connectors, undefined);
+        });
+    }
+
+    /*
+     * Returns a domain from the given Id
      * Error codes:
      *       -1: internal error
      *      -10: MySQL error
      */
-    public getNetwork(callback: (err: Err, network: Network) => void): void {
-        db.getAllPatterns((patterns: Pattern[], err: Err) => {
+    // public getDomainById(id: string, callback: (err: Err, domain: Domain) => void): void {
+    //     db.getAllPatternsInDomain(id, (patterns: Pattern[], err: Err) => {
+    //         if (err) {
+    //             callback(err, undefined);
+    //             return;
+    //         }
+    //         db.getPatternToPatternConnectionsInDomain(id, (connections: Connector[], err: Err) => {
+    //             if (err) {
+    //                 callback(err, undefined);
+    //                 return;
+    //             }
+    //             db.getDomainNode(id, (err: Err, node: Node) => {
+    //                 if (err) {
+    //                     callback(err, undefined);
+    //                     return;
+    //                 }
+    //                 callback(undefined, new Domain(id, patterns, node, connections));
+    //             });
+    //         });
+    //     });
+    // }
+    public getDomainById(id: string, callback: (err: Err, domain: Domain) => void): void {
+        db.getDomainsByIds([id], (err: Err, domains: Domain[]) => {
             if (err) {
                 callback(err, undefined);
                 return;
             }
-            db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
-                if (err) {
-                    callback(err, undefined);
-                    return;
-                }
-                callback(undefined, new Network(patterns, connections));
-            });
+            callback(undefined, domains[0]);
         });
     }
+
+    public getDomainsByIds(ids: string[], callback: (err: Err, domains: Domain[]) => void): void {
+        const getDomainPromises: Array<Promise<Domain>> = ids.map((domainId: string) => {
+            return new Promise((resolve: (domain: Domain) => void, reject: (err: Err) => void) => {
+                this.getAllPatternsInDomain(domainId, (patterns: Pattern[], err: Err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    this.getPatternToPatternConnectionsInDomain(domainId, (connections: Connector[], err: Err) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        db.getDomainNode(domainId, (err: Err, node: Node) => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+                            resolve(new Domain(domainId, patterns, node, connections));
+                        });
+                    });
+                });
+            });
+        });
+        Promise.all(getDomainPromises).then((domains: Domain[]) => {
+            callback(undefined, domains);
+        }, (err: any) => {
+            console.log(JSON.stringify("reject: " + err));
+            callback(err, undefined);
+        }).catch((err: any) => {
+            console.log(JSON.stringify("catch: " + err));
+            callback(err, undefined);
+        });
+    }
+
+    public getNetwork(callback: (err: Err, network: Network) => void): void {
+        throw new Error("not implemented");
+    }
+
+    // public getNetwork(callback: (err: Err, network: Domain) => void): void {
+    //     db.getAllPatterns((patterns: Pattern[], err: Err) => {
+    //         if (err) {
+    //             callback(err, undefined);
+    //             return;
+    //         }
+    //         db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
+    //             if (err) {
+    //                 callback(err, undefined);
+    //                 return;
+    //             }
+    //             callback(undefined, new Domain(patterns, connections));
+    //         });
+    //     });
+    // }
 
     /*
      * Deletes the specified pattern, deletes all nodes within the specified pattern,
@@ -982,6 +1135,39 @@ class DB {
         return bool ? 1 : 0;
     }
 
+    private storeNewDomainTransaction(connection: PoolConnection, args: any,
+        callback: (err: Err, results: any) => void): void {
+        let query: string = "SELECT id FROM domainIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        let domainId: string;
+        connection.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 1) {
+                callback(new Err("Not enough free domain ids", -1), undefined);
+                return;
+            }
+            domainId = results[0].id;
+            query = "UPDATE domainIds SET isFree = 0 WHERE id = '" + domainId + "'";
+            connection.query(query, (err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10), undefined);
+                    return;
+                }
+                query = "INSERT INTO domains(id) VALUES ?";
+                const values: string[][] = [[domainId]];
+                connection.query(query, [values], (err: MysqlError) => {
+                    if (err) {
+                        callback(new Err(err.message, -10), undefined);
+                        return;
+                    }
+                    callback(undefined, domainId);
+                });
+            });
+        });
+    }
+
     private storeNewPatternTransaction(connection: PoolConnection, args: any,
         callback: (err: Err, results: any) => void): void {
         let query: string = "SELECT id FROM patternIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
@@ -1002,8 +1188,8 @@ class DB {
                     callback(new Err(err.message, -10), undefined);
                     return;
                 }
-                query = "INSERT INTO patterns(id) VALUES ?";
-                const values: string[][] = [[patternId]];
+                query = "INSERT INTO patterns(id, fk_domain_id) VALUES ?";
+                const values: string[][] = [[patternId, args.domainId]];
                 connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
@@ -1015,10 +1201,17 @@ class DB {
         });
     }
 
-    private addNodeTransaction(connection: PoolConnection, args: any,
+    private addNodeTransaction(connection: PoolConnection,
+        // args: {pattern: Pattern, isActive: boolean, isConnector: boolean, patternId: string, domainId: boolean},
+        args: any,
         callback: (err: Err, results: any) => void): void {
         const pattern: Pattern = args.pattern as Pattern;
-        let query: string = "SELECT id FROM nodeIds WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        let query: string = "";
+        if (args.domainId) {
+            query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'D%' LIMIT 1 FOR UPDATE";
+        } else {
+            query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'N%' LIMIT 1 FOR UPDATE";
+        }
         const bit: (bool: boolean) => number = this.bit;
         connection.query(query, (err: MysqlError, results: any) => {
             if (err) {
@@ -1036,8 +1229,20 @@ class DB {
                     return;
                 }
                 const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
-                query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
-                const values: string[][] = [[node.id, bit(node.isActive), bit(node.isConnector), args.patternId]];
+                if (!args.patternId) {
+                    args.patternId = null;
+                }
+                if (!args.domainId) {
+                    args.domainId = null;
+                }
+                query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id, fk_domain_id) VALUES ?";
+                const values: string[][] = [[
+                    node.id,
+                    bit(node.isActive),
+                    bit(node.isConnector),
+                    args.patternId,
+                    args.domainId
+                ]];
                 const q: Query = connection.query(query, [values], (err: MysqlError) => {
                     if (err) {
                         callback(new Err(err.message, -10), undefined);
