@@ -128,7 +128,7 @@ router.post("/patterns", (req: Request, res: Response) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-            db.addNode(true, true, pid, false, (node: Node, err: Err) => {
+            db.addNode(true, true, pid, undefined, (node: Node, err: Err) => {
                 let nodeIdList = [];
                 const connectorList: Connector[] = [];
 
@@ -168,7 +168,7 @@ router.post("/patterns", (req: Request, res: Response) => {
  */
 router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
     console.log(req.body);
-    db.addNode(true, false, req.body.pattern, false, (node: Node, err: Err) => {
+    db.addNode(true, false, req.body.pattern, undefined, (node: Node, err: Err) => {
         if (err) {
             res.status(400).send(err.message);
             return;

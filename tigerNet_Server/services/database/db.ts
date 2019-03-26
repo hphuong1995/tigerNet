@@ -4,6 +4,7 @@ import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
 import { Domain } from "../../data/domain";
 import { Err } from "../../data/err";
+import { Network } from "../../data/network";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
 import { Question } from "../../data/question";
@@ -602,13 +603,13 @@ class DB {
      *     -1: Invalid lock type
      *     10: MySQL error
      */
-    public addNode(isActive: boolean, isConnector: boolean, patternId: string, isDomainNode: boolean,
+    public addNode(isActive: boolean, isConnector: boolean, patternId: string, domainId: string,
         callback: (node: Node, err: Err) => void): void {
         const args: any = {};
         args.isActive = isActive;
         args.isConnector = isConnector;
         args.patternId = patternId;
-        args.isDomainNode = isDomainNode;
+        args.domainId = domainId;
         this.transaction(args,
             this.addNodeTransaction.bind(this), (results: any, err: Err) => {
                 if (err) {
@@ -881,6 +882,25 @@ class DB {
     }
 
     /*
+     * Gets the domain node of a domain
+     * Error codes:
+     *       -1: domain node not found
+     *      -10: MySQL error
+     */
+    public getDomainNode(domainId: string, callback: (err: Err, node: Node) => void): void {
+        const query: string = "SELECT * FROM nodes WHERE fk_domain_id = '" + domainId + "'";
+        conn.query(query, (err: MysqlError, results: any[]) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+            } else if (results.length === 0) {
+                callback(new Err("domain node not found for the specified domain: " + domainId, -1), undefined);
+            } else {
+                callback(undefined, new Node(results[0].is_active, results[0].is_connector, results[0].id));
+            }
+        });
+    }
+
+    /*
      * Gets all INTERNAL connections within a pattern
      * Error codes:
      *      -10: MySQL error
@@ -963,7 +983,7 @@ class DB {
      *       -1: internal error
      *      -10: MySQL error
      */
-    public getDomainById(id: string, callback: (err: Err, network: Domain) => void): void {
+    public getDomainById(id: string, callback: (err: Err, domain: Domain) => void): void {
         db.getAllPatternsInDomain(id, (patterns: Pattern[], err: Err) => {
             if (err) {
                 callback(err, undefined);
@@ -974,11 +994,21 @@ class DB {
                     callback(err, undefined);
                     return;
                 }
-                // #FIXME: domain node needs to be returned
-                callback(undefined, new Domain(id, patterns, undefined, connections));
+                db.getDomainNode(id, (err: Err, node: Node) => {
+                    if (err) {
+                        callback(err, undefined);
+                        return;
+                    }
+                    callback(undefined, new Domain(id, patterns, node, connections));
+                });
             });
         });
     }
+
+    public getNetwork(callback: (err: Err, network: Network) => void): void {
+        throw new Error("not implemented");
+    }
+
     // public getNetwork(callback: (err: Err, network: Domain) => void): void {
     //     db.getAllPatterns((patterns: Pattern[], err: Err) => {
     //         if (err) {
@@ -1128,12 +1158,12 @@ class DB {
     }
 
     private addNodeTransaction(connection: PoolConnection,
-        // args: {pattern: Pattern, isActive: boolean, isConnector: boolean, patternId: string, isDomainNode: boolean},
+        // args: {pattern: Pattern, isActive: boolean, isConnector: boolean, patternId: string, domainId: boolean},
         args: any,
         callback: (err: Err, results: any) => void): void {
         const pattern: Pattern = args.pattern as Pattern;
         let query: string = "";
-        if (args.isDomainNode) {
+        if (args.domainId) {
             query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'D%' LIMIT 1 FOR UPDATE";
         } else {
             query = "SELECT id FROM nodeIds WHERE isFree = 1 AND id LIKE 'N%' LIMIT 1 FOR UPDATE";
@@ -1155,11 +1185,19 @@ class DB {
                     return;
                 }
                 const node: Node = new Node(args.isActive, args.isConnector, results[0].id);
-                query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id) VALUES ?";
+                if (!args.patternId) {
+                    args.patternId = null;
+                }
+                if (!args.domainId) {
+                    args.domainId = null;
+                }
+                query = "INSERT INTO nodes(id, is_active, is_connector, fk_pattern_id, fk_domain_id) VALUES ?";
                 const values: string[][] = [[
-                    node.id, bit(node.isActive),
+                    node.id,
+                    bit(node.isActive),
                     bit(node.isConnector),
-                    args.patternId
+                    args.patternId,
+                    args.domainId
                 ]];
                 const q: Query = connection.query(query, [values], (err: MysqlError) => {
                     if (err) {

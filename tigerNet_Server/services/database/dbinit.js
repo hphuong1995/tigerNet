@@ -107,14 +107,32 @@ const SECURITY_ANSWERS_TABLE =
         PRIMARY KEY (id)\
     );";
 
+// const NODES_TABLE =
+//     "CREATE TABLE nodes (\
+//         id VARCHAR(6) NOT NULL,\
+//         is_active BIT NOT NULL,\
+//         is_connector BIT NOT NULL,\
+//         fk_pattern_id VARCHAR(6),\
+//         CONSTRAINT FOREIGN KEY (fk_pattern_id)\
+//         REFERENCES patterns(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE RESTRICT,\
+//         PRIMARY KEY (id)\
+//     );";
+
 const NODES_TABLE =
     "CREATE TABLE nodes (\
         id VARCHAR(6) NOT NULL,\
         is_active BIT NOT NULL,\
         is_connector BIT NOT NULL,\
-        fk_pattern_id VARCHAR(6),\
+        fk_pattern_id VARCHAR(6) DEFAULT NULL,\
         CONSTRAINT FOREIGN KEY (fk_pattern_id)\
         REFERENCES patterns(id)\
+        ON UPDATE CASCADE\
+        ON DELETE RESTRICT,\
+        fk_domain_id VARCHAR(6) DEFAULT NULL,\
+        CONSTRAINT FOREIGN KEY (fk_domain_id)\
+        REFERENCES domains(id)\
         ON UPDATE CASCADE\
         ON DELETE RESTRICT,\
         PRIMARY KEY (id)\
@@ -153,6 +171,8 @@ const DOMAIN_DELETE_TRIGGER =
         BEGIN\
             DELETE FROM patterns WHERE fk_domain_id = OLD.id;\
             UPDATE domainids SET isFree = 1 WHERE id = OLD.id;\
+            DELETE FROM nodes WHERE fk_domain_id = OLD.id;\
+            UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
         END\
     ";
 
@@ -633,7 +653,15 @@ initQueue.unshift((connection, initQueue) => {
     db.storeNewDomain((domainId, err) => {
         if(err) rollbackAndExit(connection, err);
         next(connection, initQueue, domainId);
-    })
+    });
+});
+
+initQueue.unshift((connection, initQueue, domainId) => {
+    let next = initQueue.pop();
+    db.addNode(true, false, undefined, domainId, (node, err) => {
+        if(err) rollbackAndExit(connection, err);
+        next(connection, initQueue, domainId);
+    });
 });
 
 initQueue.unshift((connection, initQueue, domainId) => {

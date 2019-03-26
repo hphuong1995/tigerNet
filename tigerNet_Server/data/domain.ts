@@ -1,4 +1,5 @@
 import { Connector } from "./connector";
+import { Node } from "./node";
 import { Pattern } from "./pattern";
 export class Domain {
     public id: string;
