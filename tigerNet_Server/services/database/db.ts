@@ -977,6 +977,40 @@ class DB {
         });
     }
 
+    //pass in domainId
+    public getPatternToDomainNodeConnectionsByDomain(domainId: string,
+        callback: (connectors: Connector[], err: Err) => void): void {
+        const query: string =
+        "SELECT fk_node_id, fk_target_id\
+            FROM nodes JOIN node_connections\
+            ON fk_node_id = nodes.id OR fk_target_id = nodes.id\
+            WHERE fk_domain_id = '" + domainId + "'\
+            AND (fk_node_id LIKE 'D%' XOR fk_target_id LIKE 'D%')\
+            AND (fk_node_id in (SELECT id FROM nodes WHERE is_connector = 1)\
+                XOR fk_target_id IN (SELECT id FROM nodes WHERE is_connector = 1))\
+        ";
+        throw "not implemented yet";
+    }
+
+    //pass in domainNodeId
+    public getPatternToDomainNodeConnections(domainNodeId: string,
+        callback: (connectors: Connector[], err: Err) => void): void {
+        const query: string =
+        "SELECT DISTINCT fk_node_id, fk_target_id\
+            FROM nodes JOIN node_connections\
+            ON fk_node_id = nodes.id OR fk_target_id = nodes.id\
+            WHERE (fk_node_id = '" + domainNodeId + "'\
+                XOR fk_target_id = '" + domainNodeId + "')\
+            AND (fk_node_id in (SELECT id FROM nodes WHERE is_connector = 1)\
+                XOR fk_target_id IN (SELECT id FROM nodes WHERE is_connector = 1))\
+        ";
+        throw "not implemented yet";
+    }
+
+    public getDomainToDomainConnections() {
+        return;
+    }
+
     /*
      * Returns a domain from the given Id
      * Error codes:
