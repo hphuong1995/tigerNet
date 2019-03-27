@@ -19,7 +19,7 @@ export class Domain {
     }
 
     public getPatternByChildNodeId(id: string): Pattern {
-        return this.patterns.find((p) => p.getNodeById(id) !== undefined);
+        return this.patterns.find((p) => !!p.getNodeById(id));
     }
 
     // public getPatternByChildNodeId(id: string): Pattern {

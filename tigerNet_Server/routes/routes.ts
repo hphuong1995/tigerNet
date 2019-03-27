@@ -3,9 +3,11 @@ import express from "express";
 import { NextFunction, Request, Response } from "express";
 const router: any = express.Router();
 
+import { NetConnectOpts } from "net";
 import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
 import { Domain } from "../data/domain";
+import { Network } from "../data/network";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
 import { SecurityAnswer } from "../data/securityAnswer";
@@ -93,7 +95,14 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      * This object persists until the user logs out or the session expires (a long timeout)
      * The user object is validated in the authentication endpoints - no need to double check that
      */
-    db.getDomainById("DN00", (err: Err, network: Domain) => {
+    // db.getDomainById("DN00", (err: Err, network: Domain) => {
+    //     if (err) {
+    //         res.status(500).send(err.message);
+    //         return;
+    //     }
+    //     res.send(network);
+    // });
+    db.getNetwork((err: Err, network: Network) => {
         if (err) {
             res.status(500).send(err.message);
             return;

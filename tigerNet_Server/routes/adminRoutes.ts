@@ -16,12 +16,6 @@ import { Node } from "./../data/node";
 import { Session } from "./../data/session";
 import { db } from "./../services/database/db";
 
-// var gamesDb = {};// userid : [games]
-
-function validUid(userId: string, req: Request) {
-    return userId === req.session.user._id;
-}
-
 /*
  * This is an example get endpoint
  * for other methods, use router.post, router.put, router.delete, etc...
@@ -143,11 +137,11 @@ router.post("/patterns", (req: Request, res: Response) => {
                     if (err) {
                         res.status(400).send(err.message);
                     } else {
-                        db.getDomainById("DN00", (err: Err, network: Domain) => {
+                        db.getNetwork((err: Err, network: Network) => {
                             if (err) {
                                 res.status(400).send(err.message);
                             } else {
-                                res.status(200).send(network);
+                                res.send(network);
                             }
                         });
                     }
@@ -196,7 +190,8 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                 }
             });
             if (nonConNodes.length !== 2 || req.body.currentNodeNum === 3) {
-                db.getDomainById("DN00", (err: Err, network: Domain) => {
+                // db.getDomainById("DN00", (err: Err, network: Domain) => {
+                db.getNetwork((err: Err, network: Network) => {
                     if (err) {
                         res.status(400).send(err.message);
                     }
@@ -212,7 +207,8 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                         res.status(400).send(err.message);
                         return;
                     }
-                    db.getDomainById("DN00", (err: Err, network: Domain) => {
+                    // db.getDomainById("DN00", (err: Err, network: Domain) => {
+                    db.getNetwork((err: Err, network: Network) => {
                         if (err) {
                             res.status(400).send(err.message);
                             return;
@@ -237,7 +233,8 @@ router.post("/connections", (req: Request, res: Response) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-            db.getDomainById("DN00", (err: Err, network: Domain) => {
+            // db.getDomainById("DN00", (err: Err, network: Domain) => {
+            db.getNetwork((err: Err, network: Network) => {
                 if (err) {
                     res.status(400).send(err.message);
                 } else {
@@ -254,7 +251,8 @@ router.delete("/connections", (req: Request, res: Response) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-            db.getDomainById("DN00", (err: Err, network: Domain) => {
+            // db.getDomainById("DN00", (err: Err, network: Domain) => {
+            db.getNetwork((err: Err, network: Network) => {
                 if (err) {
                     res.status(400).send(err.message);
                 } else {

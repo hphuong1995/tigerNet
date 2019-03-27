@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { MysqlError, PoolConnection, Query } from "mysql";
+import { connect } from "net";
 import { resolve } from "url";
 import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
@@ -584,14 +585,20 @@ class DB {
      * and returns it in the callback
      */
     public storeNewPattern(domainId: string, callback: (patternId: string, err: Err) => void): void {
-        this.transaction({domainId}, this.storeNewPatternTransaction,
-            (results: any, err: Err) => {
-                if (err) {
-                    callback(undefined, err);
-                } else {
-                    callback(results as string, undefined);
-                }
-            });
+        db.getDomainNode(domainId, (err: Err, domainNode: Node) => {
+            if (err) {
+                callback(undefined, err);
+                return;
+            }
+            this.transaction({domainId}, this.storeNewPatternTransaction,
+                (results: any, err: Err) => {
+                    if (err) {
+                        callback(undefined, err);
+                    } else {
+                        callback(results as string, undefined);
+                    }
+                });
+        });
     }
 
     /*
@@ -653,9 +660,11 @@ class DB {
             // connected nodes must be in the same pattern unless they are both connector nodes
             if (!node.is_connector || !target.is_connector) {
                 if (!(node.fk_pattern_id === target.fk_pattern_id)) {
-                    callback(new Err("Attempted to create connection from\
-                        non connector node to a node in a different pattern", -2), undefined);
-                    return;
+                    if (!node.id.match(/d.*/i) && !target.id.match(/d.*/i)) {
+                        callback(new Err("Attempted to create connection from\
+ non connector node to a node in a different pattern", -2), undefined);
+                        return;
+                    }
                 }
             }
 
@@ -1005,6 +1014,33 @@ class DB {
     }
 
     /*
+     * Gets all connections between connector nodes and the domain
+     * node in the given domainId
+     * Error codes:
+     *      -10: MySQL error
+     */
+    // public getAllConnectionsInDomain(domainId: string,
+    //     callback: (connectors: Connector[], err: Err) => void): void {
+    //     const query: string = "";
+    //     // "SELECT fk_node_id, fk_target_id\
+    //     //     FROM nodes JOIN node_connections\
+    //     //     ON fk_node_id = nodes.id OR fk_target_id = nodes.id\
+    //     //     WHERE fk_domain_id = '" + domainId + "'\
+    //     //     AND (fk_node_id LIKE 'D%' XOR fk_target_id LIKE 'D%')\
+    //     //     AND (fk_node_id in (SELECT id FROM nodes WHERE is_connector = 1)\
+    //     //         XOR fk_target_id IN (SELECT id FROM nodes WHERE is_connector = 1))\
+    //     // ";
+    //     conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
+    //         if (err) {
+    //             callback(undefined, new Err(err.message, -10));
+    //             return;
+    //         }
+    //         const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
+    //         callback(connectors, undefined);
+    //     });
+    // }
+
+    /*
      * Gets all connections between connector nodes and the given domain node
      * Error codes:
      *      -10: MySQL error
@@ -1030,7 +1066,6 @@ class DB {
         });
     }
 
-
     /*
      * Gets all connections between domain nodes
      * Error codes:
@@ -1044,7 +1079,7 @@ class DB {
             AND fk_target_id like 'D%'\
         ";
         conn.query(query, (err: MysqlError, results: IDbConnector[]) => {
-            if(err) {
+            if (err) {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
@@ -1090,6 +1125,12 @@ class DB {
         });
     }
 
+    /*
+     * #FIXME: must get connections from domainNode to connector nodes
+     * Returns a list of domains corresponding to the list of ids
+     * Error codes:
+     *      -10: MySQL error
+     */
     public getDomainsByIds(ids: string[], callback: (err: Err, domains: Domain[]) => void): void {
         const getDomainPromises: Array<Promise<Domain>> = ids.map((domainId: string) => {
             return new Promise((resolve: (domain: Domain) => void, reject: (err: Err) => void) => {
@@ -1098,17 +1139,21 @@ class DB {
                         reject(err);
                         return;
                     }
-                    this.getPatternToPatternConnectionsInDomain(domainId, (connections: Connector[], err: Err) => {
+                    this.getPatternToPatternConnectionsInDomain(domainId, (pConnections: Connector[], err: Err) => {
                         if (err) {
                             reject(err);
                             return;
                         }
-                        db.getDomainNode(domainId, (err: Err, node: Node) => {
-                            if (err) {
-                                reject(err);
-                                return;
-                            }
-                            resolve(new Domain(domainId, patterns, node, connections));
+                        this.getPatternToDomainNodeConnectionsByDomain(domainId,
+                            (dConnectors: Connector[], err: Err) => {
+                            this.getDomainNode(domainId, (err: Err, node: Node) => {
+                                if (err) {
+                                    reject(err);
+                                    return;
+                                }
+                                dConnectors.forEach( (dc) => pConnections.push(dc));
+                                resolve(new Domain(domainId, patterns, node, pConnections));
+                            });
                         });
                     });
                 });
@@ -1125,28 +1170,39 @@ class DB {
         });
     }
 
-    public getNetwork(callback: (err: Err, network: Network) => void): void {
-        //get all domains
-        //get all domainConnections
-        
-        throw new Error("not implemented");
+    /*
+     * Returns all domains
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public getAllDomains(callback: (err: Err, domains: Domain[]) => void): void {
+        const query: string = "SELECT id FROM domains";
+        conn.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+            }
+            const domainIds: string[] = results.map((r) => r.id);
+            db.getDomainsByIds(domainIds, callback);
+        });
     }
 
-    // public getNetwork(callback: (err: Err, network: Domain) => void): void {
-    //     db.getAllPatterns((patterns: Pattern[], err: Err) => {
-    //         if (err) {
-    //             callback(err, undefined);
-    //             return;
-    //         }
-    //         db.getPatternToPatternConnections((connections: Connector[], err: Err) => {
-    //             if (err) {
-    //                 callback(err, undefined);
-    //                 return;
-    //             }
-    //             callback(undefined, new Domain(patterns, connections));
-    //         });
-    //     });
-    // }
+    public getNetwork(callback: (err: Err, network: Network) => void): void {
+        // get all domains
+        // get all domainConnections
+        db.getAllDomains((err: Err, domains: Domain[]) => {
+            if (err) {
+                callback(err, undefined);
+                return;
+            }
+            db.getDomainToDomainConnections((connectors: Connector[], err: Err) => {
+                if (err) {
+                    callback(err, undefined);
+                    return;
+                }
+                callback(undefined, new Network(domains, connectors));
+            });
+        });
+    }
 
     /*
      * Deletes the specified pattern, deletes all nodes within the specified pattern,

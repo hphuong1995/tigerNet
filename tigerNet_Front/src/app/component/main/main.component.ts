@@ -3,6 +3,7 @@ import coseBilkent from 'cytoscape-cose-bilkent';
 import { DataService } from 'src/app/data.service';
 import { HttpResponse } from '@angular/common/http';
 import { Network } from 'src/app/data/network';
+import { Domain } from 'src/app/data/domain';
 import { Pattern } from 'src/app/data/pattern';
 import { Node } from 'src/app/data/node';
 import { UserService } from 'src/app/user.service';
@@ -35,7 +36,8 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert("Error loading the network");
         return;
       }
-      this.resetGraph(res.body.patterns, res.body.patternConnections);
+      //this.resetGraph(res.body.patterns, res.body.patternConnections);
+      this.resetGraph(res.body.domains, res.body.domainConnections);
     });
   }
 
@@ -157,7 +159,8 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.resetSelectedElement();
 
     this.oldNetwork = this.network;
-    this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+    // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+    this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
     let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
     const connectorList: Connector[] = [];
 
@@ -196,7 +199,8 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert(res.body);
       } else {
         console.log(res.body);
-        this.resetGraph(res.body.patterns, res.body.patternConnections);
+        //this.resetGraph(res.body.patterns, res.body.patternConnections);
+        this.resetGraph(res.body.domains, res.body.domainConnections);
       }
     });
   }
@@ -223,13 +227,14 @@ export class MainComponent implements OnInit, AfterViewInit {
             arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
           });
           this.resetSelectedElement();
-          if (this.checkConnectionExist(arrToSend, this.network.patternConnections)) {
+          if (this.checkConnectionExist(arrToSend, this.network.getAllConnections())) {//#FIXME: get all pattern connections
             alert("The connection between selected Pattern is already exist.");
             return;
           } else {
             this.data.addNewConnection(arrToSend).subscribe((data) => {
               console.log(data);
-              this.resetGraph(data.patterns, data.patternConnections);
+              // this.resetGraph(data.patterns, data.patternConnections);
+              this.resetGraph(data.domains, data.domainConnections);
             });
           }
         }
@@ -278,7 +283,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
               this.data.addNewConnection(this.data.selectedNodes).subscribe((data) => {
                 console.log(data);
-                this.resetGraph(data.patterns, data.patternConnections);
+                this.resetGraph(data.domains, data.domainConnections);
                 this.resetSelectedElement();
               });
             }
@@ -305,7 +310,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.resetSelectedElement();
       this.data.deleteConnection(arrToSend).subscribe(data => {
         var retData: any = data;
-        this.resetGraph(retData.patterns, retData.patternConnections);
+        this.resetGraph(retData.domains, retData.domainConnections);
       });
     }
     else {  // delete connection in the Pattern
@@ -318,7 +323,8 @@ export class MainComponent implements OnInit, AfterViewInit {
       }
       else{
         this.oldNetwork = this.network;
-        this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+        // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+        this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
         let pattern: Pattern = this.network.getPatternById(currentPat.id);
         console.log(pattern.connections);
 
@@ -342,7 +348,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         else{
           this.data.deleteConnection(arrToSend).subscribe(data => {
             var retData: any = data;
-            this.resetGraph(retData.patterns, retData.patternConnections);
+            this.resetGraph(retData.domains, retData.domainConnections);
           });
         }
       }
@@ -371,7 +377,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.resetSelectedElement();
       this.data.addPattern(arrToSend).subscribe((data: Network) => {
         console.log(data);
-        this.resetGraph(data.patterns, data.patternConnections);
+        this.resetGraph(data.domains, data.domainConnections);
       });
     }
   }
@@ -433,13 +439,13 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.deleteNode(sendObj).subscribe( data =>{
         console.log(data);
         var resData : any = data;
-        this.resetGraph(resData.patterns, resData.patternConnections);
+        this.resetGraph(resData.domains, resData.domainConnections);
       });
     }
     else if(reqObject.currentNodeNum > 1 && reqObject.currentNodeNum < 4 && reqObject.node !== reqObject.conNode){
 
       this.oldNetwork = this.network;
-      this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
       let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
 
       // Remove the node
@@ -463,13 +469,14 @@ export class MainComponent implements OnInit, AfterViewInit {
         this.data.deleteNode( sendObj ).subscribe( data => {
           console.log(data);
           var resData : any = data;
-          this.resetGraph(resData.patterns, resData.patternConnections);
+          this.resetGraph(resData.domains, resData.domainConnections);
         });
       }
     }
     else if(reqObject.currentNodeNum > 3 && reqObject.currentNodeNum < 8 && reqObject.node !== reqObject.conNode){
       this.oldNetwork = this.network;
-      this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+      //this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
       let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
       var joinNodes : string[] = [];
 
@@ -536,7 +543,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         this.data.deleteNode( sendObj ).subscribe( data => {
           console.log(data);
           var resData : any = data;
-          this.resetGraph(resData.patterns, resData.patternConnections);
+          this.resetGraph(resData.domains, resData.domainConnections);
         });
       }
     }
@@ -545,53 +552,54 @@ export class MainComponent implements OnInit, AfterViewInit {
   // checkValidNetwork(network : Network){
 
   // }
-  checkPatternIsolate(network: Network) {
-    var connectorNodeQueue: string[] = [];
-    var readList: string[] = [];
+  // checkPatternIsolate(network: Network) { ### no patterns will be isolated since domain nodes connect to every pattern
+  //   var connectorNodeQueue: string[] = [];
+  //   var readList: string[] = [];
 
-    connectorNodeQueue.push(network.patterns[0].getConnectorNode().id);
+  //   connectorNodeQueue.push(network.patterns[0].getConnectorNode().id);
 
-    while (connectorNodeQueue.length != readList.length) {
-      var currentNode: string;
-      var i;
-      // Find a pattern that havent read
-      for (i = 0; i < connectorNodeQueue.length; i++) {
-        if (!readList.includes(connectorNodeQueue[i])) {
-          currentNode = connectorNodeQueue[i];
-          readList.push(currentNode);
-          break;
-        }
-      }
+  //   while (connectorNodeQueue.length != readList.length) {
+  //     var currentNode: string;
+  //     var i;
+  //     // Find a pattern that havent read
+  //     for (i = 0; i < connectorNodeQueue.length; i++) {
+  //       if (!readList.includes(connectorNodeQueue[i])) {
+  //         currentNode = connectorNodeQueue[i];
+  //         readList.push(currentNode);
+  //         break;
+  //       }
+  //     }
 
-      network.patternConnections.forEach((connection: Connector) => {
-        if (connection.id === currentNode && !connectorNodeQueue.includes(connection.targetId)) {
-          connectorNodeQueue.push(connection.targetId);
-        }
+  //     network.patternConnections.forEach((connection: Connector) => {
+  //       if (connection.id === currentNode && !connectorNodeQueue.includes(connection.targetId)) {
+  //         connectorNodeQueue.push(connection.targetId);
+  //       }
 
-        if (connection.targetId === currentNode && !connectorNodeQueue.includes(connection.id)) {
-          connectorNodeQueue.push(connection.id);
-        }
-      });
-    }
+  //       if (connection.targetId === currentNode && !connectorNodeQueue.includes(connection.id)) {
+  //         connectorNodeQueue.push(connection.id);
+  //       }
+  //     });
+  //   }
 
-    if (connectorNodeQueue.length === network.patterns.length) {
-      console.log("valid " + connectorNodeQueue);
-      return true;
-    }
-    else {
-      console.log("invalid " + connectorNodeQueue);
-      return false;
-    }
-  }
+  //   if (connectorNodeQueue.length === network.patterns.length) {
+  //     console.log("valid " + connectorNodeQueue);
+  //     return true;
+  //   }
+  //   else {
+  //     console.log("invalid " + connectorNodeQueue);
+  //     return false;
+  //   }
+  // }
 
-  resetGraph(patterns: Pattern[], connections: Connector[]) {
+  // resetGraph(patterns: Pattern[], connections: Connector[]) {
+  resetGraph(domains: Domain[], domainConnections: Connector[]) {
     let elements: any[] = [];
     let nonConnectorSelectors = "";
     let inactiveSelectors = "";
     let isConnectorSelectors = "";
 
     // this.oldNetwork = this.network;
-    this.network = new Network(patterns, connections);
+    this.network = new Network(domains, domainConnections);
     // if(!this.network.isValid()) {//if invalid network, use old network
     //   alert("Invalid network modification");
     //   this.network = this.oldNetwork;
@@ -599,53 +607,75 @@ export class MainComponent implements OnInit, AfterViewInit {
     // if(!this.network) {
     //   return;
     // }
-    this.network.patterns.forEach((pattern: Pattern) => {
+
+    this.network.domains.forEach((domain: Domain) => {
       elements.push({
         data: {
-          id: pattern.id
+          id: domain.id
         }
-      })
-      pattern.nodes.forEach((node: Node) => {
+      });
+      elements.push({
+        data: {
+          id: domain.domainNode.id,
+          parent: domain.id
+        }
+      });
+      domain.patterns.forEach((pattern: Pattern) => {
         elements.push({
           data: {
-            id: node.id,
-            parent: pattern.id
+            id: pattern.id,
+            parent: domain.id
           }
         });
-        if (node.isActive) {
-          if (node.isConnector) {
-            isConnectorSelectors += "#" + node.id + ",";
+        pattern.nodes.forEach((node: Node) => {
+          elements.push({
+            data: {
+              id: node.id,
+              parent: pattern.id
+            }
+          });
+          if (node.isActive) {
+            if (node.isConnector) {
+              isConnectorSelectors += "#" + node.id + ",";
+            } else {
+              nonConnectorSelectors += "#" + node.id + ",";
+            }
           } else {
-            nonConnectorSelectors += "#" + node.id + ",";
+            inactiveSelectors += "#" + node.id + ",";
           }
-        } else {
-          inactiveSelectors += "#" + node.id + ",";
-        }
+        });
+        pattern.connections.forEach((connection: Connector) => {
+          elements.push({
+            data: {
+              id: "" + connection.id + connection.targetId,
+              source: "" + connection.id,
+              target: "" + connection.targetId
+            }
+          });
+        });
       });
-      pattern.connections.forEach((connection: Connector) => {
+      domain.patternConnections.forEach((pConnection: Connector) => {
         elements.push({
-          // data: {
-          //     id: "" + connection.node + connection.other,
-          //     source: "" + connection.node,
-          //     target: "" + connection.other
-          // }
           data: {
-            id: "" + connection.id + connection.targetId,
-            source: "" + connection.id,
-            target: "" + connection.targetId
+            id: pConnection.id + ' ' + pConnection.targetId,
+            source: pConnection.id,
+            target: pConnection.targetId
           }
         });
       });
     });
-    this.network.patternConnections.forEach((pConnection: Connector) => {
+
+    this.network.domainConnections.forEach((dConnection: Connector) => {
       elements.push({
         data: {
-          id: pConnection.id + pConnection.targetId,
-          source: pConnection.id,
-          target: pConnection.targetId
+          id: dConnection.id + ' ' + dConnection.targetId,
+          source: dConnection.id,
+          target: dConnection.targetId
         }
       });
     });
+
+    
     nonConnectorSelectors = nonConnectorSelectors.substr(0, nonConnectorSelectors.length - 1);
     inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
     isConnectorSelectors = isConnectorSelectors.substr(0, isConnectorSelectors.length - 1);

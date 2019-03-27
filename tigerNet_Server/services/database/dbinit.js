@@ -648,6 +648,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
+//first domain
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     db.storeNewDomain((domainId, err) => {
@@ -658,103 +659,133 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue, domainId) => {
     let next = initQueue.pop();
-    db.addNode(true, false, undefined, domainId, (node, err) => {
+    db.addNode(true, false, undefined, domainId, (domainNode, err) => {
         if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainId);
+        next(connection, initQueue, domainId, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, domainId) => {
+initQueue.unshift((connection, initQueue, domainId, domainNode) => {
     let next = initQueue.pop();
     let patternIds = [];
     db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
-        next(connection, initQueue, patternIds, domainId);
+        next(connection, initQueue, patternIds, domainId, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, domainId) => {
+initQueue.unshift((connection, initQueue, patternIds, domainId, domainNode) => {
     let next = initQueue.pop();
     db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
-        next(connection, initQueue, patternIds, domainId);
+        next(connection, initQueue, patternIds, domainId, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, domainId) => {
+initQueue.unshift((connection, initQueue, patternIds, domainId, domainNode) => {
     let next = initQueue.pop();
     db.storeNewPattern(domainId, (pattern, err) => {
         if (err) rollbackAndExit(connection, err);
         patternIds.push(pattern);
-        next(connection, initQueue, patternIds);
+        next(connection, initQueue, patternIds, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds) => {
+//connector node
+initQueue.unshift((connection, initQueue, patternIds, domainNode) => {
     let next = initQueue.pop();
     let nodes = [];
     db.addNode(true, true, patternIds[0], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
+    let next = initQueue.pop();
+    let node = nodes[0].find( n => n.isConnector );
+    db.addConnection(node.id, domainNode.id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes, domainNode);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, false, patternIds[0], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, false, patternIds[0], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+//connector node
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, true, patternIds[1], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
+    let next = initQueue.pop();
+    let node = nodes[1].find( n => n.isConnector );
+    db.addConnection(node.id, domainNode.id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes, domainNode);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, false, patternIds[1], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, false, patternIds[1], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes);
+        next(connection, initQueue, patternIds, nodes, domainNode);
     });
 });
 
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+//connector node
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
     db.addNode(true, true, patternIds[2], false, (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[2].push(node);
+        next(connection, initQueue, patternIds, nodes, domainNode);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
+    let next = initQueue.pop();
+    let node = nodes[2].find( n => n.isConnector );
+    db.addConnection(node.id, domainNode.id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
         next(connection, initQueue, patternIds, nodes);
     });
 });
@@ -872,6 +903,23 @@ initQueue.unshift((connection, initQueue, patternIds, nodes) => {
         next(connection, initQueue, patternIds, nodes);
     });
 });
+
+// //second domain
+// initQueue.unshift((connection, initQueue) => {
+//     let next = initQueue.pop();
+//     db.storeNewDomain((domainId, err) => {
+//         if(err) rollbackAndExit(connection, err);
+//         next(connection, initQueue, domainId);
+//     });
+// });
+
+// initQueue.unshift((connection, initQueue, domainId) => {
+//     let next = initQueue.pop();
+//     db.addNode(true, false, undefined, domainId, (node, err) => {
+//         if(err) rollbackAndExit(connection, err);
+//         next(connection, initQueue, domainId);
+//     });
+// });
 
 initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
