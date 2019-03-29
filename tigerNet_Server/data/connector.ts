@@ -1,5 +1,21 @@
 export class Connector {
 
+    public static checkDuplicateConnection(connections: Connector[]): boolean {
+        let retFlag: boolean = true;
+        connections.forEach((con) => {
+            let count = 0;
+            connections.forEach((conToCheck) => {
+                if (con.compareTo(conToCheck)) {
+                    count++;
+                }
+            });
+            if (count === 2) {
+                retFlag = false;
+            }
+        });
+        return retFlag;
+    }
+
     public id: string;
     public targetId: string;
     constructor(id: string, targetId: string) {
@@ -19,21 +35,5 @@ export class Connector {
             return true;
         }
         return false;
-    }
-    
-    public static checkDuplicateConnection(connections: Connector[]): boolean {
-        let retFlag: boolean = true;
-        connections.forEach((con) => {
-            let count = 0;
-            connections.forEach((conToCheck) => {
-                if (con.compareTo(conToCheck)) {
-                    count++;
-                }
-            });
-            if (count === 2) {
-                retFlag = false;
-            }
-        });
-        return retFlag;
     }
 }

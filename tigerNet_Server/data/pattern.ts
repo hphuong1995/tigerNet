@@ -43,7 +43,7 @@ export class Pattern {
                 alert("If pattern have 2 node, There must 1 connection");
                 return false;
             }
-            var tempCon: Connector = new Connector(this.nodes[0].id, this.nodes[1].id);
+            const tempCon: Connector = new Connector(this.nodes[0].id, this.nodes[1].id);
             if (!tempCon.compareTo(this.connections[0])) {
                 alert("If pattern have 2 node, There must 1 connection that connect 2 node");
                 return false;
@@ -69,13 +69,13 @@ export class Pattern {
             if (!this.connectorNodeConnectionCheck()) {
                 return false;
             }
-            //If three nodes - connectors and nodes must form a triangle
-            if(this.nodes.length === 3){
-               return this.connections.length === 3
+            // If three nodes - connectors and nodes must form a triangle
+            if (this.nodes.length === 3) {
+               return this.connections.length === 3;
             }
         }
 
-        //4 to 7 nodes
+        // 4 to 7 nodes
         if (this.nodes.length >= 4 && this.nodes.length < 7) {
             //  All non connector nodes must have exactly two connections to other non connector nodes
             // if (!this.maxTwoConnectorEachNode(this.getConnectorNode().id)) {
@@ -96,10 +96,10 @@ export class Pattern {
     }
 
     private connectorNodeConnectionCheck(): boolean {
-        var connectorId = this.getConnectorNode().id;
-        var count = 0;
+        const connectorId = this.getConnectorNode().id;
+        let count = 0;
 
-        this.connections.forEach(con => {
+        this.connections.forEach((con) => {
             if (con.id === connectorId || con.targetId === connectorId) {
                 count++;
             }
@@ -110,19 +110,17 @@ export class Pattern {
                 alert("There is only one node, cant have any connection");
                 return false;
             }
-        }
-        else if (this.nodes.length === 2) {
+        } else if (this.nodes.length === 2) {
             if (count !== 1) {
-                alert("There is 2 node, there must be only 1 connection between the connector to the nonConnector node");
+                alert("There is 2 node, there must be only\
+1 connection between the connector to the nonConnector node");
                 return false;
             }
-        }
-        else if (this.nodes.length > 2) {
+        } else if (this.nodes.length > 2) {
             if (count === 0) {
                 alert("There must be at least 1 connector between connector node to non connector node");
                 return false;
-            }
-            else if (count > 3) {
+            } else if (count > 3) {
                 alert("There must be at most 3 connector between connector node to non connector node");
                 return false;
             }
@@ -132,23 +130,21 @@ export class Pattern {
     }
 
     private maxTwoEdgesPerNode(): boolean {
-        var connectorId = this.getConnectorNode().id;
-        var edgeConnectors = this.connections.filter( (conn: Connector) => {
+        const connectorId = this.getConnectorNode().id;
+        const edgeConnectors = this.connections.filter( (conn: Connector) => {
             return conn.id !== connectorId && conn.targetId !== connectorId;
         });
-
-        for( let i = 0; i < this.nodes.length; i++) {
+        for ( const node of this.nodes) {
             let count = 0;
-            let node = this.nodes[i];
-            if(node.id === connectorId) {
+            if (node.id === connectorId) {
                 continue;
             }
             edgeConnectors.forEach( (edge: Connector) => {
-                if(edge.id === node.id || edge.targetId === node.id) {
+                if (edge.id === node.id || edge.targetId === node.id) {
                     count++;
                 }
-            })
-            if(count !== 2) {
+            });
+            if (count !== 2) {
                 return false;
             }
         }
@@ -156,12 +152,11 @@ export class Pattern {
     }
 
     private connectionWithinPattern(): boolean {
-        var connections: Connector[] = this.connections;
-        var nodes: Node[] = this.nodes;
-        let nodeIds: string[] = nodes.map(n => n.id);
-        let connectorIds: string[] = [];
-        for (var i = 0; i < connections.length; i++) {
-            var connector = connections[i];
+        const connections: Connector[] = this.connections;
+        const nodes: Node[] = this.nodes;
+        const nodeIds: string[] = nodes.map((n) => n.id);
+        const connectorIds: string[] = [];
+        for ( const connector of this.connections) {
             if (!connectorIds.includes(connector.id)) {
                 connectorIds.push(connector.id);
             }
@@ -172,9 +167,8 @@ export class Pattern {
                 return false;
             }
         }
-
-        for (var i = 0; i < nodeIds.length; i++) {
-            if (!connectorIds.includes(nodeIds[i])) {
+        for (const nodeId of nodeIds) {
+            if (!connectorIds.includes(nodeId)) {
                 return false;
             }
         }

@@ -14,28 +14,24 @@ export class Domain {
     }
 
     public getPatternById(id: string): Pattern {
-        return this.patterns.find(p => p.id === id);
+        return this.patterns.find((p) => p.id === id);
     }
 
     public getPatternByChildNodeId(id: string): Pattern {
-        return this.patterns.find(p => !!p.getNodeById(id));
+        return this.patterns.find((p) => !!p.getNodeById(id));
     }
 
     public isValid(): boolean {
-        for(var i = 0; i < this.patterns.length; i++) {
-            if(!this.patterns[i].isValid()) {
-                return false;
-            }
+        for ( const pattern of this.patterns) {
+            if (!pattern.isValid()) { return false; }
         }
 
-        //domain must not be empty
-        if(this.patterns.length === 0) {
+        // domain must not be empty
+        if (this.patterns.length === 0) {
             return false;
         }
 
-        
-
-        //validate pattern connections
+        // validate pattern connections
 
         return true;
     }
