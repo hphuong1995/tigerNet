@@ -659,7 +659,7 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue, domainId) => {
     let next = initQueue.pop();
-    db.addNode(true, false, undefined, domainId, (domainNode, err) => {
+    db.addDomainNode(true, domainId, (domainNode, err) => {
         if(err) rollbackAndExit(connection, err);
         next(connection, initQueue, domainId, domainNode);
     });
@@ -697,7 +697,7 @@ initQueue.unshift((connection, initQueue, patternIds, domainId, domainNode) => {
 initQueue.unshift((connection, initQueue, patternIds, domainNode) => {
     let next = initQueue.pop();
     let nodes = [];
-    db.addNode(true, true, patternIds[0], false, (node, err) => {
+    db.addNode(true, true, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[0].push(node);
@@ -716,7 +716,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[0], false, (node, err) => {
+    db.addNode(true, false, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
         next(connection, initQueue, patternIds, nodes, domainNode);
@@ -725,7 +725,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[0], false, (node, err) => {
+    db.addNode(true, false, patternIds[0], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[0].push(node);
         next(connection, initQueue, patternIds, nodes, domainNode);
@@ -735,7 +735,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 //connector node
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, true, patternIds[1], false, (node, err) => {
+    db.addNode(true, true, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[1].push(node);
@@ -754,7 +754,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[1], false, (node, err) => {
+    db.addNode(true, false, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
         next(connection, initQueue, patternIds, nodes, domainNode);
@@ -763,7 +763,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[1], false, (node, err) => {
+    db.addNode(true, false, patternIds[1], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[1].push(node);
         next(connection, initQueue, patternIds, nodes, domainNode);
@@ -773,7 +773,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 //connector node
 initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
     let next = initQueue.pop();
-    db.addNode(true, true, patternIds[2], false, (node, err) => {
+    db.addNode(true, true, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes.push([]);
         nodes[2].push(node);
@@ -792,7 +792,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[2], false, (node, err) => {
+    db.addNode(true, false, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[2].push(node);
         next(connection, initQueue, patternIds, nodes);
@@ -801,7 +801,7 @@ initQueue.unshift((connection, initQueue, patternIds, nodes) => {
 
 initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
-    db.addNode(true, false, patternIds[2], false, (node, err) => {
+    db.addNode(true, false, patternIds[2], (node, err) => {
         if (err) rollbackAndExit(connection, err);
         nodes[2].push(node);
         next(connection, initQueue, patternIds, nodes);
