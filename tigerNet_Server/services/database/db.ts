@@ -1224,6 +1224,27 @@ class DB {
     }
 
     /*
+     * Deletes the specified domain, deletes all patterns and nodes within the specified domain
+     *     deletes all connectors that touch any node on the pattern,
+     *     and adds the pattern id and all affected node ids to the free id lists.
+     *
+     * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
+     *
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deleteDomain(domainId: string, callback: (err: Err) => void): void {
+        const query: string = "DELETE FROM domains WHERE id = '" + domainId + "'";
+        conn.query(query, (err: MysqlError, results: any) => {
+            if (err) {
+                callback(new Err(err.message, -10));
+                return;
+            }
+            callback(undefined);
+        });
+    }
+
+    /*
      * Deletes the specified pattern, deletes all nodes within the specified pattern,
      *     deletes all connectors that touch any node on the pattern,
      *     and adds the pattern id and all affected node ids to the free id lists.

@@ -7,7 +7,6 @@ export class Domain {
     public patterns: Pattern[];
     public domainNode: Node;
     constructor(id: string, patterns: Pattern[], domainNode: Node, patternConnections: Connector[]) {
-        // add code to validate domain
         this.id = id;
         this.patterns = patterns;
         this.patternConnections = patternConnections;
@@ -15,29 +14,29 @@ export class Domain {
     }
 
     public getPatternById(id: string): Pattern {
-        return this.patterns.find((p) => p.id === id);
+        return this.patterns.find(p => p.id === id);
     }
 
     public getPatternByChildNodeId(id: string): Pattern {
-        return this.patterns.find((p) => !!p.getNodeById(id));
+        return this.patterns.find(p => !!p.getNodeById(id));
     }
 
-    // public getPatternByChildNodeId(id: string): Pattern {
-    //     return this.patterns.find((p) => {
-    //         if (p.getNodeById(id)) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     });
-    // }
-
     public isValid(): boolean {
-        for (const pattern of this.patterns) {
-            if (!pattern.isValid()) {
+        for(var i = 0; i < this.patterns.length; i++) {
+            if(!this.patterns[i].isValid()) {
                 return false;
             }
         }
+
+        //domain must not be empty
+        if(this.patterns.length === 0) {
+            return false;
+        }
+
+        
+
+        //validate pattern connections
+
         return true;
     }
 }

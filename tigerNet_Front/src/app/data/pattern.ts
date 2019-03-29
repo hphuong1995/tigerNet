@@ -1,6 +1,6 @@
 import { Node } from './node';
-import { Connector } from './connector'
-import { nodeChildrenAsMap } from '@angular/router/src/utils/tree';
+import { Connector } from './connector';
+
 export class Pattern {
     public id: string;
     public nodes: Node[];
@@ -25,10 +25,8 @@ export class Pattern {
         });
     }
 
-
-
     public isValid(): boolean {
-        // If one noed - it must be a connector
+        // If one node - it must be a connector
         if (this.nodes.length === 1) {
             if (this.nodes[0].id !== this.getConnectorNode().id) {
                 alert("If pattern have 1 node, it must be connectorNode");
@@ -140,23 +138,6 @@ export class Pattern {
 
 
     private maxTwoEdgesPerNode(): boolean {
-        // var retFlag: boolean = true;
-
-        // this.nodes.forEach(node => {
-        //     var count = 0;
-        //     this.connections.forEach(con => {
-        //         if (con.id !== connectorId && con.targetId !== connectorId) {
-        //             if (con.id === node.id || con.targetId === node.id) {
-        //                 count++;
-        //             }
-        //         }
-        //     });
-        //     if (count !== 2) {
-        //         retFlag = false;
-        //     }
-        // });
-
-        // return retFlag;
         var connectorId = this.getConnectorNode().id;
         var edgeConnectors = this.connections.filter( (conn: Connector) => {
             return conn.id !== connectorId && conn.targetId !== connectorId;
@@ -205,72 +186,5 @@ export class Pattern {
         }
 
         return true;
-
-        // for( var connector in connections) {
-        //     if(!connectorIds.includes(connector.id)) {
-        //         connectorIds.push(connector.id);
-        //     }
-        //     if(!connectorIds.includes(connector.targetId)) {
-        //         connectorIds.push(connector.targetId);
-        //     }
-        //     if(!nodeIds.includes(connector.id)) {
-
-        //     }
-        // }
-
-
-        // connections.forEach( (connector: Connector) => {
-        //     if(!connectorIds.includes(connector.id)) {
-        //         connectorIds.push(connector.id);
-        //     }
-        //     if(!connectorIds.includes(connector.targetId)) {
-        //         connectorIds.push(connector.targetId);
-        //     }
-        //     if(!nodeIds.includes(connector.id)) {
-
-        //     }
-        // });
-
-
-
-        // return false;
     }
-
-    // private connectionWithinPattern() {
-    //     var connections = this.connections;
-    //     var nodes = this.nodes;
-    //     var flag: boolean = true;
-    //     var nodesId: string[] = [];
-
-    //     nodes.forEach(node => {
-    //         nodesId.push(node.id);
-    //     });
-
-    //     connections.forEach(con => {
-    //         if (!nodesId.includes(con.id) || !(nodesId.includes(con.targetId))) {
-    //             flag = false;
-    //         }
-    //     });
-    //     return flag;
-    // }
-
-    // private checkDuplicateConnection(connections: Connector[]) {
-    //     var retFlag: boolean = true;
-    //     connections.forEach(con => {
-    //         var count = 0;
-    //         connections.forEach(conToCheck => {
-    //             if (con.compareTo(conToCheck)) {
-    //                 count++;
-    //             }
-    //         });
-    //         if (count === 2) {
-    //             retFlag = false;
-    //         }
-    //     });
-    //     return retFlag;
-    // }
-
-
-
-
 }
