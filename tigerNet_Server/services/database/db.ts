@@ -566,8 +566,9 @@ class DB {
     }
 
     /*
-     * Creates an empty pattern, stores it in the database,
+     * Creates an empty domain, stores it in the database,
      * and returns it in the callback
+     * Be sure to add a domain node and a pattern, otherwise this domain will not be valid
      */
     public storeNewDomain(callback: (domainId: string, err: Err) => void): void {
         this.transaction(undefined, this.storeNewDomainTransaction,
@@ -603,20 +604,38 @@ class DB {
 
     /*
      * Create a new node from the given parameters and add it into the database.
-     * The new node is returned in the callback
+     * The new node is returned in the callback.
+     *
      *
      * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
      *
      * Error codes:
-     *     -1: Invalid lock type
-     *     10: MySQL error
+     *     -10: MySQL error
      */
-    public addNode(isActive: boolean, isConnector: boolean, patternId: string, domainId: string,
+    public addNode(isActive: boolean, isConnector: boolean, patternId: string,
         callback: (node: Node, err: Err) => void): void {
         const args: any = {};
         args.isActive = isActive;
         args.isConnector = isConnector;
         args.patternId = patternId;
+        args.domainId = null;
+        this.transaction(args,
+            this.addNodeTransaction.bind(this), (results: any, err: Err) => {
+                if (err) {
+                    callback(undefined, err);
+                    return;
+                }
+                callback(results as Node, undefined);
+            }
+        );
+    }
+
+    public addDomainNode(isActive: boolean, domainId: string,
+        callback: (node: Node, err: Err) => void): void {
+        const args: any = {};
+        args.isActive = isActive;
+        args.isConnector = false;
+        args.patternId = null;
         args.domainId = domainId;
         this.transaction(args,
             this.addNodeTransaction.bind(this), (results: any, err: Err) => {
