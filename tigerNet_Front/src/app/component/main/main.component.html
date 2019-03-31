@@ -83,8 +83,41 @@
             <p><button mat-raised-button (click)="deleteNode()">Delete Node</button></p>
         </mat-action-row>
     </mat-expansion-panel>
+    <!-- Delete Pattern -->
+    <mat-expansion-panel *ngIf="this.user.isAdmAccount()">
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Pattern
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a pattern you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="deletePattern()">Delete Pattern</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+    <!-- Delete Domain -->
+    <mat-expansion-panel *ngIf="this.user.isAdmAccount()">
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Domain
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a Domain you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="deleteDomain()">Delete Domain</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
 
-    <!-- Delete Link -->
+
+    <!-- Delete Connection -->
     <mat-expansion-panel >
         <mat-expansion-panel-header>
         <mat-panel-title>
@@ -101,7 +134,40 @@
             <p><button mat-raised-button (click)="deleteConnetion()">Delete Connection</button></p>
         </mat-action-row>
     </mat-expansion-panel>
+    <!-- Active Node -->
+    <mat-expansion-panel >
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+                Active Node
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+                Active a Node you selected
+            </p>
+        </mat-panel-description>
 
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="activeNode()">Active Node</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+    <!-- View detail of nodes -->
+    <mat-expansion-panel >
+            <mat-expansion-panel-header>
+            <mat-panel-title>
+                    View Nodes Profile
+            </mat-panel-title>
+            <mat-panel-description>
+                <p style="text-align:right;margin: auto">
+                    View details of nodes
+                </p>
+            </mat-panel-description>
+    
+            </mat-expansion-panel-header>
+            <mat-action-row >
+                <p><button mat-raised-button (click)="viewNode()">View</button></p>
+            </mat-action-row>
+        </mat-expansion-panel>
     <!-- Send Message -->
     <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -110,26 +176,17 @@
         </mat-panel-title>
         <mat-panel-description>
             <p style="text-align:right;margin: auto">
-            Select nodes to communicate
+            Select only two nodes to communicate
             </p>
         </mat-panel-description>
         </mat-expansion-panel-header>
+        <mat-action-row >
+            <mat-form-field id="textArea" appearance = "outline">
+                <mat-label>Message</mat-label>
+                <textarea style="height:100px" matInput placeholder="Your Message"></textarea>
+            </mat-form-field>
+            <p><button style="margin-left: 10px" id="sendMessages" mat-raised-button (click)="sendMessage()">Send Message</button></p>
+        </mat-action-row>
     </mat-expansion-panel>
-    <!-- Active Node -->
-    <mat-expansion-panel >
-            <mat-expansion-panel-header>
-            <mat-panel-title>
-                    Active Node
-            </mat-panel-title>
-            <mat-panel-description>
-                <p style="text-align:right;margin: auto">
-                    Active a Node you selected
-                </p>
-            </mat-panel-description>
     
-            </mat-expansion-panel-header>
-            <mat-action-row >
-                <p><button mat-raised-button (click)="activeNode()">Active Node</button></p>
-            </mat-action-row>
-        </mat-expansion-panel>
 </mat-accordion>
