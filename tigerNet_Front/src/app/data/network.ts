@@ -11,7 +11,7 @@ export class Network {
         this.domainConnections = domainConnections.map(dc => new Connector(dc.id, dc.targetId));
     }
 
-    
+
 
     public getPatternByChildNodeId(id: string): Pattern {
         let p: Pattern;
@@ -22,6 +22,17 @@ export class Network {
             }
         }
         return undefined;
+    }
+
+    public getDomainByChildNodeId( id: string) : Domain {
+      let p : Pattern;
+      for( let i = 0; i < this.domains.length; i++){
+        p = this.domains[i].getPatternByChildNodeId(id);
+        if(p) {
+            return this.domains[i];
+        }
+      }
+      return undefined;
     }
 
     public getPatternById(id: string): Pattern {
@@ -40,7 +51,8 @@ export class Network {
     }
 
     public isValid(): boolean {
-        return !!this.domains.find(d => !d.isValid());
+        //return !!this.domains.find(d => !d.isValid());
+        return true;
     }
 
     public getAllConnections(): Connector[] {

@@ -117,9 +117,10 @@ router.put("/users/:uid", (req: Request, res: Response) => {
  * add new pattern
  */
 router.post("/patterns", (req: Request, res: Response) => {
-    console.log(req.body);
+    console.log(req.body.pid);
     // #FIXME: must give a domain id
-    db.storeNewPattern("", (pid: string, err: Err) => {
+    console.log(req.body);
+    db.storeNewPattern(req.body.did, (pid: string, err: Err) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
@@ -127,11 +128,13 @@ router.post("/patterns", (req: Request, res: Response) => {
                 let nodeIdList = [];
                 const connectorList: Connector[] = [];
 
-                nodeIdList = req.body;
+                nodeIdList = req.body.pid;
                 nodeIdList.forEach((nid: string) => {
                     const newConnector = new Connector(node.id, nid);
                     connectorList.push(newConnector);
                 });
+
+                connectorList.push( new Connector(req.body.dnid, node.id));
 
                 db.addConnections(connectorList, (err: Err) => {
                     if (err) {

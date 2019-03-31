@@ -7,4 +7,9 @@ export class Node {
         this.isActive = isActive;
         this.isConnector = isConnector;
     }
+    
+    public get isDomainNode(): boolean {
+        if (!this.id) { return false; }
+        return !!this.id.match(/d.*/i);
+    }
 }
