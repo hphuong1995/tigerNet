@@ -23,7 +23,6 @@ export class MainComponent implements OnInit, AfterViewInit {
   private i: any;
   private network: Network;
   private oldNetwork: Network;
-  private currentSelectedNode = "hello";
 
 
   constructor(private data: DataService, private user: UserService) { }
@@ -597,7 +596,8 @@ export class MainComponent implements OnInit, AfterViewInit {
     let nonConnectorSelectors = "";
     let inactiveSelectors = "";
     let isConnectorSelectors = "";
-
+    let isDomainNodeSelectors = "";
+   
     // this.oldNetwork = this.network;
     this.network = new Network(domains, domainConnections);
     // if(!this.network.isValid()) {//if invalid network, use old network
@@ -620,6 +620,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           parent: domain.id
         }
       });
+      isDomainNodeSelectors += "#" + domain.domainNode.id + ",";
       domain.patterns.forEach((pattern: Pattern) => {
         elements.push({
           data: {
@@ -631,7 +632,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           elements.push({
             data: {
               id: node.id,
-              parent: pattern.id
+              parent: pattern.id 
             }
           });
           if (node.isActive) {
@@ -679,7 +680,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     nonConnectorSelectors = nonConnectorSelectors.substr(0, nonConnectorSelectors.length - 1);
     inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
     isConnectorSelectors = isConnectorSelectors.substr(0, isConnectorSelectors.length - 1);
-
+    isDomainNodeSelectors = isDomainNodeSelectors.substr(0, isDomainNodeSelectors.length - 1);
     this.cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
       elements: elements,
@@ -715,18 +716,29 @@ export class MainComponent implements OnInit, AfterViewInit {
           style: {
             'background-color': '	#888888'
           }
+        },{
+          selector: isDomainNodeSelectors,
+          style: {
+            'background-color': '#FF7F00',
+            'shape':'round-rectangle',
+            'width':'33px',
+            'height':'33px'
+          }
         },
         {
           selector: '.highlighted',
           css: {
-            'background-color': '#FF4500',
-            'line-color': '#FF4500'
+            //'background-color': '#FF4500',
+            'line-color': '#228B22',
+            'border-color':'#228B22',
+            'border-style':'solid',
+            'border-width':'3px'
           }
         },
         {
           selector: '.patternHighlighted',
           css: {
-            'background-color': '#B03060'
+            'background-color': '#63B8FF'
           }
         }
 
@@ -751,7 +763,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       e.preventDefault();
       e.stopPropagation();
       //collector = collector.union(clickedNode);
-      if (clickedEle.charAt(0) === 'P') {//pattern
+      if (clickedEle.charAt(0) === 'P'||(clickedEle.charAt(0) === 'D'&&clickedEle.charAt(1) === 'N')) {//pattern
 
         if (_this.data.selectedPatterns.includes(clickedEle)) {//pattern is selected, deselect it
           _this.data.selectedPatterns = _this.data.selectedPatterns.filter(x => x !== clickedEle);

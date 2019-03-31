@@ -83,6 +83,39 @@
             <p><button mat-raised-button (click)="deleteNode()">Delete Node</button></p>
         </mat-action-row>
     </mat-expansion-panel>
+    <!-- Delete Pattern -->
+    <mat-expansion-panel *ngIf="this.user.isAdmAccount()">
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Pattern
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a pattern you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="deleteNode()">Delete Pattern</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+    <!-- Delete Domain -->
+    <mat-expansion-panel *ngIf="this.user.isAdmAccount()">
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Delete Domain
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Remove a Domain you unwanted
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <p><button mat-raised-button (click)="deleteNode()">Delete Domain</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+
 
     <!-- Delete Link -->
     <mat-expansion-panel >
