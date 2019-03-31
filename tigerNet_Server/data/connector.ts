@@ -1,5 +1,5 @@
 export class Connector {
-
+    /* Returns false for duplicates, true for no duplicates */
     public static checkDuplicateConnection(connections: Connector[]): boolean {
         let retFlag: boolean = true;
         connections.forEach((con) => {
@@ -24,7 +24,7 @@ export class Connector {
     }
 
     public validateConnector() {
-        return !(this.id === this.targetId);
+        return this.id !== this.targetId;
     }
 
     public compareTo(other: Connector) {
