@@ -658,7 +658,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       domain.patternConnections.forEach((pConnection: Connector) => {
         elements.push({
           data: {
-            id: pConnection.id + ' ' + pConnection.targetId,
+            id: pConnection.id + pConnection.targetId,
             source: pConnection.id,
             target: pConnection.targetId
           }
@@ -669,7 +669,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.network.domainConnections.forEach((dConnection: Connector) => {
       elements.push({
         data: {
-          id: dConnection.id + ' ' + dConnection.targetId,
+          id: dConnection.id + dConnection.targetId,
           source: dConnection.id,
           target: dConnection.targetId
         }
