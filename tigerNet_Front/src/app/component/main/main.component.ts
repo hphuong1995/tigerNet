@@ -69,7 +69,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   addNode = function () {
-    console.log(this.data.selectedNodes);
+  //console.log(this.data.selectedNodes);
 
     if(!this.user.isAdmAccount()) {
       alert("Only administrators can modify the network");
@@ -90,119 +90,126 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
     let currentPattern: Pattern;
     currentPattern = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]);
-    console.log(currentPattern);
-
+    let currentDomain = this.network.getDomainByChildNodeId(this.data.selectedNodes[0]);
+    //console.log(currentPattern);
+    console.log(currentDomain.id);
     // check if the pattern is full
     if (currentPattern.nodes.length === 7) {
       this.resetSelectedElement();
-      alert("The pattern is full.");
-      return;
+      let reqData = { pid : [currentPattern.getConnectorNode().id],
+                      did : currentDomain.id,
+                      dnid : currentDomain.domainNode.id};
+      this.data.addPattern(reqData).subscribe( (data) =>{
+        var retData : any = data;
+        this.resetGraph(retData.domains, retData.domainConnections);
+      });
     }
-
-    // check if all nodes selected in the selected patterns
-    this.data.selectedNodes.forEach((node: string) => {
-      if (!currentPattern.getNodeById(node)) {
-        this.resetSelectedElement();
-        alert("Please select nodes that inside the only 1 patern pattern.");
-        return;
-      }
-    });
-
-    // Check if 3 nodes is selected, the connector node must be in the arr
-    if (this.data.selectedNodes.length === 3) {
-      if (!this.data.selectedNodes.includes(currentPattern.getConnectorNode().id)) {
-        this.resetSelectedElement();
-        alert("When user choose 3 nodes, one of them must be connector node");
-        return;
-      }
-    }
-
-    // If selected pattern has 3 nodes, then must select at least 2 node.
-    if (currentPattern.nodes.length >= 2) {
-      if (this.data.selectedNodes.length < 2) {
-        this.resetSelectedElement();
-        console.log("hit");
-        alert("Selected pattern has more than 3 nodes, please select at least 2 nodes to maintain the ring.");
-        return;
-      }
-
-      var flag : boolean = true;
-
-      var nonNodes : string[] = [];
-
-      this.data.selectedNodes.forEach( node =>{
-        if( node.id !== currentPattern.getConnectorNode().id){
-          nonNodes.push(node);
+    else{
+      // check if all nodes selected in the selected patterns
+      this.data.selectedNodes.forEach((node: string) => {
+        if (!currentPattern.getNodeById(node)) {
+          this.resetSelectedElement();
+          alert("Please select nodes that inside the only 1 patern pattern.");
+          return;
         }
       });
 
-      currentPattern.connections.forEach( con =>{
-        if( con.id === nonNodes[0] && con.targetId === nonNodes[1])
-          flag = false;
-        if( con.id === nonNodes[1] && con.targetId === nonNodes[0])
-          flag = false;
+      // Check if 3 nodes is selected, the connector node must be in the arr
+      if (this.data.selectedNodes.length === 3) {
+        if (!this.data.selectedNodes.includes(currentPattern.getConnectorNode().id)) {
+          this.resetSelectedElement();
+          alert("When user choose 3 nodes, one of them must be connector node");
+          return;
+        }
+      }
+
+      // If selected pattern has 3 nodes, then must select at least 2 node.
+      if (currentPattern.nodes.length >= 2) {
+        if (this.data.selectedNodes.length < 2) {
+          this.resetSelectedElement();
+          console.log("hit");
+          alert("Selected pattern has more than 3 nodes, please select at least 2 nodes to maintain the ring.");
+          return;
+        }
+
+        var flag : boolean = true;
+
+        var nonNodes : string[] = [];
+
+        this.data.selectedNodes.forEach( node =>{
+          if( node.id !== currentPattern.getConnectorNode().id){
+            nonNodes.push(node);
+          }
+        });
+
+        currentPattern.connections.forEach( con =>{
+          if( con.id === nonNodes[0] && con.targetId === nonNodes[1])
+            flag = false;
+          if( con.id === nonNodes[1] && con.targetId === nonNodes[0])
+            flag = false;
+        });
+
+        if(flag){
+          this.resetSelectedElement();
+          alert("You can not add a connection there.");
+          return;
+        }
+      }
+
+      var reqObject = {
+        pattern: currentPattern.id,
+        nodes: this.data.selectedNodes,
+        conNode: currentPattern.getConnectorNode().id,
+        currentNodeNum: currentPattern.nodes.length
+      };
+      this.resetSelectedElement();
+
+      this.oldNetwork = this.network;
+      // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+      let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
+      const connectorList: Connector[] = [];
+
+      pattern.nodes.push(new Node(true, false, "NXX"));
+
+      reqObject.nodes.forEach((nid: string) => {
+        const newConnector = new Connector("NXX", nid);
+        pattern.connections.push(newConnector);
       });
 
-      if(flag){
-        this.resetSelectedElement();
-        alert("You can not add a connection there.");
-        return;
-      }
-    }
-
-    var reqObject = {
-      pattern: currentPattern.id,
-      nodes: this.data.selectedNodes,
-      conNode: currentPattern.getConnectorNode().id,
-      currentNodeNum: currentPattern.nodes.length
-    };
-    this.resetSelectedElement();
-
-    this.oldNetwork = this.network;
-    // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
-    this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
-    let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
-    const connectorList: Connector[] = [];
-
-    pattern.nodes.push(new Node(true, false, "NXX"));
-
-    reqObject.nodes.forEach((nid: string) => {
-      const newConnector = new Connector("NXX", nid);
-      pattern.connections.push(newConnector);
-    });
-
-    const nonConNodes: string[] = [];
-    reqObject.nodes.forEach((nid: string) => {
-      if (nid !== reqObject.conNode) {
-        nonConNodes.push(nid);
-      }
-    });
-    if (nonConNodes.length !== 2 || reqObject.currentNodeNum === 3) {
-      if (!this.network.isValid()) {
-        this.resetSelectedElement();
-        this.network = this.oldNetwork;
-        return;
-      }
-    } else {
-      pattern.connections = pattern.connections.filter( (conn: Connector) => {
-        return !Connector.compare(conn, new Connector(nonConNodes[0], nonConNodes[1]));
+      const nonConNodes: string[] = [];
+      reqObject.nodes.forEach((nid: string) => {
+        if (nid !== reqObject.conNode) {
+          nonConNodes.push(nid);
+        }
       });
-      if (!this.network.isValid()) {
-        this.resetSelectedElement();
-        this.network = this.oldNetwork;
-        return;
-      }
-    }
-
-    this.data.addNode(reqObject).subscribe((res: HttpResponse<Network>) => {
-      if (!res.ok) {
-        alert(res.body);
+      if (nonConNodes.length !== 2 || reqObject.currentNodeNum === 3) {
+        if (!this.network.isValid()) {
+          this.resetSelectedElement();
+          this.network = this.oldNetwork;
+          return;
+        }
       } else {
-        console.log(res.body);
-        //this.resetGraph(res.body.patterns, res.body.patternConnections);
-        this.resetGraph(res.body.domains, res.body.domainConnections);
+        pattern.connections = pattern.connections.filter( (conn: Connector) => {
+          return !Connector.compare(conn, new Connector(nonConNodes[0], nonConNodes[1]));
+        });
+        if (!this.network.isValid()) {
+          this.resetSelectedElement();
+          this.network = this.oldNetwork;
+          return;
+        }
       }
-    });
+
+      this.data.addNode(reqObject).subscribe((res: HttpResponse<Network>) => {
+        if (!res.ok) {
+          alert(res.body);
+        } else {
+          console.log(res.body);
+          //this.resetGraph(res.body.patterns, res.body.patternConnections);
+          this.resetGraph(res.body.domains, res.body.domainConnections);
+        }
+      });
+    }
   }
 
   addConnection = function () {
@@ -300,9 +307,15 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
     var arrToSend: any[] = [];
+    console.log(this.data.selectedLink);
     arrToSend.push(this.data.selectedLink[0].substr(0,3));
     arrToSend.push(this.data.selectedLink[0].substr(3,5));
     console.log(arrToSend);
+    if(arrToSend[0].charAt(0) === 'D' || arrToSend[1].charAt[0] === 'D'){
+      this.resetSelectedElement();
+      alert("User can not delete the connection that assosiates with domain node.");
+      return;
+    }
     // Delete Pattern connection
     if (this.network.getPatternByChildNodeId(arrToSend[0]).id
       !== this.network.getPatternByChildNodeId(arrToSend[1]).id) {
@@ -373,9 +386,14 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.selectedPatterns.forEach((pid) => {
         arrToSend.push(this.network.getPatternById(pid).getConnectorNode().id);
       });
-      console.log(arrToSend);
+      var currentDomain = this.network.getDomainByChildNodeId(arrToSend[0]);
+
       this.resetSelectedElement();
-      this.data.addPattern(arrToSend).subscribe((data: Network) => {
+      var reqData = {pid : arrToSend,
+                     did : currentDomain.id,
+                     dnid : currentDomain.domainNode.id}
+                     console.log(reqData);
+      this.data.addPattern(reqData).subscribe((data: Network) => {
         console.log(data);
         this.resetGraph(data.domains, data.domainConnections);
       });
@@ -675,7 +693,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       });
     });
 
-    
+
     nonConnectorSelectors = nonConnectorSelectors.substr(0, nonConnectorSelectors.length - 1);
     inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
     isConnectorSelectors = isConnectorSelectors.substr(0, isConnectorSelectors.length - 1);
