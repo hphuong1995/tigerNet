@@ -81,7 +81,7 @@ export class Network {
 
         // all domains must be connected in some way
         let network: Connector[] = [];
-        
+
 
         for(const connector of this.domainConnections) {
             if(network === [] || network.find( cn => cn.sharesEnd(connector))) {

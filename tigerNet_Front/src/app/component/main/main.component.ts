@@ -463,18 +463,23 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
 
     let selectedDomain = this.data.selectedDomains[0];
+    let selectedDomainNode = this.network.getDomainById(selectedDomain).domainNode.id;
+
     this.resetSelectedElement();
 
     this.oldNetwork = this.network;
     this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
 
-    this.network.domains.filter( domain =>{
+    this.network.domains = this.network.domains.filter( domain =>{
       return domain.id !== selectedDomain;
     });
 
-    this.network.domainConnections.filter( connection =>{
-      return connection.id !== selectedDomain && connection.targetId !== selectedDomain;
+    this.network.domainConnections = this.network.domainConnections.filter( connection =>{
+      return connection.id !== selectedDomainNode && connection.targetId !== selectedDomainNode;
     });
+    console.log(selectedDomainNode);
+
+    console.log(this.network.domainConnections);
 
     if (!this.network.isValid()) {
       this.network = this.oldNetwork;
