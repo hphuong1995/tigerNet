@@ -61,10 +61,14 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.selectedLink.forEach((selectedLink: string) => {
       this.cy.$('#' + selectedLink).json({ selected: false });
     });
+    this.data.selectedDomains.forEach((selectedDomain: string) => {
+      this.cy.$('#' + selectedDomain).json({ selected: false });
+    });
 
     this.data.selectedLink = [];
     this.data.selectedNodes = [];
     this.data.selectedPatterns = [];
+    this.data.selectedDomains = [];
   }
 
   addNode = function () {
@@ -369,7 +373,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
   addPattern = function () {
-    if (this.data.selectedNodes.length > 0) {
+    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
       alert("Please only select patterns for this operation.");
       return;
@@ -417,7 +421,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   deletePattern(){
-    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0) {
+    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
       alert("Please only select patterns for this operation.");
       return;
@@ -436,6 +440,74 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   deleteDomain(){
+    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select domain for this operation.");
+      return;
+    }
+    if (this.data.selectedDomains.length !== 1) {
+      this.resetSelectedElement();
+      alert("Please 1 Domain to delete");
+      return;
+    }
+
+    let selectedDomain = this.data.selectedDomains[0];
+    this.resetSelectedElement();
+
+    this.oldNetwork = this.network;
+    this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+
+    this.network.domains.filter( domain =>{
+      return domain.id !== selectedDomain;
+    });
+
+    this.network.domainConnections.filter( connection =>{
+      return connection.id !== selectedDomain && connection.targetId !== selectedDomain;
+    });
+
+    if (!this.network.isValid()) {
+      this.network = this.oldNetwork;
+      this.resetSelectedElement();
+      console.log("not valid");
+      alert("Operation will break the network");
+      return;
+    }
+    else{
+      this.data.deleteDomain( selectedDomain ).subscribe( data => {
+        console.log(data);
+        var resData : any = data;
+        this.resetGraph(resData.domains, resData.domainConnections);
+      });
+    }
+  }
+
+  addDomain(){
+    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select domain for this operation.");
+      return;
+    }
+    if (this.data.selectedDomains.length === 0) {
+      this.resetSelectedElement();
+      alert("Please select at least one domain that new domain connect to.");
+      return;
+    } else {
+      var arrToSend = [];
+      console.log(this.data.selectedPatterns);
+      console.log(this.network.getDomainById(this.data.selectedPatterns[0]));
+      this.data.selectedDomains.forEach((did) => {
+        arrToSend.push(this.network.getDomainById(did).domainNode.id);
+      });
+
+      this.resetSelectedElement();
+      var reqData = {did : arrToSend};
+      console.log(reqData);
+      this.data.addDomain(reqData).subscribe((data: Network) => {
+        console.log(data);
+        this.resetGraph(data.domains, data.domainConnections);
+      });
+    }
+
 
   }
 
@@ -804,7 +876,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       e.preventDefault();
       e.stopPropagation();
       //collector = collector.union(clickedNode);
-      if (clickedEle.charAt(0) === 'P'||(clickedEle.charAt(0) === 'D'&&clickedEle.charAt(1) === 'N')) {//pattern
+      if (clickedEle.charAt(0) === 'P') {//pattern
 
         if (_this.data.selectedPatterns.includes(clickedEle)) {//pattern is selected, deselect it
           _this.data.selectedPatterns = _this.data.selectedPatterns.filter(x => x !== clickedEle);
@@ -813,8 +885,17 @@ export class MainComponent implements OnInit, AfterViewInit {
           _this.data.selectedPatterns.push(clickedEle);
           e.target.addClass('patternHighlighted');
         }
-
-      } else {//node
+      }
+      else if ((clickedEle.charAt(0) === 'D'&&clickedEle.charAt(1) === 'N')){
+        if (_this.data.selectedDomains.includes(clickedEle)) {//pattern is selected, deselect it
+          _this.data.selectedDomains = _this.data.selectedDomains.filter(x => x !== clickedEle);
+          e.target.removeClass('patternHighlighted');
+        } else {//pattern is not selected, select it
+          _this.data.selectedDomains.push(clickedEle);
+          e.target.addClass('patternHighlighted');
+        }
+      }
+      else {//node
 
         if (_this.data.selectedNodes.includes(clickedEle)) {//node is selected, deselect it
           _this.data.selectedNodes = _this.data.selectedNodes.filter(x => x !== clickedEle);

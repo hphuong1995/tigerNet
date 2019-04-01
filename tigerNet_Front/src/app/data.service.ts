@@ -12,7 +12,7 @@ export class DataService {
   public selectedPatterns: string[] = [];
   public selectedLink: string[] = [];
   public selectedNodes: string[] = [];
-
+  public selectedDomains: string[] = [];
 
   public cy : any;
 
@@ -60,5 +60,13 @@ export class DataService {
 
   deletePattern(reqId : string){
     return this.http.delete('api/v1/admin/patterns?pid=' + reqId);
+  }
+
+  deleteDomain( reqId : string){
+    return this.http.delete('api/v1/admin/domains?did=' + reqId);
+  }
+
+  addDomain( reqObj : any){
+    return this.http.post('api/v1/admin/domains', JSON.stringify(reqObj));
   }
 }
