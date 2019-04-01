@@ -6,11 +6,11 @@ export class Connector {
         this.targetId = targetId;
     }
 
-    public validateConnector() {
+    public validateConnector(): boolean {
         return !(this.id === this.targetId);
     }
 
-    public compareTo(other: Connector) {
+    public compareTo(other: Connector): boolean {
         if (this.id === other.id && this.targetId === other.targetId) {
             return true;
         }
@@ -20,7 +20,14 @@ export class Connector {
         return false;
     }
 
-    public static compare(conn: Connector, other: Connector) {
+    public sharesEnd(other: Connector): boolean {
+        return other.id === this.id
+            || other.id === this.targetId
+            || other.targetId === this.id
+            || other.targetId === this.targetId
+    }
+
+    public static compare(conn: Connector, other: Connector): boolean {
         if (conn.id === other.id && conn.targetId === other.targetId) {
             return true;
         }
@@ -30,6 +37,7 @@ export class Connector {
         return false;
     }
 
+    /* Returns false for duplicates, true for no duplicates */
     public static checkDuplicateConnection(connections: Connector[]): boolean {
         var retFlag: boolean = true;
         connections.forEach(con => {
