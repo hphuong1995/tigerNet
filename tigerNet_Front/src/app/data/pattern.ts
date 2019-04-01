@@ -77,7 +77,7 @@ export class Pattern {
             }
         }
 
-        // 4 to 7 nodes
+        //4 to 7 nodes
         if (this.nodes.length >= 4 && this.nodes.length < 7) {
             //  All non connector nodes must have exactly two connections to other non connector nodes
             // if (!this.maxTwoConnectorEachNode(this.getConnectorNode().id)) {
