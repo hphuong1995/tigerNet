@@ -52,7 +52,7 @@ export class Domain {
         // or connector node <--> domain node
         const conNodeIds: string[] = this.patterns.map( (p) => p.getConnectorNode().id );
         for ( const con of this.patternConnections) {
-            if(!con.validateConnector()) {
+            if (!con.validateConnector()) {
                 return false;
             }
             if (con.id !== this.domainNode.id && !conNodeIds.find( (id) => id === con.id)) {

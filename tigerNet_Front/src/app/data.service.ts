@@ -57,4 +57,8 @@ export class DataService {
     else
       return this.http.delete('api/v1/admin/nodes?nid=' + reqObject.node);
   }
+
+  deletePattern(reqId : string){
+    return this.http.delete('api/v1/admin/patterns?pid=' + reqId);
+  }
 }

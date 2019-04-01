@@ -416,6 +416,29 @@ export class MainComponent implements OnInit, AfterViewInit {
     return flag;
   }
 
+  deletePattern(){
+    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select patterns for this operation.");
+      return;
+    }
+    if (this.data.selectedPatterns.length !== 1) {
+      this.resetSelectedElement();
+      alert("Please 1 pattern to delete");
+      return;
+    }
+
+    this.data.deletePattern(this.data.selectedPatterns[0]).subscribe( data =>{
+      this.resetSelectedElement();
+      var retData : any = data;
+      this.resetGraph(retData.domains, retData.domainConnections);
+    });
+  }
+
+  deleteDomain(){
+
+  }
+
   deleteNode() {
     if (this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
       this.resetSelectedElement();
@@ -615,7 +638,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     let inactiveSelectors = "";
     let isConnectorSelectors = "";
     let isDomainNodeSelectors = "";
-   
+
     // this.oldNetwork = this.network;
     this.network = new Network(domains, domainConnections);
     // if(!this.network.isValid()) {//if invalid network, use old network
@@ -650,7 +673,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           elements.push({
             data: {
               id: node.id,
-              parent: pattern.id 
+              parent: pattern.id
             }
           });
           if (node.isActive) {
