@@ -75,7 +75,7 @@ export class Network {
         }
 
 
-        if(this.domains.length == 0 && this.domainConnections.length == 0) {
+        if(this.domains.length < 2 && this.domainConnections.length == 0) {
             return true;
         }
 
@@ -108,7 +108,7 @@ export class Network {
             // }
             for(let i = 0; i < network.length; i++) {
                 matchIndex = conns.findIndex( c => c.sharesEnd(network[i]));
-                if(matchIndex) {
+                if(matchIndex > -1) {
                     network.push(conns[matchIndex])
                     conns = conns.splice(matchIndex, 1);
                     done = false;
