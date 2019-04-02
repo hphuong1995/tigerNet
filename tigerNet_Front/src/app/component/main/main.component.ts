@@ -707,7 +707,8 @@ export class MainComponent implements OnInit, AfterViewInit {
           selector: 'node',
           style: {
             //'background-color': '#1C86EE',
-            'label': 'data(id)'
+            'label': 'data(id)',
+            'selection-box-color': '#00FF00'
           }
         },
         {
