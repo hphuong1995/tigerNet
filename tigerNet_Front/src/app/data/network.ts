@@ -79,7 +79,7 @@ export class Network {
             return true;
         }
         if(this.domains.length < 2) {
-            return this.domainConnections.length === 0;            
+            return this.domainConnections.length === 0;
         } else {
             if(this.domainConnections.length === 0) {//more than two domains but no connections
                 return false;
@@ -89,12 +89,12 @@ export class Network {
         // all domains must be connected in some way
         let network: Connector[] = [];
 
-
         for(const connector of this.domainConnections) {
             if(network.length === 0 || network.find( cn => cn.sharesEnd(connector))) {
                 network.push(connector);
             }
         }
+
         if(network.length !== this.domainConnections.length) {
             return false;
         }
@@ -105,7 +105,7 @@ export class Network {
         while(!done) {
             done = true;
             let matchIndex: number = -1;
-            
+
             for(let i = 0; i < network.length; i++) {
                 matchIndex = conns.findIndex( c => c.sharesEnd(network[i]));
                 if(matchIndex > -1) {

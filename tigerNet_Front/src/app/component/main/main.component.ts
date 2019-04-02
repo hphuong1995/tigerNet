@@ -218,28 +218,32 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   addConnection = function () {
-    if (this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2) {
+    if (this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2 && this.data.selectedDomains.length !== 2) {
       this.resetSelectedElement();
-      alert("Please select 2 nodes or 2 patterns to add a link");
+      alert("Please select 2 nodes or 2 patterns or 2 domains to add a link");
       return;
     }
     else {
       if (this.data.selectedPatterns.length === 2) {
-        if (this.data.selectedNodes.length !== 0) {
+        if (this.data.selectedNodes.length !== 0 || this.data.selectedDomains.length !== 0) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes OR 2 patterns to add a link, not both");
+          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
           return;
         }
         else {
           // Adding link between 2 connector nodes
           var arrToSend = [];
 
-          this.data.selectedPatterns.forEach((pat) => {
+          this.data.selectedPatterns.forEach( (pat) => {
             //console.log(this.network.getPatternById(pat).getConnectorNode().id);
             arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
           });
+
+          var conList = this.network.getDomainByChildNodeId(arrToSend[0]).getAllConnections();
+
           this.resetSelectedElement();
-          if (this.checkConnectionExist(arrToSend, this.network.getAllConnections())) {//#FIXME: get all pattern connections
+
+          if (this.checkConnectionExist(arrToSend, conList)) {
             alert("The connection between selected Pattern is already exist.");
             return;
           } else {
@@ -251,10 +255,37 @@ export class MainComponent implements OnInit, AfterViewInit {
           }
         }
       }
-      else if (this.data.selectedNodes.length === 2) {
-        if (this.data.selectedPatterns.length !== 0) {
+      else if (this.data.selectedDomains.length === 2) {
+        if (this.data.selectedPatterns.length !== 0 || this.data.selectedNodes.length !== 0) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes or 2 patterns to add a link, not both");
+          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
+          return;
+        }
+
+        // Adding link between 2 connector nodes
+        var arrToSend = [];
+
+        this.data.selectedDomains.forEach( (dom) => {
+          //console.log(this.network.getPatternById(pat).getConnectorNode().id);
+          arrToSend.push(this.network.getDomainById(dom).domainNode.id);
+        });
+        this.resetSelectedElement();
+        if (this.checkConnectionExist(arrToSend, this.network.domainConnections)) {
+          alert("The connection between selected Domain is already exist.");
+          return;
+        } else {
+          this.data.addNewConnection(arrToSend).subscribe((data) => {
+            console.log(data);
+            // this.resetGraph(data.patterns, data.patternConnections);
+            this.resetGraph(data.domains, data.domainConnections);
+          });
+        }
+
+      }
+      else if (this.data.selectedNodes.length === 2) {
+        if (this.data.selectedPatterns.length !== 0 || this.data.selectedDomains.length !== 0 ) {
+          this.resetSelectedElement();
+          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
           return;
         }
 
