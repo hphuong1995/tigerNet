@@ -100,8 +100,8 @@ export class Pattern {
 
 
     private connectorNodeConnectionCheck(): boolean {
-        var connectorId = this.getConnectorNode().id;
-        var count = 0;
+        let connectorId = this.getConnectorNode().id;
+        let count = 0;
 
         this.connections.forEach(con => {
             if (con.id === connectorId || con.targetId === connectorId) {
@@ -138,8 +138,8 @@ export class Pattern {
 
 
     private maxTwoEdgesPerNode(): boolean {
-        var connectorId = this.getConnectorNode().id;
-        var edgeConnectors = this.connections.filter( (conn: Connector) => {
+        let connectorId = this.getConnectorNode().id;
+        let edgeConnectors = this.connections.filter( (conn: Connector) => {
             return conn.id !== connectorId && conn.targetId !== connectorId;
         });
 
@@ -162,8 +162,8 @@ export class Pattern {
     }
 
     private connectionWithinPattern(): boolean {
-        var connections: Connector[] = this.connections;
-        var nodes: Node[] = this.nodes;
+        let connections: Connector[] = this.connections;
+        let nodes: Node[] = this.nodes;
         let nodeIds: string[] = nodes.map(n => n.id);
         let connectorIds: string[] = [];
         for (var i = 0; i < connections.length; i++) {

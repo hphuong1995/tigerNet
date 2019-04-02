@@ -312,4 +312,87 @@ router.delete("/nodes", (req: Request, res: Response) => {
     });
 });
 
+router.delete("/patterns", (req: Request, res: Response) => {
+  console.log(req.query);
+  db.deletePattern(req.query.pid, (err: Err) => {
+    if (err) {
+        res.status(400).send(err.message);
+    } else {
+      db.getNetwork((err: Err, network: Network) => {
+          if (err) {
+              res.status(400).send(err.message);
+          } else {
+              res.status(200).send(network);
+          }
+      });
+    }
+  });
+});
+
+router.delete("/domains", (req: Request, res: Response) => {
+  console.log(req.query);
+  db.deleteDomain(req.query.did, (err: Err) => {
+    if (err) {
+        res.status(400).send(err.message);
+    } else {
+      db.getNetwork((err: Err, network: Network) => {
+          if (err) {
+              res.status(400).send(err.message);
+          } else {
+              res.status(200).send(network);
+          }
+      });
+    }
+  });
+});
+
+router.post("/domains", (req: Request, res: Response) => {
+  console.log(req.body);
+  db.storeNewDomain( (domainId: string, err: Err) => {
+    if (err) {
+        res.status(400).send(err.message);
+    } else {
+      db.addDomainNode(true, domainId, (domainNode: Node, err: Err) => {
+        if (err) {
+            res.status(400).send(err.message);
+        } else {
+          let nodeIdList = [];
+          const connectorList: Connector[] = [];
+
+          nodeIdList = req.body.did;
+          nodeIdList.forEach((nid: string) => {
+              const newConnector = new Connector(domainNode.id, nid);
+              connectorList.push(newConnector);
+          });
+
+          db.storeNewPattern(domainId, (patternId: string, err: Err) => {
+            if (err) {
+                res.status(400).send(err.message);
+            } else {
+              db.addNode(true, true, patternId, (conNode: Node, err: Err) => {
+
+                  connectorList.push( new Connector( domainNode.id, conNode.id));
+                  console.log(connectorList);
+                  db.addConnections(connectorList, (err: Err) => {
+                      if (err) {
+                          res.status(400).send(err.message);
+                      } else {
+                          db.getNetwork((err: Err, network: Network) => {
+                              if (err) {
+                                  res.status(400).send(err.message);
+                              } else {
+                                  res.send(network);
+                              }
+                          });
+                      }
+                  });
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+});
+
 export { router as adminRoutes };

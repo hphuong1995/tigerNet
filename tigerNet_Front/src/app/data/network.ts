@@ -51,7 +51,76 @@ export class Network {
     }
 
     public isValid(): boolean {
-        //return !!this.domains.find(d => !d.isValid());
+        if(this.domains.find(d => !d.isValid())) {
+            return false;
+        }
+        // no duplicate connectors
+        if(!Connector.checkDuplicateConnection(this.domainConnections)) {
+            return false;
+        }
+
+        // connectors must all be valid
+        for (const connector of this.domainConnections) {
+            if(!connector.validateConnector()) {
+                return false;
+            }
+        }
+
+        // connectors must all connect to the network's domain nodes
+        let domainNodeIds: string[] = this.domains.map( d => d.domainNode.id );
+        for (const connector of this.domainConnections) {
+            if(!domainNodeIds.find( id => id === connector.id) && !domainNodeIds.find( id => id === connector.targetId)) {
+                return false;
+            }
+        }
+
+
+        if(this.domains.length < 2 && this.domainConnections.length == 0) {
+            return true;
+        }
+        if(this.domains.length < 2) {
+            return this.domainConnections.length === 0;            
+        } else {
+            if(this.domainConnections.length === 0) {//more than two domains but no connections
+                return false;
+            }
+        }
+
+        // all domains must be connected in some way
+        let network: Connector[] = [];
+
+
+        for(const connector of this.domainConnections) {
+            if(network.length === 0 || network.find( cn => cn.sharesEnd(connector))) {
+                network.push(connector);
+            }
+        }
+        if(network.length !== this.domainConnections.length) {
+            return false;
+        }
+
+        let done: boolean = false;
+        let conns = this.domainConnections.slice();
+        network.push(conns.pop());
+        while(!done) {
+            done = true;
+            let matchIndex: number = -1;
+            
+            for(let i = 0; i < network.length; i++) {
+                matchIndex = conns.findIndex( c => c.sharesEnd(network[i]));
+                if(matchIndex > -1) {
+                    network.push(conns[matchIndex])
+                    conns.splice(matchIndex, 1);
+                    done = false;
+                }
+            }
+        }
+
+        //these are stray connectors that share no nodes with the connectors in network
+        if(conns.length > 0) {
+            return false;
+        }
+
         return true;
     }
 
