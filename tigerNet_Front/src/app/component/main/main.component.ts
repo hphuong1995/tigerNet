@@ -9,6 +9,7 @@ import { Node } from 'src/app/data/node';
 import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
+import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
 
 declare var cytoscape: any;
 
@@ -557,7 +558,9 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
   }
+  reset(){
 
+  }
   deleteNode() {
     if (this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
       this.resetSelectedElement();
@@ -569,7 +572,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please choose only one node to delete");
       return;
     }
-
+  
     var selectedNodeId = this.data.selectedNodes[0];
 
     var reqObject = {
