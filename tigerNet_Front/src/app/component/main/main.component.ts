@@ -25,6 +25,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private oldNetwork: Network;
 
 
+
   constructor(private data: DataService, private user: UserService) { }
 
 
@@ -303,8 +304,6 @@ export class MainComponent implements OnInit, AfterViewInit {
           return;
         }
 
-        //console.log(this.network.getPatternByChildNodeId(this.data.selectedNodes[0]));
-        //console.log(this.data.selectedNodes[0]));
         if (this.checkConnectionExist(this.data.selectedNodes, this.network.getPatternByChildNodeId(this.data.selectedNodes[0]).connections)) {
           this.resetSelectedElement();
           alert("The connection is already exist");
@@ -340,7 +339,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   deleteConnetion() {
-    if (this.data.selectedPatterns.length !== 0 && this.data.selectedNodes.length !== 0) {
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedNodes.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
       alert("Please select only the connection to delete.");
       return;
@@ -354,7 +353,10 @@ export class MainComponent implements OnInit, AfterViewInit {
     arrToSend.push(this.data.selectedLink[0].substr(0, 3));
     arrToSend.push(this.data.selectedLink[0].substr(3, 5));
     console.log(arrToSend);
-    if (arrToSend[0].charAt(0) === 'D' || arrToSend[1].charAt(0) === 'D') {
+    if(arrToSend[0].charAt(0) === 'D' && arrToSend[1].charAt(0) === 'D'){
+
+    }
+    else if (arrToSend[0].charAt(0) === 'D' || arrToSend[1].charAt(0) === 'D') {
       this.resetSelectedElement();
       alert("User can not delete the connection that assosiates with domain node.");
       return;
@@ -409,6 +411,19 @@ export class MainComponent implements OnInit, AfterViewInit {
         }
       }
     }
+  }
+
+  activeNode(){
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select node for this operation.");
+      return;
+    }
+
+    let selectedNode = this.data.selectedNodes[0];
+    this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
+    this.cy.$('#' + selectedNode).removeClass('nonConnectorSelectors');
+    this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
   }
 
 
@@ -756,7 +771,8 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   // resetGraph(patterns: Pattern[], connections: Connector[]) {
   resetGraph(domains: Domain[], domainConnections: Connector[]) {
-    let elements: any[] = [];
+
+    let elements: any = [];
     let nonConnectorSelectors = "";
     let inactiveSelectors = "";
     let isConnectorSelectors = "";
@@ -879,7 +895,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         {
           selector: inactiveSelectors,
           style: {
-            'background-color': '	#888888'
+            'background-color': '	#CC0000'
           }
         }, {
           selector: isDomainNodeSelectors,

@@ -395,4 +395,15 @@ router.post("/domains", (req: Request, res: Response) => {
   });
 });
 
+router.put("/nodes/:nid", (req: Request, res: Response) => {
+  console.log(req.query);
+  db.setNodeActivated(req.params.nid, req.query.active, (err: Err) => {
+    if (err) {
+      res.status(400).send(err.message);
+    } else {
+      res.status(200).send({});
+    }
+  });
+});
+
 export { router as adminRoutes };
