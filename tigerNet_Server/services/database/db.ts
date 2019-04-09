@@ -1308,6 +1308,7 @@ class DB {
     }
 
     public setNodeActivated(nodeId: string, activate: boolean, callback: (err: Err) => void): void {
+
         const query: string = "UPDATE nodes SET is_active = " + this.bit(activate) + " WHERE id = '" + nodeId + "'";
         conn.query(query, (err: MysqlError, results: any) => {
             if (err) {

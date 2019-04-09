@@ -113,4 +113,17 @@ router.get( "/network", ( req: Request, res: Response, next: NextFunction ) => {
      // res.send(examplePattern);
 } );
 
+router.put("/nodes/:nid", (req: Request, res: Response) => {
+  const activate: boolean = (req.query.active === "true");
+
+  console.log(activate);
+  db.setNodeActivated(req.params.nid, activate, (err: Err) => {
+    if (err) {
+      res.status(400).send(err.message);
+    } else {
+      res.status(200).send({});
+    }
+  });
+});
+
 export { router as routes };

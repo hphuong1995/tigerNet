@@ -9,6 +9,7 @@ import { Node } from 'src/app/data/node';
 import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
+import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
 
 declare var cytoscape: any;
 
@@ -23,14 +24,16 @@ export class MainComponent implements OnInit, AfterViewInit {
   private i: any;
   private network: Network;
   private oldNetwork: Network;
+  // private listTest:any=['N01','N02'];
+  private magicNumber = 1;
 
+  private magicChance = 100;
 
 
   constructor(private data: DataService, private user: UserService) { }
 
 
   ngOnInit() {
-
     this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
       if (!res.ok) {
         alert("Error loading the network");
@@ -42,7 +45,42 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
+    var _this = this;
+    setInterval(this.autoDeactivate.bind(this), 1000);
+  }
 
+  autoDeactivate(_this : any){
+    let magicChance = 10;
+    let magicNumber = 1;
+    let randomNumber = Math.floor(Math.random() * magicChance);
+    console.log(randomNumber);
+    if(randomNumber === magicNumber){
+      let randomDomain = Math.floor(Math.random() * this.network.domains.length);
+      let randomPattern = Math.floor(Math.random() * this.network.domains[randomDomain].patterns.length);
+      let randomNode = Math.floor(Math.random() * this.network.domains[randomDomain].patterns[randomPattern].nodes.length);
+      let selectedNode = this.network.domains[randomDomain].patterns[randomPattern].nodes[randomNode].id;
+
+      console.log(selectedNode);
+      this.data.activeNode(selectedNode, false).subscribe(data =>{
+        this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
+        this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
+      });
+    }
+  }
+
+  activeNode(){
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select node for this operation.");
+      return;
+    }
+
+    let selectedNode = this.data.selectedNodes[0];
+    this.cy.$('#' + selectedNode).removeClass('inactiveSelectors');
+
+    this.data.activeNode(this.data.selectedNodes[0], true).subscribe( data =>{
+      this.resetSelectedElement();
+    });
   }
 
 
@@ -413,18 +451,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
   }
 
-  activeNode(){
-    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
-      this.resetSelectedElement();
-      alert("Please only select node for this operation.");
-      return;
-    }
 
-    let selectedNode = this.data.selectedNodes[0];
-    this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
-    this.cy.$('#' + selectedNode).removeClass('nonConnectorSelectors');
-    this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
-  }
 
 
   addPattern = function () {
@@ -572,6 +599,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
   }
+
 
   deleteNode() {
     if (this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
@@ -727,6 +755,13 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
   }
 
+  reset(){
+    this.resetSelectedElement();
+    this.cy.nodes().removeClass('highlighted');
+    this.cy.nodes().removeClass('patternHighlighted');
+    this.cy.edges().removeClass('highlighted');
+  }
+
   // checkValidNetwork(network : Network){
 
   // }
@@ -861,6 +896,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     inactiveSelectors = inactiveSelectors.substr(0, inactiveSelectors.length - 1);
     isConnectorSelectors = isConnectorSelectors.substr(0, isConnectorSelectors.length - 1);
     isDomainNodeSelectors = isDomainNodeSelectors.substr(0, isDomainNodeSelectors.length - 1);
+
     this.cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
       elements: elements,
@@ -889,13 +925,13 @@ export class MainComponent implements OnInit, AfterViewInit {
         {
           selector: nonConnectorSelectors,
           style: {
-            'background-color': '	#66CD00'
+            'background-color': '#66CD00'
           }
         },
         {
-          selector: inactiveSelectors,
+          selector: '.inactiveSelectors',
           style: {
-            'background-color': '	#CC0000'
+            'background-color': '#FF3030'
           }
         }, {
           selector: isDomainNodeSelectors,
@@ -921,6 +957,12 @@ export class MainComponent implements OnInit, AfterViewInit {
           css: {
             'background-color': '#63B8FF'
           }
+        },
+        {
+          selector: ':selected',
+          css: {
+            'background-color': 'inherit'
+          }
         }
 
       ],
@@ -936,6 +978,15 @@ export class MainComponent implements OnInit, AfterViewInit {
     //console.log(this);
     var _this = this;
     //this.cy.$('#' + clickedEle).addClass('test');
+
+    // this.cy.nodes().forEach(function( ele ){
+    //   let idTest=ele.id();
+    //   for(let inActived of _this.listTest){
+    //     if(idTest===inActived){
+    //       ele.addClass('inactiveSelectors');
+    //     }
+    //   }
+    //  });
 
 
     this.cy.nodes().on('tap', function (e) {
@@ -980,6 +1031,16 @@ export class MainComponent implements OnInit, AfterViewInit {
       //   _this.data.selectedNodes.push(clickedEle);
       // }
     });
+
+    let inactiveNodes = inactiveSelectors.split(',');
+    inactiveNodes.forEach( (nid : string) =>{
+      console.log(nid);
+      if(nid.charAt(1) === 'N'){
+        console.log("hit")
+        this.cy.$( nid).addClass('inactiveSelectors');
+      }
+    });
+
 
     this.cy.edges().on('tap', function (e) {
       //let clickedNode : string;

@@ -69,4 +69,8 @@ export class DataService {
   addDomain( reqObj : any){
     return this.http.post('api/v1/admin/domains', JSON.stringify(reqObj));
   }
+
+  activeNode( reqId : string, status : boolean){
+    return this.http.put('api/v1/nodes/' + reqId + '?active=' + status, {active : status});
+  }
 }
