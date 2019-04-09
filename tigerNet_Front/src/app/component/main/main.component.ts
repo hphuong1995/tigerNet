@@ -24,6 +24,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private i: any;
   private network: Network;
   private oldNetwork: Network;
+  // private listTest:any=['N01','N02'];
 
 
   constructor(private data: DataService, private user: UserService) { }
@@ -558,9 +559,8 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
   }
-  reset(){
+ 
 
-  }
   deleteNode() {
     if (this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
       this.resetSelectedElement();
@@ -714,7 +714,19 @@ export class MainComponent implements OnInit, AfterViewInit {
       }
     }
   }
+  reset(){
+    this.cy.nodes().removeClass('highlighted');
+    this.cy.nodes().removeClass('patternHighlighted');
+    this.cy.edges().removeClass('highlighted');
+  }
 
+  activeNode(){
+   
+    //this.cy.$(this.data.selectedNodes[0]).removeClass('inactiveSelectors');
+    
+    //this.resetSelectedElement();
+    this.cy.$(':selected').removeClass('inactiveSelectors');
+  }
   // checkValidNetwork(network : Network){
 
   // }
@@ -880,9 +892,9 @@ export class MainComponent implements OnInit, AfterViewInit {
           }
         },
         {
-          selector: inactiveSelectors,
+          selector: '.inactiveSelectors',
           style: {
-            'background-color': '	#888888'
+            'background-color': '#FF3030'
           }
         }, {
           selector: isDomainNodeSelectors,
@@ -923,7 +935,15 @@ export class MainComponent implements OnInit, AfterViewInit {
     //console.log(this);
     var _this = this;
     //this.cy.$('#' + clickedEle).addClass('test');
-
+    
+    // this.cy.nodes().forEach(function( ele ){
+    //   let idTest=ele.id();
+    //   for(let inActived of _this.listTest){
+    //     if(idTest===inActived){
+    //       ele.addClass('inactiveSelectors');
+    //     }
+    //   }
+    //  });
 
     this.cy.nodes().on('tap', function (e) {
       //let clickedNode : string;
