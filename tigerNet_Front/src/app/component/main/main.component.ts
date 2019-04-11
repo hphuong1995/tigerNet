@@ -27,7 +27,12 @@ export class MainComponent implements OnInit, AfterViewInit {
   // private listTest:any=['N01','N02'];
   private magicNumber = 1;
 
-  private magicChance = 100;
+  private magicChance = 1000000;
+
+  private currentNode : string;
+
+  private currentNodeMessages: any[] = [{sender : "N11", content: "Hello I AM Team TIGER I NEED TO MAKE THIS LONG"},
+                              {sender: "N22", content:"Test"}];
 
 
   constructor(private data: DataService, private user: UserService) { }
@@ -49,12 +54,21 @@ export class MainComponent implements OnInit, AfterViewInit {
     setInterval(this.autoDeactivate.bind(this), 1000);
   }
 
+  viewNode(){
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select node for this operation.");
+      return;
+    }
+
+    this.currentNode = this.data.selectedNodes[0];
+  }
+
   autoDeactivate(_this : any){
-    let magicChance = 10;
-    let magicNumber = 1;
-    let randomNumber = Math.floor(Math.random() * magicChance);
+
+    let randomNumber = Math.floor(Math.random() * this.magicChance);
     console.log(randomNumber);
-    if(randomNumber === magicNumber){
+    if(randomNumber === this.magicNumber){
       let randomDomain = Math.floor(Math.random() * this.network.domains.length);
       let randomPattern = Math.floor(Math.random() * this.network.domains[randomDomain].patterns.length);
       let randomNode = Math.floor(Math.random() * this.network.domains[randomDomain].patterns[randomPattern].nodes.length);
