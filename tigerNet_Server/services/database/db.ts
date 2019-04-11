@@ -6,6 +6,7 @@ import uuid from "uuid/v1";
 import { Connector } from "../../data/connector";
 import { Domain } from "../../data/domain";
 import { Err } from "../../data/err";
+import { Message } from "../../data/message";
 import { Network } from "../../data/network";
 import { Node } from "../../data/node";
 import { Pattern } from "../../data/pattern";
@@ -610,6 +611,7 @@ class DB {
      * ***THIS METHOD DOES NOT VERIFY THE INTEGRITY OF THE NETWORK AFTER ITS COMPLETION***
      *
      * Error codes:
+     *      -1: No free node ids
      *     -10: MySQL error
      */
     public addNode(isActive: boolean, isConnector: boolean, patternId: string,
@@ -628,6 +630,34 @@ class DB {
                 callback(results as Node, undefined);
             }
         );
+    }
+
+    /*
+     * Create a new message from the given parameters and add it into the database.
+     * The new message is returned in the callback.
+     *
+     * Error codes:
+     *      -1: No free message ids
+     *      -2: Empty arguments
+     *     -10: MySQL error
+     */
+    public storeNewMessage(sender: string, destination: string, body: string,
+        callback: (message: Message, err: Err) => void): void {
+        const args: any = {};
+        args.sender = sender;
+        args.destination = destination;
+        args.body = body;
+        if (!sender || !destination) {
+            callback(undefined, new Err("Missing destination or sender", -2));
+            return;
+        }
+        this.transaction(args, this.storeNewMessageTransaction.bind(this), (results: any, err: Err) => {
+            if (err) {
+                callback(undefined, err);
+                return;
+            }
+            callback(results as Message, undefined);
+        });
     }
 
     public addDomainNode(isActive: boolean, domainId: string,
@@ -1443,6 +1473,52 @@ class DB {
         });
     }
 
+    /*
+     * args: {
+     *     sender: Message,
+     *     destination: string,
+     *     body: string
+     * }
+     *
+     */
+    private storeNewMessageTransaction(connection: PoolConnection,
+        args: any,
+        callback: (err: Err, results: any) => void): void {
+        let query: string = "SELECT id FROM messageids WHERE isFree = 1 LIMIT 1 FOR UPDATE";
+        connection.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            if (results.length < 1) {
+                callback(new Err("Not enoguh free message ids", -1), undefined);
+                return;
+            }
+            query = "UPDATE messageIds SET isFree = 0 WHERE id = '" + results[0].id + "'";
+            connection.query(query, (err: MysqlError) => {
+                if (err) {
+                    callback(new Err(err.message, -10), undefined);
+                    return;
+                }
+                const message: Message = new Message(args.sender, args.destination, args.body, results[0].id);
+                query = "INSERT INTO messages(id, fk_receiver_id, fk_sender_id, body) VALUES ?";
+                const values: string[][] = [[
+                    message.id,
+                    message.destination,
+                    message.sender,
+                    message.body
+                ]];
+                const q: Query = connection.query(query, [values], (err: MysqlError) => {
+                    if (err) {
+                        callback(new Err(err.message, -10), undefined);
+                        return;
+                    }
+                    callback(undefined, message);
+                });
+                console.log(q.sql);
+            });
+        });
+    }
 }
 
 const db: DB = new DB();

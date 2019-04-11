@@ -52,15 +52,15 @@ const USERS_TABLE =
 const MESSAGES_TABLE =
     "CREATE TABLE messages (\
         id VARCHAR(45) NOT NULL,\
-        content VARCHAR(500) NOT NULL,\
+        body VARCHAR(51) NOT NULL,\
         fk_receiver_id VARCHAR(45) NOT NULL,\
         CONSTRAINT FOREIGN KEY (fk_receiver_id)\
-        REFERENCES users(id)\
+        REFERENCES nodes(id)\
         ON UPDATE CASCADE\
-        ON DELETE CASCADE,\
+        ON DELETE RESTRICT,\
         fk_sender_id VARCHAR(45),\
         CONSTRAINT FOREIGN KEY (fk_sender_id)\
-        REFERENCES users(id)\
+        REFERENCES nodes(id)\
         ON UPDATE CASCADE\
         ON DELETE SET NULL,\
         PRIMARY KEY (id)\
@@ -107,19 +107,6 @@ const SECURITY_ANSWERS_TABLE =
         PRIMARY KEY (id)\
     );";
 
-// const NODES_TABLE =
-//     "CREATE TABLE nodes (\
-//         id VARCHAR(6) NOT NULL,\
-//         is_active BIT NOT NULL,\
-//         is_connector BIT NOT NULL,\
-//         fk_pattern_id VARCHAR(6),\
-//         CONSTRAINT FOREIGN KEY (fk_pattern_id)\
-//         REFERENCES patterns(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE RESTRICT,\
-//         PRIMARY KEY (id)\
-//     );";
-
 const NODES_TABLE =
     "CREATE TABLE nodes (\
         id VARCHAR(6) NOT NULL,\
@@ -143,7 +130,17 @@ const NODES_DELETE_TRIGGER =
         BEFORE DELETE ON nodes\
         FOR EACH ROW\
         BEGIN\
+            DELETE FROM messages WHERE fk_receiver_id = OLD.id;\
             UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
+
+const MESSAGES_DELETE_TRIGGER = 
+    "CREATE TRIGGER messages_delete\
+        BEFORE DELETE ON messages\
+        FOR EACH ROW\
+        BEGIN\
+            UPDATE messageids SET isFree = 1 WHERE id = OLD.id;\
         END\
     ";
 
@@ -254,6 +251,15 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
+    let query = "DROP TRIGGER IF EXISTS messages_delete;";
+    connection.query(query, (err, res, fields) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
     let query = "DROP TRIGGER IF EXISTS patterns_delete;";
     connection.query(query, (err, res, fields) => {
         if (err) rollbackAndExit(connection, err);
@@ -338,15 +344,6 @@ initQueue.unshift((connection, initQueue) => {
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    let query = MESSAGES_TABLE;
-    connection.query(query, (err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
     let query = DOMAINS_TABLE;
     connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
@@ -366,6 +363,15 @@ initQueue.unshift((connection, initQueue) => {
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODES_TABLE;
+    connection.query(query, (err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = MESSAGES_TABLE;
     connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -438,6 +444,15 @@ initQueue.unshift((connection, initQueue) => {
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let query = NODES_DELETE_TRIGGER;
+    connection.query(query, (err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = MESSAGES_DELETE_TRIGGER;
     connection.query(query, (err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue);
@@ -891,6 +906,46 @@ initQueue.unshift((connection, initQueue, patternIds, nodes) => {
 initQueue.unshift((connection, initQueue, patternIds, nodes) => {
     let next = initQueue.pop();
     db.addConnection(nodes[2][0].id, nodes[2][2].id, (err, connector) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "I think node N05 smells funny", (message, err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.storeNewMessage(nodes[1][2].id, nodes[2][2].id, "Which orange came first? The color or the fruit?", (message, err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "Is the S or C silent in scent?", (message, err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "I am attempting to store a very very long message that is over 50 characters", (message, err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue, patternIds, nodes);
+    });
+});
+
+initQueue.unshift((connection, initQueue, patternIds, nodes) => {
+    let next = initQueue.pop();
+    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "Why is it called a building if it's already built?", (message, err) => {
         if (err) rollbackAndExit(connection, err);
         next(connection, initQueue, patternIds, nodes);
     });
