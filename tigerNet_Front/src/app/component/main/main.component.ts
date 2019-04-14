@@ -544,8 +544,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Invalid network modification");
       return;
     }
-    //get pattern id
-    //#TODO: finish this
 
     this.data.deletePattern(this.data.selectedPatterns[0]).subscribe(data => {
       this.resetSelectedElement();
