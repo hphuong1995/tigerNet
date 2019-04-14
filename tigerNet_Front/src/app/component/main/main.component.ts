@@ -31,7 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 20;
+  private magicChance = 2;
 
   private currentNode : string;
 
@@ -117,18 +117,26 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   autoDeactivate(_this : any){
-    console.log("autoDeactivate");
-
+    if(!this.network.domains || this.network.domains.length < 1) {
+      return;
+    }
     let randomNumber = Math.floor(Math.random() * this.magicChance);
     if(randomNumber === this.magicNumber){
       let randomDomain = Math.floor(Math.random() * this.network.domains.length);
       let randomPattern = Math.floor(Math.random() * this.network.domains[randomDomain].patterns.length);
-      let randomNode = Math.floor(Math.random() * this.network.domains[randomDomain].patterns[randomPattern].nodes.length);
-      let selectedNode = this.network.domains[randomDomain].patterns[randomPattern].nodes[randomNode].id;
+      let randomNode = Math.floor((Math.random() * (this.network.domains[randomDomain].patterns[randomPattern].nodes.length + 1)) - 1);
+      let selectedNode: string = "";
+      if(randomNode > -1) {
+        selectedNode = this.network.domains[randomDomain].patterns[randomPattern].nodes[randomNode].id;
+      } else {
+        selectedNode = this.network.domains[randomDomain].domainNode.id;
+      }
+      
 
       console.log(selectedNode);
       this.data.activeNode(selectedNode, false).subscribe(data =>{
-        this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
+        // this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
+        this.network.getNodeById(selectedNode).isActive = false;
         this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
       });
     }
@@ -860,49 +868,6 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.cy.edges().removeClass('highlighted');
   }
 
-  // checkValidNetwork(network : Network){
-
-  // }
-  // checkPatternIsolate(network: Network) { ### no patterns will be isolated since domain nodes connect to every pattern
-  //   var connectorNodeQueue: string[] = [];
-  //   var readList: string[] = [];
-
-  //   connectorNodeQueue.push(network.patterns[0].getConnectorNode().id);
-
-  //   while (connectorNodeQueue.length != readList.length) {
-  //     var currentNode: string;
-  //     var i;
-  //     // Find a pattern that havent read
-  //     for (i = 0; i < connectorNodeQueue.length; i++) {
-  //       if (!readList.includes(connectorNodeQueue[i])) {
-  //         currentNode = connectorNodeQueue[i];
-  //         readList.push(currentNode);
-  //         break;
-  //       }
-  //     }
-
-  //     network.patternConnections.forEach((connection: Connector) => {
-  //       if (connection.id === currentNode && !connectorNodeQueue.includes(connection.targetId)) {
-  //         connectorNodeQueue.push(connection.targetId);
-  //       }
-
-  //       if (connection.targetId === currentNode && !connectorNodeQueue.includes(connection.id)) {
-  //         connectorNodeQueue.push(connection.id);
-  //       }
-  //     });
-  //   }
-
-  //   if (connectorNodeQueue.length === network.patterns.length) {
-  //     console.log("valid " + connectorNodeQueue);
-  //     return true;
-  //   }
-  //   else {
-  //     console.log("invalid " + connectorNodeQueue);
-  //     return false;
-  //   }
-  // }
-
-  // resetGraph(patterns: Pattern[], connections: Connector[]) {
   resetGraph(domains: Domain[], domainConnections: Connector[]) {
 
     let elements: any = [];
@@ -913,13 +878,6 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     // this.oldNetwork = this.network;
     this.network = new Network(domains, domainConnections);
-    // if(!this.network.isValid()) {//if invalid network, use old network
-    //   alert("Invalid network modification");
-    //   this.network = this.oldNetwork;
-    // }
-    // if(!this.network) {
-    //   return;
-    // }
 
     this.network.domains.forEach((domain: Domain) => {
       elements.push({
@@ -934,6 +892,9 @@ export class MainComponent implements OnInit, AfterViewInit {
         }
       });
       isDomainNodeSelectors += "#" + domain.domainNode.id + ",";
+      if(!domain.domainNode.isActive) {
+        inactiveSelectors += "#" + domain.domainNode.id + ",";
+      }
       domain.patterns.forEach((pattern: Pattern) => {
         elements.push({
           data: {
@@ -1026,17 +987,18 @@ export class MainComponent implements OnInit, AfterViewInit {
           }
         },
         {
-          selector: '.inactiveSelectors',
-          style: {
-            'background-color': '#FF3030'
-          }
-        }, {
           selector: isDomainNodeSelectors,
           style: {
             'background-color': '#FF7F00',
             'shape': 'round-rectangle',
             'width': '33px',
             'height': '33px'
+          }
+        },
+        {
+          selector: '.inactiveSelectors',
+          style: {
+            'background-color': '#FF3030'
           }
         },
         {
@@ -1054,13 +1016,14 @@ export class MainComponent implements OnInit, AfterViewInit {
           css: {
             'background-color': '#63B8FF'
           }
-        },
-        {
-          selector: ':selected',
-          css: {
-            'background-color': 'inherit'
-          }
         }
+        // ,
+        // {
+        //   selector: ':selected',
+        //   css: {
+        //     'background-color': 'inherit'
+        //   }
+        // }
 
       ],
 
