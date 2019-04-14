@@ -219,7 +219,7 @@
             <tr scope="row" *ngFor="let message of currentNodeMessages">
               <td>{{message.sender}}</td>
               <td align="right">
-                {{message.content}}
+                {{message._body}}
               </td>
               <td>
                 <button type="button">Delete</button>

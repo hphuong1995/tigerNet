@@ -77,4 +77,8 @@ export class DataService {
   sendMessage( reqObj : any){
     return this.http.post('api/v1/messages', JSON.stringify(reqObj));
   }
+
+  viewNode( reqStr :string){
+    return this.http.get('api/v1/nodes/' + reqStr);
+  }
 }

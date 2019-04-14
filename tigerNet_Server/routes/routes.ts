@@ -7,6 +7,7 @@ import { NetConnectOpts } from "net";
 import { isContext } from "vm";
 import { ClientQuestion } from "../data/clientQuestion";
 import { Domain } from "../data/domain";
+import { Message } from "../data/message";
 import { Network } from "../data/network";
 import { Node } from "../data/node";
 import { Question } from "../data/question";
@@ -136,4 +137,16 @@ router.post("/messages", (req: Request, res: Response) => {
     }
   });
 });
+
+router.get("/nodes/:nid", (req: Request, res: Response) => {
+  console.log(req.params.nid);
+  db.getMessage(req.params.nid, (err: Err, messages: Message[]) => {
+    if (err) {
+      res.status(400).send(err.message);
+    } else {
+      res.status(200).send(messages);
+    }
+  });
+});
+
 export { router as routes };

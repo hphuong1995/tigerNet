@@ -10,6 +10,8 @@ import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
 import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
 
 declare var cytoscape: any;
 
@@ -25,21 +27,26 @@ export class MainComponent implements OnInit, AfterViewInit {
   private network: Network;
   private oldNetwork: Network;
   private timerId: number;
-  // private listTest:any=['N01','N02'];
+
+  private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 20;
+  private magicChance = 1000;
 
   private currentNode : string;
 
-  private currentNodeMessages: any[] = [{sender : "N11", content: "Hello I AM Team TIGER I NEED TO MAKE THIS LONG"},
-                              {sender: "N22", content:"Test"}];
+  private currentNodeMessages: any[];
 
 
-  constructor(private data: DataService, private user: UserService) { }
+  constructor(private data: DataService, private user: UserService, private formBuilder: FormBuilder) { }
 
 
   ngOnInit() {
+
+    this.sendMess = this.formBuilder.group({
+        message: ['']
+    });
+
     this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
       if (!res.ok) {
         alert("Error loading the network");
@@ -59,6 +66,34 @@ export class MainComponent implements OnInit, AfterViewInit {
     console.log("Component Destroyed");
   }
 
+  get f() { return this.sendMess.controls; }
+
+  sendMessage(){
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select 2 node for this operation.");
+      return;
+    }
+
+    if (this.data.selectedNodes.length !== 2 ) {
+      this.resetSelectedElement();
+      alert("Please only select exactly 2 node for this operation.");
+      return;
+    }
+
+    let reqObj :any = {sender : this.data.selectedNodes[0],
+                        receiver: this.data.selectedNodes[1],
+                        message : this.f.message.value};
+
+    this.data.sendMessage(reqObj).subscribe( data =>{
+      console.log(data);
+      this.f.message.setValue("");
+      alert("message sent successfully.");
+      this.resetSelectedElement();
+    });
+  }
+
+
   viewNode(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
@@ -66,13 +101,23 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.currentNode = this.data.selectedNodes[0];
+    if (this.data.selectedNodes.length !== 1 ){
+      this.resetSelectedElement();
+      alert("Please only select a node for this operation.");
+      return;
+    }
+
+    this.data.viewNode(this.data.selectedNodes[0]).subscribe( data =>{
+      let retData : any = data;
+      this.currentNodeMessages = retData;
+      this.resetSelectedElement();
+
+    });
   }
 
   autoDeactivate(_this : any){
 
     let randomNumber = Math.floor(Math.random() * this.magicChance);
-    console.log(randomNumber);
     if(randomNumber === this.magicNumber){
       let randomDomain = Math.floor(Math.random() * this.network.domains.length);
       let randomPattern = Math.floor(Math.random() * this.network.domains[randomDomain].patterns.length);
@@ -534,7 +579,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please 1 pattern to delete");
       return;
     }
-    
+
     this.oldNetwork = this.network;
     this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
     let patternId: string = this.data.selectedPatterns[0];
@@ -674,7 +719,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         pid: reqObject.pattern
       };
 
-      
+
       this.oldNetwork = this.network;
       this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
       let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
