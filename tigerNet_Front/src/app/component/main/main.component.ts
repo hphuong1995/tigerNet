@@ -529,6 +529,23 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please 1 pattern to delete");
       return;
     }
+    
+    this.oldNetwork = this.network;
+    this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+    let patternId: string = this.data.selectedPatterns[0];
+
+    let affectedDomain: Domain = this.network.getDomainByPatternId(patternId);
+    affectedDomain.patterns = affectedDomain.patterns.filter( p => p.id !== patternId );
+
+    if(!this.network.isValid()) {
+      this.network = this.oldNetwork;
+      this.resetSelectedElement();
+      console.log("not valid");
+      alert("Invalid network modification");
+      return;
+    }
+    //get pattern id
+    //#TODO: finish this
 
     this.data.deletePattern(this.data.selectedPatterns[0]).subscribe(data => {
       this.resetSelectedElement();
@@ -629,7 +646,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     var selectedNodeId = this.data.selectedNodes[0];
 
-    var reqObject = {
+    var reqObject: { pattern: string, node: string, conNode: string, currentNodeNum: number } = {
       pattern: this.network.getPatternByChildNodeId(selectedNodeId).id,
       node: selectedNodeId,
       conNode: this.network.getPatternByChildNodeId(selectedNodeId).getConnectorNode().id,
@@ -653,6 +670,23 @@ export class MainComponent implements OnInit, AfterViewInit {
         node: reqObject.node,
         pid: reqObject.pattern
       };
+
+      
+      this.oldNetwork = this.network;
+      this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+      let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
+      //remove the pattern
+      let affectedDomain = this.network.getDomainByPatternId(reqObject.pattern);
+      affectedDomain.patterns = affectedDomain.patterns.filter( p => p.id !== reqObject.pattern);
+
+
+      if (!this.network.isValid()) {
+        this.network = this.oldNetwork;
+        this.resetSelectedElement();
+        console.log("not valid");
+        alert("Domains must not be empty");
+        return;
+      }
 
       this.data.deleteNode(sendObj).subscribe(data => {
         console.log(data);

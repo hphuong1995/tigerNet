@@ -1,16 +1,16 @@
 import { Connector } from './connector';
 import { Pattern } from './pattern';
 import { Node } from './node';
-import { PatternsComponent } from '../component/patterns/patterns.component';
+
 export class Domain {
     public id: string;
     public patternConnections: Connector[];
-    public patterns: Pattern[];
+    public patterns: Pattern[] = [];
     public domainNode: Node;
     constructor(id: string, patterns: Pattern[], domainNode: Node, patternConnections: Connector[]) {
         this.id = id;
         this.domainNode = new Node(domainNode.isActive, domainNode.isConnector, domainNode.id);
-        this.patterns = patterns.map(p => new Pattern(p.id, p.nodes, p.connections));
+        this.patterns = patterns.map(p => new Pattern(p.id, p.nodes, p.connections)) || [];
         this.patternConnections = patternConnections.map(pc => new Connector(pc.id, pc.targetId));
     }
 
@@ -28,6 +28,11 @@ export class Domain {
             return false;
         }
         if (!this.domainNode.isDomainNode) {
+            return false;
+        }
+
+        //domains must contain at least one pattern
+        if(!this.patterns || this.patterns.length < 1) {
             return false;
         }
 
