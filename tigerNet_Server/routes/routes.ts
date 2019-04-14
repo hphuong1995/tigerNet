@@ -126,4 +126,14 @@ router.put("/nodes/:nid", (req: Request, res: Response) => {
   });
 });
 
+router.post("/messages", (req: Request, res: Response) => {
+  console.log(req.body);
+  db.storeNewMessage(req.body.sender, req.body.receiver, req.body.message, (message, err: Err) => {
+    if (err) {
+      res.status(400).send(err.message);
+    } else {
+      res.status(200).send(message);
+    }
+  });
+});
 export { router as routes };
