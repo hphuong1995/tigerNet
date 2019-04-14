@@ -31,7 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 1000;
+  private magicChance = 20;
 
   private currentNode : string;
 
@@ -64,6 +64,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   ngOnDestroy() {
     console.log("Component Destroyed");
+    window.clearInterval(this.timerId);
   }
 
   get f() { return this.sendMess.controls; }
@@ -116,6 +117,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   autoDeactivate(_this : any){
+    console.log("autoDeactivate");
 
     let randomNumber = Math.floor(Math.random() * this.magicChance);
     if(randomNumber === this.magicNumber){
@@ -946,13 +948,12 @@ export class MainComponent implements OnInit, AfterViewInit {
               parent: pattern.id
             }
           });
-          if (node.isActive) {
-            if (node.isConnector) {
-              isConnectorSelectors += "#" + node.id + ",";
-            } else {
-              nonConnectorSelectors += "#" + node.id + ",";
-            }
+          if (node.isConnector) {
+            isConnectorSelectors += "#" + node.id + ",";
           } else {
+            nonConnectorSelectors += "#" + node.id + ",";
+          }
+          if (!node.isActive) {
             inactiveSelectors += "#" + node.id + ",";
           }
         });
