@@ -183,7 +183,7 @@
         <mat-action-row >
             <mat-form-field id="textArea" appearance = "outline">
                 <mat-label>Message</mat-label>
-                <textarea style="height:100px" matInput placeholder="Your Message"></textarea>
+                <textarea [formControl]='curMess' style="height:100px" matInput placeholder="Your Message"></textarea>
             </mat-form-field>
             <p><button style="margin-left: 10px" id="sendMessages" mat-raised-button (click)="sendMessage()">Send Message</button></p>
         </mat-action-row>

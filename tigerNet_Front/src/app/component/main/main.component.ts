@@ -10,6 +10,7 @@ import { UserService } from 'src/app/user.service';
 import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
 import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 declare var cytoscape: any;
 
@@ -30,6 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private magicChance = 1000000;
 
   private currentNode : string;
+  private curMess : string;
 
   private currentNodeMessages: any[] = [{sender : "N11", content: "Hello I AM Team TIGER I NEED TO MAKE THIS LONG"},
                               {sender: "N22", content:"Test"}];
@@ -67,14 +69,14 @@ export class MainComponent implements OnInit, AfterViewInit {
   autoDeactivate(_this : any){
 
     let randomNumber = Math.floor(Math.random() * this.magicChance);
-    console.log(randomNumber);
+    //console.log(randomNumber);
     if(randomNumber === this.magicNumber){
       let randomDomain = Math.floor(Math.random() * this.network.domains.length);
       let randomPattern = Math.floor(Math.random() * this.network.domains[randomDomain].patterns.length);
       let randomNode = Math.floor(Math.random() * this.network.domains[randomDomain].patterns[randomPattern].nodes.length);
       let selectedNode = this.network.domains[randomDomain].patterns[randomPattern].nodes[randomNode].id;
 
-      console.log(selectedNode);
+      //console.log(selectedNode);
       this.data.activeNode(selectedNode, false).subscribe(data =>{
         this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
         this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
@@ -122,6 +124,25 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.selectedNodes = [];
     this.data.selectedPatterns = [];
     this.data.selectedDomains = [];
+  }
+
+  sendMessage(){
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+      this.resetSelectedElement();
+      alert("Please only select 2 node for this operation.");
+      return;
+    }
+
+    if (this.data.selectedNodes.length !== 2 ) {
+      this.resetSelectedElement();
+      alert("Please only select exactly 2 node for this operation.");
+      return;
+    }
+
+    let sender = this.data.selectedNodes[0];
+    let receiver = this.data.selectedNodes[1];
+    let message = this.curMess;
+    console.log(message);
   }
 
   addNode = function () {
