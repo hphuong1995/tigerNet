@@ -25,7 +25,9 @@ export class MainComponent implements OnInit, AfterViewInit {
   private i: any;
   private network: Network;
   private oldNetwork: Network;
-  // private listTest:any=['N01','N02'];
+
+  private sendMess: FormGroup;
+
   private magicNumber = 1;
 
   private magicChance = 1000000;
@@ -37,10 +39,14 @@ export class MainComponent implements OnInit, AfterViewInit {
                               {sender: "N22", content:"Test"}];
 
 
-  constructor(private data: DataService, private user: UserService) { }
+  constructor(private data: DataService, private user: UserService, private formBuilder: FormBuilder) { }
 
 
   ngOnInit() {
+    this.sendMess = this.formBuilder.group({
+        message: ['']
+    });
+
     this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
       if (!res.ok) {
         alert("Error loading the network");
@@ -126,6 +132,8 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.selectedDomains = [];
   }
 
+  get f() { return this.sendMess.controls; }
+
   sendMessage(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
@@ -139,10 +147,16 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    let sender = this.data.selectedNodes[0];
-    let receiver = this.data.selectedNodes[1];
-    let message = this.curMess;
-    console.log(message);
+    let reqObj :any = {sender : this.data.selectedNodes[0],
+                        receiver: this.data.selectedNodes[1],
+                        message : this.f.message.value};
+
+    this.data.sendMessage(reqObj).subscribe( data =>{
+      console.log(data);
+      this.f.message.setValue("");
+      alert("message sent successfully.");
+      this.resetSelectedElement();
+    });
   }
 
   addNode = function () {
@@ -550,7 +564,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please 1 pattern to delete");
       return;
     }
-    
+
     this.oldNetwork = this.network;
     this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
     let patternId: string = this.data.selectedPatterns[0];
@@ -690,7 +704,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         pid: reqObject.pattern
       };
 
-      
+
       this.oldNetwork = this.network;
       this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
       let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
