@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import coseBilkent from 'cytoscape-cose-bilkent';
 import { DataService } from 'src/app/data.service';
 import { HttpResponse } from '@angular/common/http';
@@ -24,10 +24,11 @@ export class MainComponent implements OnInit, AfterViewInit {
   private i: any;
   private network: Network;
   private oldNetwork: Network;
+  private timerId: number;
   // private listTest:any=['N01','N02'];
   private magicNumber = 1;
 
-  private magicChance = 1000000;
+  private magicChance = 20;
 
   private currentNode : string;
 
@@ -51,7 +52,11 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     var _this = this;
-    setInterval(this.autoDeactivate.bind(this), 1000);
+    this.timerId = window.setInterval(this.autoDeactivate.bind(this), 1000);
+  }
+
+  ngOnDestroy() {
+    console.log("Component Destroyed");
   }
 
   viewNode(){
