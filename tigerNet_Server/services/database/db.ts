@@ -16,6 +16,7 @@ import { Session } from "../../data/session";
 import { User } from "../../data/user";
 // import { conn } from "./connect";
 import pool from "./connect";
+import { CONNREFUSED } from "dns";
 
 pool.getConnection((err: MysqlError, connection: PoolConnection) => {
     if (err) {
@@ -873,6 +874,20 @@ class DB {
             db.getPatterns(patternIds, callback);
         });
         return;
+    }
+
+    public getMessage(nodeId: string, callback: ( err: Err, messages: Message[]) => void): void {
+        //id   | body | fk_receiver_id | fk_sender_id |
+        const query: string = "SELECT * FROM messages WHERE fk_receiver_id = '" + nodeId + "'";
+        conn.query(query, (err: MysqlError,
+            results: Array<{ id: string, body: string, fk_receiver_id: string, fk_sender_id: string}>) => {
+            if(err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            let msgs: Message[] = results.map( r => new Message(r.fk_sender_id, r.fk_receiver_id, r.body, r.id));
+            callback(undefined, msgs);
+        });
     }
 
     /*
