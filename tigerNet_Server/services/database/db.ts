@@ -1382,6 +1382,7 @@ class DB {
         conn.query(query, (err: MysqlError) => {
             if (err) {
                 callback(new Err(err.message, -10));
+                return;
             }
             callback(undefined);
         });
