@@ -1,6 +1,7 @@
 import { Connector } from './connector';
 import { Pattern } from './pattern';
 import { Domain } from './domain';
+import { Node } from './node';
 import { PatternsComponent } from '../component/patterns/patterns.component';
 export class Network {
     public domainConnections: Connector[];
@@ -10,8 +11,6 @@ export class Network {
         this.domains = domains.map(d => new Domain(d.id, d.patterns, d.domainNode, d.patternConnections));
         this.domainConnections = domainConnections.map(dc => new Connector(dc.id, dc.targetId));
     }
-
-
 
     public getPatternByChildNodeId(id: string): Pattern {
         let p: Pattern;
@@ -27,6 +26,9 @@ export class Network {
     public getDomainByChildNodeId(id: string): Domain {
         let p: Pattern;
         for (let i = 0; i < this.domains.length; i++) {
+            if(this.domains[i].domainNode.id === id) {
+                return this.domains[i];
+            }
             p = this.domains[i].getPatternByChildNodeId(id);
             if (p) {
                 return this.domains[i];
@@ -39,6 +41,21 @@ export class Network {
         for (let domain of this.domains) {
             if(domain.patterns.find( p => p.id === id)) {
                 return domain;
+            }
+        }
+        return undefined;
+    }
+
+    public getNodeById(id: string): Node {
+        for( let domain of this.domains) {
+            if(domain.domainNode.id === id) {
+                return domain.domainNode;
+            }
+            for( let pattern of domain.patterns ) {
+                let node: Node = pattern.getNodeById(id);
+                if(node) {
+                    return node;
+                }
             }
         }
         return undefined;
@@ -140,5 +157,15 @@ export class Network {
             d.getAllConnections().forEach(dcn => connectors.push(dcn));
         });
         return connectors;
+    }
+
+    public getPath(startId: string, destinationId: string) : number[] {
+        let path: number[] = [];
+        //if in same pattern go directly to destination
+        
+        //if not in same pattern find shortest path to connector node
+        //if in different domain, go directly to domain node
+
+        return path;
     }
 }
