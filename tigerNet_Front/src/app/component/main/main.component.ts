@@ -610,8 +610,11 @@ export class MainComponent implements OnInit, AfterViewInit {
     let patternId: string = this.data.selectedPatterns[0];
 
     let affectedDomain: Domain = this.network.getDomainByPatternId(patternId);
+    let connectorNode = affectedDomain.getPatternById(patternId).getConnectorNode().id;
     affectedDomain.patterns = affectedDomain.patterns.filter( p => p.id !== patternId );
+    //console.log(patternId);
 
+    affectedDomain.patternConnections = affectedDomain.patternConnections.filter( con => con.id !== connectorNode && con.targetId !== connectorNode);
     if(!this.network.isValid()) {
       this.network = this.oldNetwork;
       this.resetSelectedElement();
@@ -751,6 +754,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       //remove the pattern
       let affectedDomain = this.network.getDomainByPatternId(reqObject.pattern);
       affectedDomain.patterns = affectedDomain.patterns.filter( p => p.id !== reqObject.pattern);
+      affectedDomain.patternConnections = affectedDomain.patternConnections.filter( con => con.id !== reqObject.node && con.targetId !== reqObject.node);
 
 
       if (!this.network.isValid()) {
