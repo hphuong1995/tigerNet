@@ -89,13 +89,17 @@ export class Domain {
         return p.getConnectorNode();
     }
 
+    public getPathToDomainNode(start: string): Node[] {
+        return this.getPath(start, this.domainNode.id);
+    }
+
     public getPath(start: string, end: string): Node[] {
         //start and end in same pattern, return pattern path
         //start and end both connector nodes, return connector node paths (no need for pattern.path)
         //start pattern's path to connector node + path to end's connector node + end pattern's path to end node
         let path: Node[] = [];
-        let startPattern = this.getPatternByChildNodeId(start);
-        let endPattern = this.getPatternByChildNodeId(end);
+        let startPattern: Pattern = this.getPatternByChildNodeId(start);
+        let endPattern: Pattern = this.getPatternByChildNodeId(end);
         if(startPattern && endPattern) {
             if(startPattern.id === endPattern.id) {
                 return startPattern.getPath(start, end);
@@ -119,29 +123,49 @@ export class Domain {
 
         //     }
         // }
+        let section: Node[] = [];
         
         if(startPattern) {
             path = startPattern.getPathToConnector(start);
             // path.pop();
+            
             if(endPattern) {
                 // path = path.concat(this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode()));
                 // path = path.concat(endPattern.getPath(endPattern.getConnectorNode().id, end))
 
-                path = this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode()).concat(path);
+                // path = this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode()).concat(path);
+                section = this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode());
+                section.pop();
+                path = section.concat(path);
+
                 // path.pop();
-                path = endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
+                
+                //path = endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
+                section = endPattern.getPath(endPattern.getConnectorNode().id, end);
+                section.pop();
+                path = section.concat(path);
                 // path.pop();
+                
             } else {
                 // path = path.concat(this.connToConnPath(startPattern.getConnectorNode(), this.domainNode));
-                path = this.connToConnPath(startPattern.getConnectorNode(), this.domainNode).concat(path);
+                // path = this.connToConnPath(startPattern.getConnectorNode(), this.domainNode).concat(path);
+                section = this.connToConnPath(startPattern.getConnectorNode(), this.domainNode);
+                section.pop();
+                path = section.concat(path);
             }
         } else {
             path = [this.domainNode];
             // path.pop();
             if(endPattern) {
-                path = this.connToConnPath(this.domainNode, endPattern.getConnectorNode()).concat(path);
+                // path = this.connToConnPath(this.domainNode, endPattern.getConnectorNode()).concat(path);
+                section = this.connToConnPath(this.domainNode, endPattern.getConnectorNode());
+                section.pop();
+                path = section.concat(path);
                 // path.pop();
-                endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
+                // endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
+                section = endPattern.getPath(endPattern.getConnectorNode().id, end);
+                section.pop();
+                path = section.concat(path);
                 // path.pop();
             } else {
 

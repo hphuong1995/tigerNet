@@ -76,6 +76,10 @@ export class Network {
         return this.domains.find(d => d.id === id);
     }
 
+    public getDomainNodeById(id: string): Node {
+        return this.domains.find(d => d.domainNode.id === id).domainNode;
+    }
+
     public isValid(): boolean {
         if (this.domains.find(d => !d.isValid())) {
             return false;
@@ -159,13 +163,64 @@ export class Network {
         return connectors;
     }
 
-    public getPath(startId: string, destinationId: string) : number[] {
-        let path: number[] = [];
-        //if in same pattern go directly to destination
+    public getPath(start: string, end: string) : Node[] {
+        //start and end in same domain, return domain path
         
-        //if not in same pattern find shortest path to connector node
-        //if in different domain, go directly to domain node
+        let path: Node[] = [];
+        let startDomain: Domain = this.getDomainByChildNodeId(start);
+        let endDomain: Domain = this.getDomainByChildNodeId(end);
+        if(!startDomain || !endDomain) {
+            return undefined;//invalid node
+        }
+        if(startDomain.id === endDomain.id) {
+            return startDomain.getPath(start, end);
+        }
+        let section: Node[] = [];
+        path = startDomain.getPathToDomainNode(start);
+        
+        section = this.domToDomPath(startDomain.domainNode, endDomain.domainNode);
+        section.pop();
+        path = section.concat(path);
+
+        section = endDomain.getPath(endDomain.domainNode.id, end);
+        section.pop();
+        path = section.concat(path);
 
         return path;
+    }
+
+    private domToDomPath(start: Node, end: Node): Node[] {
+        return this._domToDomPath(start, end, this.domainConnections.slice(0));
+    }
+
+    private _domToDomPath(current: Node, end: Node, untraversed: Connector[]): Node[] {
+        let shortestPath: Node[] = [];
+        let paths: Node[][] = [];
+        if(current.id === end.id) {
+            return [end];
+        }
+        if(!untraversed || untraversed.length === 0) {
+            return undefined;
+        }
+        let traversing: Connector[] = untraversed.transfer( x => current.id === x.id || current.id === x.targetId );
+        for(const c of traversing) {
+            let nextNodeId = current.id === c.id? c.targetId : c.id;
+            let p: Node[] = this._domToDomPath(this.getDomainNodeById(nextNodeId), end, untraversed.slice(0));
+            if(p !== undefined) {
+                p.push(current);
+                paths.push(p);
+            }
+        }
+        if(paths.length === 0) {
+            return undefined;
+        }
+        let shortestPathLen = 10000;
+        for(const p of paths) {
+            if(p.length < shortestPathLen) {
+                shortestPathLen = p.length;
+                shortestPath = p;
+            }
+        }
+        return shortestPath;
     }
 }
