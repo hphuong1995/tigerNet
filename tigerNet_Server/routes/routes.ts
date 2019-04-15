@@ -151,7 +151,7 @@ router.get("/nodes/:nid", (req: Request, res: Response) => {
 
 router.get("/messages", (req: Request, res: Response) => {
   console.log(req.query.mid);
-  
+
 });
 
 export { router as routes };

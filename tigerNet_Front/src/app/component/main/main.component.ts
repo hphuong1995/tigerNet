@@ -138,7 +138,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       } else {
         selectedNode = this.network.domains[randomDomain].domainNode.id;
       }
-      
+
 
       console.log(selectedNode);
       this.data.activeNode(selectedNode, false).subscribe(data =>{
