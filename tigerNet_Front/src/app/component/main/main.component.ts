@@ -31,7 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 2;
+  private magicChance = 20;
 
   private currentNode : string;
 
@@ -69,10 +69,10 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   get f() { return this.sendMess.controls; }
 
-  deleteMess( messageId :string){
-    console.log(messageId);
-    this.data.deleteMess(messageId).subscribe( data =>{
-      console.log(data);
+  deleteMess( messageId :string, nid : string){
+    this.data.deleteMess(messageId, nid).subscribe(data =>{
+      let retData : any = data;
+      this.currentNodeMessages = retData;
     });
   }
 
@@ -88,6 +88,14 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please only select exactly 2 node for this operation.");
       return;
     }
+
+    if(this.data.selectedNodes[0].charAt(0) === 'D' || this.data.selectedNodes[1].charAt(0) === 'D'){
+      this.resetSelectedElement();
+      alert("Domain node can not participate in this operation");
+      return;
+    }
+
+    console.log(this.data.selectedNodes);
 
     let reqObj :any = {sender : this.data.selectedNodes[0],
                         receiver: this.data.selectedNodes[1],
@@ -119,7 +127,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       let retData : any = data;
       this.currentNodeMessages = retData;
       this.resetSelectedElement();
-
+      console.log(data);
     });
   }
 

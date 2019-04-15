@@ -149,9 +149,15 @@ router.get("/nodes/:nid", (req: Request, res: Response) => {
   });
 });
 
-router.get("/messages", (req: Request, res: Response) => {
-  console.log(req.query.mid);
-
+router.delete("/messages", (req: Request, res: Response) => {
+    console.log(req.query);
+    db.deleteMessageGetMessages(req.query.mid, req.query.nid, (err: Err, messages: Message[]) => {
+      if (err) {
+        res.status(400).send(err.message);
+      } else {
+        res.status(200).send(messages);
+      }
+    });
 });
 
 export { router as routes };

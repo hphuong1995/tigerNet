@@ -222,7 +222,7 @@
                 {{message._body}}
               </td>
               <td>
-                <button mat-icon-button type="button" (click)='deleteMess(message.id)' color="primary">
+                <button mat-icon-button type="button" (click)='deleteMess(message.id,message.destination)' color="primary">
                     <mat-icon>delete_forever</mat-icon>
                 </button>
               </td>
