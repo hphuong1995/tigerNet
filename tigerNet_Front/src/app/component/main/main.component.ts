@@ -31,7 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 2;
+  private magicChance = 20;
 
   private currentNode : string;
 
@@ -88,6 +88,14 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please only select exactly 2 node for this operation.");
       return;
     }
+
+    if(this.data.selectedNodes[0].charAt(0) === 'D' || this.data.selectedNodes[1].charAt(0) === 'D'){
+      this.resetSelectedElement();
+      alert("Domain node can not participate in this operation");
+      return;
+    }
+
+    console.log(this.data.selectedNodes);
 
     let reqObj :any = {sender : this.data.selectedNodes[0],
                         receiver: this.data.selectedNodes[1],
