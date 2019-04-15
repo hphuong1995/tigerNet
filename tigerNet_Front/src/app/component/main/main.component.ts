@@ -69,6 +69,13 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   get f() { return this.sendMess.controls; }
 
+  deleteMess( messageId :string){
+    console.log(messageId);
+    this.data.deleteMess(messageId).subscribe( data =>{
+      console.log(data);
+    });
+  }
+
   sendMessage(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();

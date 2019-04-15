@@ -201,7 +201,7 @@
   <div class="modal-dialog">
 
     <!-- Modal content-->
-    <div class="modal-content">
+    <div class="modal-content" id="detailBox">
       <div class="modal-header">
         <h4 class="modal-title"> Node {{currentNode}}</h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -212,24 +212,28 @@
             <tr>
               <th scope="col">Sender</th>
               <th scope="col">Content</th>
-              <th scope="col"></th>
+              <th scope="col">Operation</th>
             </tr>
           </thead>
           <tbody *ngIf="currentNodeMessages">
             <tr scope="row" *ngFor="let message of currentNodeMessages">
               <td>{{message.sender}}</td>
-              <td align="right">
+              <td style="text-align:left">
                 {{message._body}}
               </td>
               <td>
-                <button type="button" >Delete</button>
+                <button mat-icon-button type="button" (click)='deleteMess(message.id)' color="primary">
+                    <mat-icon>delete_forever</mat-icon>
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
         </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button"class="btn btn-default"  color="primary"mat-raised-button data-dismiss="modal">
+        Go Back
+        </button>
       </div>
     </div>
 

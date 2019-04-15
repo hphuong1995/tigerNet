@@ -81,4 +81,8 @@ export class DataService {
   viewNode( reqStr :string){
     return this.http.get('api/v1/nodes/' + reqStr);
   }
+
+  deleteMess( messId : string){
+    return this.http.delete('api/v1/messages?mid=' + messId);
+  }
 }
