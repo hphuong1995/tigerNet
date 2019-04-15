@@ -98,7 +98,7 @@ export class Domain {
     //     return this.  filter( cn => {
     //         return this.getNodeById(cn.id).isActive && this.getNodeById(cn.targetId).isActive;
     //     });
-    }
+    //}
 
     public getPath(start: string, end: string): Node[] {
         //start and end in same pattern, return pattern path
