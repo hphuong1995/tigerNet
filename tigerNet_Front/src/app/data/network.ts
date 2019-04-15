@@ -161,6 +161,10 @@ export class Network {
 
     public getPath(startId: string, destinationId: string) : number[] {
         let path: number[] = [];
+        //if in same pattern go directly to destination
+        
+        //if not in same pattern find shortest path to connector node
+        //if in different domain, go directly to domain node
 
         return path;
     }
