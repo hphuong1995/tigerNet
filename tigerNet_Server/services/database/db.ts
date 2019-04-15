@@ -876,7 +876,7 @@ class DB {
         return;
     }
 
-    public getMessage(nodeId: string, callback: ( err: Err, messages: Message[]) => void): void {
+    public getMessages(nodeId: string, callback: ( err: Err, messages: Message[]) => void): void {
         // id   | body | fk_receiver_id | fk_sender_id |
         const query: string = "SELECT * FROM messages WHERE fk_receiver_id = '" + nodeId + "'";
         conn.query(query, (err: MysqlError,
@@ -1347,6 +1347,41 @@ class DB {
             if (err) {
                 callback(new Err(err.message, -10));
                 return;
+            }
+            callback(undefined);
+        });
+    }
+
+    /*
+     * Deletes the specified message
+     * Returns the list of messages
+     *
+     *
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deleteMessageGetMessages(mid: string, nodeId: string, callback: (err: Err, messages: Message[]) => void): void {
+        const query: string = "DELETE FROM messages WHERE id = '" + mid + "' AND fk_receiver_id = '" + nodeId +  "'";
+        conn.query(query, (err: MysqlError) => {
+            if (err) {
+                callback(new Err(err.message, -10), undefined);
+                return;
+            }
+            db.getMessages(nodeId, callback);
+        });
+    }
+
+    /*
+     * Deletes the specified message
+     *
+     * Error codes:
+     *      -10: MySQL error
+     */
+    public deleteMessage(mid: string, callback: (err: Err) => void): void {
+        const query: string = "DELETE FROM messages WHERE id = '" + mid + "'";
+        conn.query(query, (err: MysqlError) => {
+            if (err) {
+                callback(new Err(err.message, -10));
             }
             callback(undefined);
         });

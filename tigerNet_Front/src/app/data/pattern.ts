@@ -184,7 +184,16 @@ export class Pattern {
                 return false;
             }
         }
-
         return true;
+    }
+
+    private getPath(start: Node, end: Node): string[] {
+        let path: string[] = [];
+
+        return path;
+    }
+
+    private getPathToConnector(start: Node) : string[] {
+        
     }
 }

@@ -140,7 +140,7 @@ router.post("/messages", (req: Request, res: Response) => {
 
 router.get("/nodes/:nid", (req: Request, res: Response) => {
   console.log(req.params.nid);
-  db.getMessage(req.params.nid, (err: Err, messages: Message[]) => {
+  db.getMessages(req.params.nid, (err: Err, messages: Message[]) => {
     if (err) {
       res.status(400).send(err.message);
     } else {
