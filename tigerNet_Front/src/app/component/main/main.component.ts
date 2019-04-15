@@ -103,6 +103,10 @@ export class MainComponent implements OnInit, AfterViewInit {
     let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
       return '#' + n.id;
     }).reverse();
+    if(route.length === 0) {
+      alert('Message cannot be sent');
+      return;
+    }
     for(let node of route){
       this.cy.$(node).addClass('path');
       //this.jAni.play();
@@ -1137,9 +1141,9 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     let inactiveNodes = inactiveSelectors.split(',');
     inactiveNodes.forEach( (nid : string) =>{
-      console.log(nid);
-      if(nid.charAt(1) === 'N'){
-        console.log("hit")
+      // console.log(nid);
+      if(nid.charAt(1) === 'N' || nid.charAt(1) === 'D'){
+        // console.log("hit")
         this.cy.$( nid).addClass('inactiveSelectors');
       }
     });
