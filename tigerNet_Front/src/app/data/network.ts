@@ -163,9 +163,18 @@ export class Network {
         return connectors;
     }
 
-    public getPath(start: string, end: string) : Node[] {
-        //start and end in same domain, return domain path
-        
+    /* 
+     * Returns a list of nodes representing the shortest path between and including the start and end nodes
+     * The list is in reverse order like this:
+     *     [end, node, node, node, start]
+     * Calling list.pop() repeatedly dumps out the nodes in order.
+     * 
+     * To get an in-order version of the array for iteration call the function like this:
+     *     path: Node[] = network.getPath(...).reverse();
+     * To get an in-order list of node ids of the path:
+     *     path: string[] = network.getPath(...).map( n => n.id ).reverse();
+     */
+    public getPath(start: string, end: string) : Node[] {        
         let path: Node[] = [];
         let startDomain: Domain = this.getDomainByChildNodeId(start);
         let endDomain: Domain = this.getDomainByChildNodeId(end);
