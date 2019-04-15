@@ -163,6 +163,14 @@ export class Network {
         return connectors;
     }
 
+    // Returns connectors for which both ends connected to active nodes
+    private getActiveConnections(): Connector[] {
+        return this.domainConnections.filter( cn => {
+            // return this.getNodeById(cn.id).isActive && this.getNodeById(cn.targetId).isActive;
+            return this.getDomainNodeById(cn.id).isActive && this.getDomainNodeById(cn.targetId).isActive
+        });
+    }
+
     /* 
      * Returns a list of nodes representing the shortest path between and including the start and end nodes
      * The list is in reverse order like this:
@@ -179,34 +187,40 @@ export class Network {
         let startDomain: Domain = this.getDomainByChildNodeId(start);
         let endDomain: Domain = this.getDomainByChildNodeId(end);
         if(!startDomain || !endDomain) {
-            return undefined;//invalid node
+            return [];//invalid node
         }
         if(startDomain.id === endDomain.id) {
-            return startDomain.getPath(start, end);
+            return startDomain.getPath(start, end) || [];
         }
         let section: Node[] = [];
         path = startDomain.getPathToDomainNode(start);
         
         section = this.domToDomPath(startDomain.domainNode, endDomain.domainNode);
+        if(!section) return [];
         section.pop();
         path = section.concat(path);
 
         section = endDomain.getPath(endDomain.domainNode.id, end);
+        if(!section) return [];
         section.pop();
         path = section.concat(path);
 
-        return path;
+        return path || [];
     }
 
     private domToDomPath(start: Node, end: Node): Node[] {
-        return this._domToDomPath(start, end, this.domainConnections.slice(0));
+        return this._domToDomPath(start, end, this.getActiveConnections());
     }
 
     private _domToDomPath(current: Node, end: Node, untraversed: Connector[]): Node[] {
         let shortestPath: Node[] = [];
         let paths: Node[][] = [];
         if(current.id === end.id) {
-            return [end];
+            if(end.isActive) {
+                return [end];
+            } else {
+                return undefined;
+            }
         }
         if(!untraversed || untraversed.length === 0) {
             return undefined;
@@ -215,7 +229,7 @@ export class Network {
         for(const c of traversing) {
             let nextNodeId = current.id === c.id? c.targetId : c.id;
             let p: Node[] = this._domToDomPath(this.getDomainNodeById(nextNodeId), end, untraversed.slice(0));
-            if(p !== undefined) {
+            if(p !== undefined/* && p.length > 0*/) {
                 p.push(current);
                 paths.push(p);
             }

@@ -244,22 +244,26 @@ export class Pattern {
         let shortestPath: Node[] = [];
         let paths: Node[][] = [];
         if(current.id === end.id) {
-            return [end];
+            if(end.isActive) {
+                return [end];
+            } else {
+                return undefined;
+            }
         }
         if(!untraversed || untraversed.length === 0) {
-            return [];
+            return undefined;
         }
         let traversing: Connector[] = untraversed.transfer( x => x.id === current.id || x.targetId === current.id );
         for(const c of traversing) {
             let nextNodeId = current.id === c.id? c.targetId : c.id;
             let p: Node[] = this._getPath(this.getNodeById(nextNodeId), end, untraversed.slice(0));
-            if(p !== undefined) {
+            if(p !== undefined/* && p.length > 0*/) {
                 p.push(current);
                 paths.push(p);
             }
         }
         if(paths.length === 0) {
-            return [];
+            return undefined;
         }
         let shortestPathLen = 10000;
         for(const p of paths) {

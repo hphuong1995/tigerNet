@@ -94,11 +94,11 @@ export class Domain {
     }
 
     
-    // private getActiveConnections(): Connector[] {
-    //     return this.  filter( cn => {
-    //         return this.getNodeById(cn.id).isActive && this.getNodeById(cn.targetId).isActive;
-    //     });
-    //}
+    private getActiveConnections(): Connector[] {
+        return this.patternConnections.filter( cn => {
+            return this.getConnectorOrDomainNodeById(cn.id).isActive && this.getConnectorOrDomainNodeById(cn.targetId).isActive;
+        });
+    }
 
     public getPath(start: string, end: string): Node[] {
         //start and end in same pattern, return pattern path
@@ -142,6 +142,7 @@ export class Domain {
 
                 // path = this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode()).concat(path);
                 section = this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode());
+                if(!section) return undefined;
                 section.pop();
                 path = section.concat(path);
 
@@ -149,6 +150,7 @@ export class Domain {
                 
                 //path = endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
                 section = endPattern.getPath(endPattern.getConnectorNode().id, end);
+                if(!section) return undefined;
                 section.pop();
                 path = section.concat(path);
                 // path.pop();
@@ -157,6 +159,7 @@ export class Domain {
                 // path = path.concat(this.connToConnPath(startPattern.getConnectorNode(), this.domainNode));
                 // path = this.connToConnPath(startPattern.getConnectorNode(), this.domainNode).concat(path);
                 section = this.connToConnPath(startPattern.getConnectorNode(), this.domainNode);
+                if(!section) return undefined;
                 section.pop();
                 path = section.concat(path);
             }
@@ -166,11 +169,13 @@ export class Domain {
             if(endPattern) {
                 // path = this.connToConnPath(this.domainNode, endPattern.getConnectorNode()).concat(path);
                 section = this.connToConnPath(this.domainNode, endPattern.getConnectorNode());
+                if(!section) return undefined;
                 section.pop();
                 path = section.concat(path);
                 // path.pop();
                 // endPattern.getPath(endPattern.getConnectorNode().id, end).concat(path);
                 section = endPattern.getPath(endPattern.getConnectorNode().id, end);
+                if(!section) return undefined;
                 section.pop();
                 path = section.concat(path);
                 // path.pop();
@@ -184,7 +189,7 @@ export class Domain {
 
     //PRE start and end are connector or domain nodes
     private connToConnPath(start: Node, end: Node): Node[] {
-        return this._connToConnPath(start, end, this.patternConnections.slice(0));
+        return this._connToConnPath(start, end, this.getActiveConnections()) || [];
     }
 
     //warning: untraversed will get modifed
@@ -192,7 +197,11 @@ export class Domain {
         let shortestPath: Node[] = [];
         let paths: Node[][] = [];
         if(current.id === end.id) {
-            return [end];
+            if(end.isActive) {
+                return [end];
+            } else {
+                return undefined;
+            }
         }
         if(!untraversed || untraversed.length === 0) {
             return undefined;
@@ -201,7 +210,7 @@ export class Domain {
         for(const c of traversing) {
             let nextNodeId = current.id === c.id? c.targetId : c.id;
             let p: Node[] = this._connToConnPath(this.getConnectorOrDomainNodeById(nextNodeId), end, untraversed.slice(0));
-            if(p !== undefined) {
+            if(p !== undefined/* && p.length > 0*/) {
                 p.push(current);
                 paths.push(p);
             }
