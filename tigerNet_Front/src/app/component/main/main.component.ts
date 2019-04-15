@@ -69,10 +69,10 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   get f() { return this.sendMess.controls; }
 
-  deleteMess( messageId :string){
-    console.log(messageId);
-    this.data.deleteMess(messageId).subscribe( data =>{
-      console.log(data);
+  deleteMess( messageId :string, nid : string){
+    this.data.deleteMess(messageId, nid).subscribe(data =>{
+      let retData : any = data;
+      this.currentNodeMessages = retData;
     });
   }
 
@@ -119,7 +119,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       let retData : any = data;
       this.currentNodeMessages = retData;
       this.resetSelectedElement();
-
+      console.log(data);
     });
   }
 

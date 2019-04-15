@@ -82,7 +82,8 @@ export class DataService {
     return this.http.get('api/v1/nodes/' + reqStr);
   }
 
-  deleteMess( messId : string){
-    return this.http.delete('api/v1/messages?mid=' + messId);
+  deleteMess( messId : string, nid : string){
+    console.log(messId + " " + nid);
+    return this.http.delete('api/v1/messages?mid=' + messId + '&nid=' + nid);
   }
 }

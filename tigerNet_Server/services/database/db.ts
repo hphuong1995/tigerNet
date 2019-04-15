@@ -1360,7 +1360,8 @@ class DB {
      * Error codes:
      *      -10: MySQL error
      */
-    public deleteMessageGetMessages(mid: string, nodeId: string, callback: (err: Err, messages: Message[]) => void): void {
+    public deleteMessageGetMessages(mid: string, nodeId: string,
+      callback: (err: Err, messages: Message[]) => void): void {
         const query: string = "DELETE FROM messages WHERE id = '" + mid + "' AND fk_receiver_id = '" + nodeId +  "'";
         conn.query(query, (err: MysqlError) => {
             if (err) {
