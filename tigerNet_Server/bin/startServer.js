@@ -20,7 +20,7 @@ var debug = require( 'debug' )( 'app:server' );
 /*
  * Set server to port 3000
  */
-var port = 3000;
+var port = 80;
 app.set( 'port', port );
 
 /*
