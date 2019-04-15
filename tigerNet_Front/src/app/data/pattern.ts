@@ -194,6 +194,6 @@ export class Pattern {
     }
 
     private getPathToConnector(start: Node) : string[] {
-        
+        return [];
     }
 }
