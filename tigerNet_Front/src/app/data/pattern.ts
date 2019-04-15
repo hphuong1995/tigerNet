@@ -5,7 +5,7 @@ import { Connector } from './connector';
 
 declare global {
     interface Array<T> {
-        transfer( filter: (x: T) => boolean ): Array<T>;
+        transfer( transfer: (x: T) => boolean ): Array<T>;
     }
 }
 
@@ -19,12 +19,28 @@ export class Pattern {
         this.id = id;
         this.nodes = nodes.map(n => new Node(n.isActive, n.isConnector, n.id));
         this.connections = connections.map(c => new Connector(c.id, c.targetId));
+        let nums: number[] = [0,,0];
         
         if(!Array.prototype.transfer) {
-            Array.prototype.transfer = function<T>(this: T[], filter: (x: T) => boolean): Array<T> { 
-                let results : Array<T> = [];
-    
-                return results;
+            Array.prototype.transfer = function<T>(this: T[], transfer: (x: T) => boolean): Array<T> { 
+                let transfers : Array<T> = [];
+                let original: Array<T> = [];
+                
+                let t: T = this.pop();
+                while(t !== undefined) {
+                    if(transfer(t)) {
+                        transfers.push(t);
+                    } else {
+                        original.push(t);
+                    }
+                    t = this.pop();
+                }
+                t = original.pop();
+                while(t !== undefined) {
+                    this.push(t);
+                    t = original.pop();
+                }
+                return transfers;
             }
         }
     }
@@ -203,29 +219,48 @@ export class Pattern {
         return true;
     }
 
-    public getPath(start: Node, end: Node): string[] {
-        let path: string[] = [];
-        let untraversed: Connector[] = this.connections.slice(0);
-
-        return path;
+    public getPath(start: string, end: string): Node[] {
+        return this._getPath(this.getNodeById(start), this.getNodeById(end), this.connections.slice(0));
     }
 
-    public getPathToConnector(start: Node) : Node[] {
-        let path: Node[] = [];
-        if(start.isConnector) {
-            return path;
+    // public getPath(start: Node, end: Node): Node[] {
+
+    //     return this._getPath(start, end, this.connections.slice(0));
+    // }
+
+    public getPathToConnector(start: string) : Node[] {
+        return this._getPath(this.getNodeById(start), this.getConnectorNode(), this.connections.slice(0));
+    }
+
+    //warning: untraversed will get modifed
+    private _getPath(current: Node, end: Node, untraversed: Connector[]): Node[] {
+        let shortestPath: Node[] = [];
+        let paths: Node[][] = [];
+        if(current.id === end.id) {
+            return [end];
         }
-        let untraversed: Connector[] = this.connections.slice(0);
-        
-        return path;
-    }
-
-    private _getPath(start: Node, end: Node, untraversed: Connector[]): Node[] {
-        let path: Node[] = [];
-        if(!untraversed || untraversed.length == 0) {
+        if(!untraversed || untraversed.length === 0) {
             return undefined;
         }
-        let traversing: Connector[];
-        return path;
+        let traversing: Connector[] = untraversed.transfer( x => x.id === current.id || x.targetId === current.id );
+        for(const c of traversing) {
+            let nextNodeId = current.id === c.id? c.targetId : c.id;
+            let p: Node[] = this._getPath(this.getNodeById(nextNodeId), end, untraversed.slice(0));
+            if(p !== undefined) {
+                p.push(current);
+                paths.push(p);
+            }
+        }
+        if(paths.length === 0) {
+            return undefined;
+        }
+        let shortestPathLen = 10000;
+        for(const p of paths) {
+            if(p.length < shortestPathLen) {
+                shortestPathLen = p.length;
+                shortestPath = p;
+            }
+        }
+        return shortestPath;
     }
 }
