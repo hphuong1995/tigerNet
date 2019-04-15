@@ -466,6 +466,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   deleteConnetion() {
+    console.log(this.data.selectedLink);
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedNodes.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
       alert("Please select only the connection to delete.");
