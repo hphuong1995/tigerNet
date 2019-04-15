@@ -1,6 +1,14 @@
 import { Node } from './node';
 import { Connector } from './connector';
 
+
+
+declare global {
+    interface Array<T> {
+        transfer( filter: (x: T) => boolean ): Array<T>;
+    }
+}
+
 export class Pattern {
     public id: string;
     public nodes: Node[];
@@ -11,6 +19,14 @@ export class Pattern {
         this.id = id;
         this.nodes = nodes.map(n => new Node(n.isActive, n.isConnector, n.id));
         this.connections = connections.map(c => new Connector(c.id, c.targetId));
+        
+        if(!Array.prototype.transfer) {
+            Array.prototype.transfer = function<T>(this: T[], filter: (x: T) => boolean): Array<T> { 
+                let results : Array<T> = [];
+    
+                return results;
+            }
+        }
     }
 
     public getConnectorNode(): Node {
@@ -187,13 +203,29 @@ export class Pattern {
         return true;
     }
 
-    private getPath(start: Node, end: Node): string[] {
+    public getPath(start: Node, end: Node): string[] {
         let path: string[] = [];
+        let untraversed: Connector[] = this.connections.slice(0);
 
         return path;
     }
 
-    private getPathToConnector(start: Node) : string[] {
-        return [];
+    public getPathToConnector(start: Node) : Node[] {
+        let path: Node[] = [];
+        if(start.isConnector) {
+            return path;
+        }
+        let untraversed: Connector[] = this.connections.slice(0);
+        
+        return path;
+    }
+
+    private _getPath(start: Node, end: Node, untraversed: Connector[]): Node[] {
+        let path: Node[] = [];
+        if(!untraversed || untraversed.length == 0) {
+            return undefined;
+        }
+        let traversing: Connector[];
+        return path;
     }
 }
