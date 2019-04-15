@@ -76,7 +76,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     });
   }
 
-  sendMessage(){
+  async sendMessage(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
       alert("Please only select 2 node for this operation.");
@@ -100,6 +100,15 @@ export class MainComponent implements OnInit, AfterViewInit {
     let reqObj :any = {sender : this.data.selectedNodes[0],
                         receiver: this.data.selectedNodes[1],
                         message : this.f.message.value};
+    let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
+      return '#' + n.id;
+    }).reverse();
+    for(let node of route){
+      this.cy.$(node).addClass('path');
+      //this.jAni.play();
+      await this.sleep(1000);
+    }
+
 
     this.data.sendMessage(reqObj).subscribe( data =>{
       console.log(data);
@@ -107,9 +116,13 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("message sent successfully.");
       this.resetSelectedElement();
     });
+   
+
   }
 
-
+  sleep(ms:number){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+  }
   viewNode(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
@@ -886,6 +899,8 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.cy.nodes().removeClass('highlighted');
     this.cy.nodes().removeClass('patternHighlighted');
     this.cy.edges().removeClass('highlighted');
+    this.cy.nodes().removeClass('path');
+    this.cy.edges().removeClass('path');
   }
 
   resetGraph(domains: Domain[], domainConnections: Connector[]) {
@@ -1036,6 +1051,15 @@ export class MainComponent implements OnInit, AfterViewInit {
           css: {
             'background-color': '#63B8FF'
           }
+        },
+        {
+            selector: '.path',
+            css: {
+              'background-color': '#4876FF',
+              'line-color':'#4876FF',
+              'transition-property': 'background-color, line-color',
+              'transition-duration': '0.5s'
+            }
         }
         // ,
         // {
@@ -1120,7 +1144,9 @@ export class MainComponent implements OnInit, AfterViewInit {
         this.cy.$( nid).addClass('inactiveSelectors');
       }
     });
-
+    // sleep(ms:number){
+    //   return new Promise(resolve=>setTimeout(resolve,ms));
+    // }
 
     this.cy.edges().on('tap', function (e) {
       //let clickedNode : string;
