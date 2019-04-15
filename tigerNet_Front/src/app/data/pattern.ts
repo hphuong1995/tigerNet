@@ -219,8 +219,15 @@ export class Pattern {
         return true;
     }
 
+    // Returns connectors for which both ends connected to active nodes
+    private getActiveConnections(): Connector[] {
+        return this.connections.filter( cn => {
+            return this.getNodeById(cn.id).isActive && this.getNodeById(cn.targetId).isActive;
+        });
+    }
+
     public getPath(start: string, end: string): Node[] {
-        return this._getPath(this.getNodeById(start), this.getNodeById(end), this.connections.slice(0));
+        return this._getPath(this.getNodeById(start), this.getNodeById(end), this.getActiveConnections());
     }
 
     // public getPath(start: Node, end: Node): Node[] {
@@ -229,7 +236,7 @@ export class Pattern {
     // }
 
     public getPathToConnector(start: string) : Node[] {
-        return this._getPath(this.getNodeById(start), this.getConnectorNode(), this.connections.slice(0));
+        return this._getPath(this.getNodeById(start), this.getConnectorNode(), this.getActiveConnections());
     }
 
     //warning: untraversed will get modifed
@@ -240,7 +247,7 @@ export class Pattern {
             return [end];
         }
         if(!untraversed || untraversed.length === 0) {
-            return undefined;
+            return [];
         }
         let traversing: Connector[] = untraversed.transfer( x => x.id === current.id || x.targetId === current.id );
         for(const c of traversing) {
@@ -252,7 +259,7 @@ export class Pattern {
             }
         }
         if(paths.length === 0) {
-            return undefined;
+            return [];
         }
         let shortestPathLen = 10000;
         for(const p of paths) {

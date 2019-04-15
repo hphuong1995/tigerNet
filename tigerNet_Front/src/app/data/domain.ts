@@ -93,6 +93,13 @@ export class Domain {
         return this.getPath(start, this.domainNode.id);
     }
 
+    
+    // private getActiveConnections(): Connector[] {
+    //     return this.  filter( cn => {
+    //         return this.getNodeById(cn.id).isActive && this.getNodeById(cn.targetId).isActive;
+    //     });
+    }
+
     public getPath(start: string, end: string): Node[] {
         //start and end in same pattern, return pattern path
         //start and end both connector nodes, return connector node paths (no need for pattern.path)
