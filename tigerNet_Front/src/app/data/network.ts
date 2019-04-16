@@ -129,6 +129,10 @@ export class Network {
             return false;
         }
 
+        if(!this.checkDomainIsolate()){
+          return false;
+        }
+
         let done: boolean = false;
         let conns = this.domainConnections.slice();
         network.push(conns.pop());
@@ -154,6 +158,47 @@ export class Network {
         return true;
     }
 
+    private checkDomainIsolate(){
+      var domainNodeQueue : string[] = [];
+      var readList : string[] = [];
+
+      domainNodeQueue.push(this.domains[0].domainNode.id);
+
+      while( domainNodeQueue.length != readList.length){
+        var currentNode : string;
+        var i;
+        // find a domain that havent readList
+        for(i = 0; i < domainNodeQueue.length; i++){
+          if(!readList.includes(domainNodeQueue[i])){
+            currentNode = domainNodeQueue[i];
+            readList.push(currentNode);
+            console.log(readList);
+            break;
+          }
+        }
+
+        this.domainConnections.forEach( (connection : Connector) =>{
+          if(connection.id === currentNode && !domainNodeQueue.includes(connection.targetId)){
+            domainNodeQueue.push(connection.targetId);
+          }
+
+          if(connection.targetId === currentNode && !domainNodeQueue.includes(connection.id)){
+            domainNodeQueue.push(connection.id);
+          }
+        });
+      }
+
+      if(domainNodeQueue.length === this.domains.length){
+        console.log("valid " + domainNodeQueue);
+        return true;
+      }
+      else{
+        console.log("invalid " + domainNodeQueue);
+        return false;
+      }
+
+    }
+
     public getAllConnections(): Connector[] {
         let connectors: Connector[];
         this.domainConnections.forEach(dc => connectors.push(dc));
@@ -171,18 +216,18 @@ export class Network {
         });
     }
 
-    /* 
+    /*
      * Returns a list of nodes representing the shortest path between and including the start and end nodes
      * The list is in reverse order like this:
      *     [end, node, node, node, start]
      * Calling list.pop() repeatedly dumps out the nodes in order.
-     * 
+     *
      * To get an in-order version of the array for iteration call the function like this:
      *     path: Node[] = network.getPath(...).reverse();
      * To get an in-order list of node ids of the path:
      *     path: string[] = network.getPath(...).map( n => n.id ).reverse();
      */
-    public getPath(start: string, end: string) : Node[] {        
+    public getPath(start: string, end: string) : Node[] {
         let path: Node[] = [];
         let startDomain: Domain = this.getDomainByChildNodeId(start);
         let endDomain: Domain = this.getDomainByChildNodeId(end);
@@ -194,7 +239,7 @@ export class Network {
         }
         let section: Node[] = [];
         path = startDomain.getPathToDomainNode(start);
-        
+
         section = this.domToDomPath(startDomain.domainNode, endDomain.domainNode);
         if(!section) return [];
         section.pop();

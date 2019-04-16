@@ -120,7 +120,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("message sent successfully.");
       this.resetSelectedElement();
     });
-   
+
 
   }
 
@@ -185,6 +185,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.cy.$('#' + selectedNode).removeClass('inactiveSelectors');
 
     this.data.activeNode(this.data.selectedNodes[0], true).subscribe( data =>{
+      this.network.getNodeById(selectedNode).isActive = true;
       this.resetSelectedElement();
     });
   }
@@ -499,99 +500,129 @@ export class MainComponent implements OnInit, AfterViewInit {
     arrToSend.push(this.data.selectedLink[0].substr(3, 5));
     console.log(arrToSend);
     if(arrToSend[0].charAt(0) === 'D' && arrToSend[1].charAt(0) === 'D'){
+      console.log("hello");
+      // WORKING ON
+      this.oldNetwork = this.network;
+      // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+      this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
 
+      this.network.domainConnections = this.network.domainConnections.filter(connection => {
+        return !(connection.id === arrToSend[0] && connection.targetId === arrToSend[1]);
+      });
+
+      this.network.domainConnections = this.network.domainConnections.filter(connection => {
+        return !(connection.id === arrToSend[1] && connection.targetId === arrToSend[0]);
+      });
+
+      console.log(this.network.domainConnections);
+      this.resetSelectedElement();
+
+      if (!this.network.isValid()) {
+        this.network = this.oldNetwork;
+        alert("Operation will break the network");
+        return;
+      }
+      else {
+        this.data.deleteConnection(arrToSend).subscribe(data => {
+          var retData: any = data;
+          this.resetGraph(retData.domains, retData.domainConnections);
+        });
+      }
     }
     else if (arrToSend[0].charAt(0) === 'D' || arrToSend[1].charAt(0) === 'D') {
       this.resetSelectedElement();
       alert("User can not delete the connection that assosiates with domain node.");
       return;
     }
-    // Delete Pattern connection
-    if (this.network.getPatternByChildNodeId(arrToSend[0]).id
-      !== this.network.getPatternByChildNodeId(arrToSend[1]).id) {
-      // check isolate
-      this.resetSelectedElement();
-      this.data.deleteConnection(arrToSend).subscribe(data => {
-        var retData: any = data;
-        this.resetGraph(retData.domains, retData.domainConnections);
-      });
-    }
-    else {  // delete connection in the Pattern
-      let currentPat = this.network.getPatternByChildNodeId(arrToSend[0]);
-
-      if (arrToSend[0] !== currentPat.getConnectorNode().id && arrToSend[1] !== currentPat.getConnectorNode().id) {
-        this.resetSelectedElement();
-        alert("You can only delete connection from connector Node to non-connector Node");
-        return;
-      }
-      else {
-        this.oldNetwork = this.network;
-        // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
-        this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
-        let pattern: Pattern = this.network.getPatternById(currentPat.id);
-        console.log(pattern.connections);
-
-        // Remove the connections
-        pattern.connections = pattern.connections.filter(connection => {
-          return !(connection.id === arrToSend[0] && connection.targetId === arrToSend[1]);
-        });
-
-        pattern.connections = pattern.connections.filter(connection => {
-          return !(connection.id === arrToSend[1] && connection.targetId === arrToSend[0]);
-        });
-
-        console.log(pattern.connections);
-        this.resetSelectedElement();
-
-        if (!this.network.isValid()) {
-          this.network = this.oldNetwork;
-          alert("Operation will break the network");
-          return;
-        }
-        else {
+    else{
+      // Delete Pattern connection
+        if (this.network.getPatternByChildNodeId(arrToSend[0]).id
+          !== this.network.getPatternByChildNodeId(arrToSend[1]).id) {
+          // check isolate
+          this.resetSelectedElement();
           this.data.deleteConnection(arrToSend).subscribe(data => {
             var retData: any = data;
             this.resetGraph(retData.domains, retData.domainConnections);
           });
         }
+        else {  // delete connection in the Pattern
+          let currentPat = this.network.getPatternByChildNodeId(arrToSend[0]);
+
+          if (arrToSend[0] !== currentPat.getConnectorNode().id && arrToSend[1] !== currentPat.getConnectorNode().id) {
+            this.resetSelectedElement();
+            alert("You can only delete connection from connector Node to non-connector Node");
+            return;
+          }
+          else {
+            this.oldNetwork = this.network;
+            // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
+            this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+            let pattern: Pattern = this.network.getPatternById(currentPat.id);
+            console.log(pattern.connections);
+
+            // Remove the connections
+            pattern.connections = pattern.connections.filter(connection => {
+              return !(connection.id === arrToSend[0] && connection.targetId === arrToSend[1]);
+            });
+
+            pattern.connections = pattern.connections.filter(connection => {
+              return !(connection.id === arrToSend[1] && connection.targetId === arrToSend[0]);
+            });
+
+            console.log(pattern.connections);
+            this.resetSelectedElement();
+
+            if (!this.network.isValid()) {
+              this.network = this.oldNetwork;
+              alert("Operation will break the network");
+              return;
+            }
+            else {
+              this.data.deleteConnection(arrToSend).subscribe(data => {
+                var retData: any = data;
+                this.resetGraph(retData.domains, retData.domainConnections);
+              });
+            }
+          }
+        }
       }
     }
-  }
 
 
 
 
-  addPattern = function () {
-    if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
-      this.resetSelectedElement();
-      alert("Please only select patterns for this operation.");
-      return;
-    }
-    if (this.data.selectedPatterns.length === 0) {
-      this.resetSelectedElement();
-      alert("Please select a pattern that new pattern connect to.");
-      return;
-    }
-    else {
-      var arrToSend = [];
-      //console.log(this.data.selectedPatterns);
-      this.data.selectedPatterns.forEach((pid) => {
-        arrToSend.push(this.network.getPatternById(pid).getConnectorNode().id);
-      });
-      var currentDomain = this.network.getDomainByChildNodeId(arrToSend[0]);
-
-      this.resetSelectedElement();
-      var reqData = {
-        pid: arrToSend,
-        did: currentDomain.id,
-        dnid: currentDomain.domainNode.id
+    addPattern = function () {
+      if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+        this.resetSelectedElement();
+        alert("Please only select patterns for this operation.");
+        return;
       }
-      console.log(reqData);
-      this.data.addPattern(reqData).subscribe((data: Network) => {
-        console.log(data);
-        this.resetGraph(data.domains, data.domainConnections);
-      });
-    }
+      if (this.data.selectedPatterns.length === 0) {
+        this.resetSelectedElement();
+        alert("Please select a pattern that new pattern connect to.");
+        return;
+      }
+      else {
+        var arrToSend = [];
+        //console.log(this.data.selectedPatterns);
+        this.data.selectedPatterns.forEach((pid) => {
+          arrToSend.push(this.network.getPatternById(pid).getConnectorNode().id);
+        });
+        var currentDomain = this.network.getDomainByChildNodeId(arrToSend[0]);
+
+        this.resetSelectedElement();
+        var reqData = {
+          pid: arrToSend,
+          did: currentDomain.id,
+          dnid: currentDomain.domainNode.id
+        }
+        console.log(reqData);
+        this.data.addPattern(reqData).subscribe((data: Network) => {
+          console.log(data);
+          this.resetGraph(data.domains, data.domainConnections);
+        });
+      }
+
   }
 
   checkConnectionExist(arrToSend: any[], arrayToCheck: any[]) {
