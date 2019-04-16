@@ -20,7 +20,7 @@ var debug = require( 'debug' )( 'app:server' );
 /*
  * Set server to port 3000
  */
-var port = 80;
+var port = 3000;
 app.set( 'port', port );
 
 /*
@@ -28,7 +28,7 @@ app.set( 'port', port );
  */
 var server = http.createServer( app );
 
-/* 
+/*
  * Listen on provided port.
  */
 server.listen( port );
