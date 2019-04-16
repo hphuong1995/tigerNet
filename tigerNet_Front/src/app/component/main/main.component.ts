@@ -31,7 +31,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private sendMess : FormGroup;
   private magicNumber = 1;
 
-  private magicChance = 20;
+  private magicChance = 30;
 
   private currentNode : string;
 
@@ -187,6 +187,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.activeNode(this.data.selectedNodes[0], true).subscribe( data =>{
       this.network.getNodeById(selectedNode).isActive = true;
       this.resetSelectedElement();
+      this.network.getNodeById(selectedNode).isActive = true;
     });
   }
 

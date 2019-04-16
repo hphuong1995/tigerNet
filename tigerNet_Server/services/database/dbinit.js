@@ -987,7 +987,7 @@ initQueue.unshift((connection, initQueue, oldDomainNodeId) => {
 
 initQueue.unshift((connection, initQueue, domainId, oldDomainNodeId) => {
     let next = initQueue.pop();
-    db.addDomainNode(true, domainId, (node, err) => {
+    db.addDomainNode(false, domainId, (node, err) => {
         if(err) rollbackAndExit(connection, err);
         next(connection, initQueue, node.id, domainId, oldDomainNodeId);
     });
