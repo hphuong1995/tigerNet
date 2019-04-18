@@ -8,7 +8,9 @@ const pool = require('./../../dist/services/database/connect');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const initQueue = [];
+const fs = require('fs');
 const db = require('./../../dist/services/database/db').db;
+const sqlData = 'services/database/network.sql';
 
 const NODE_IDS_TABLE = 
     "CREATE TABLE nodeIds (\
@@ -72,22 +74,6 @@ const QUESTIONS_TABLE =
         question VARCHAR(120),\
         PRIMARY KEY (id)\
     );";
-
-// const NODE_MESSAGES_TABLE =
-//     "CREATE TABLE node_messages (\
-//         id VARCHAR(45) NOT NULL,\
-//         fk_connected_node_id VARCHAR(45),\
-//         CONSTRAINT FOREIGN KEY (fk_connected_node_id)\
-//         REFERENCES nodes(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE SET NULL,\
-//         fk_connected_message_id VARCHAR(45),\
-//         CONSTRAINT FOREIGN KEY (fk_connected_message_id)\
-//         REFERENCES messages(id)\
-//         ON UPDATE CASCADE\
-//         ON DELETE SET NULL,\
-//         PRIMARY KEY (id)\
-//     );";
 
 const SECURITY_ANSWERS_TABLE =
     "CREATE TABLE security_answers (\
@@ -568,7 +554,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-initQueue.unshift((connection, initQueue, params) => {
+initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let id = 0;
     let idString = "";
@@ -587,7 +573,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-initQueue.unshift((connection, initQueue, params) => {
+initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let id = 0;
     let idString = "";
@@ -606,7 +592,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-initQueue.unshift((connection, initQueue, params) => {
+initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let id = 0;
     let idString = "";
@@ -625,7 +611,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-initQueue.unshift((connection, initQueue, params) => {
+initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let id = 0;
     let idString = "";
@@ -644,7 +630,7 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-initQueue.unshift((connection, initQueue, params) => {
+initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
     let id = 0;
     let idString = "";
@@ -663,465 +649,31 @@ initQueue.unshift((connection, initQueue, params) => {
     });
 });
 
-//first domain
-initQueue.unshift((connection, initQueue) => {
-    let next = initQueue.pop();
-    db.storeNewDomain((domainId, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, domainId) => {
-    let next = initQueue.pop();
-    db.addDomainNode(true, domainId, (domainNode, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainId, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, domainId, domainNode) => {
-    let next = initQueue.pop();
-    let patternIds = [];
-    db.storeNewPattern(domainId, (pattern, err) => {
-        if (err) rollbackAndExit(connection, err);
-        patternIds.push(pattern);
-        next(connection, initQueue, patternIds, domainId, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, domainId, domainNode) => {
-    let next = initQueue.pop();
-    db.storeNewPattern(domainId, (pattern, err) => {
-        if (err) rollbackAndExit(connection, err);
-        patternIds.push(pattern);
-        next(connection, initQueue, patternIds, domainId, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, domainId, domainNode) => {
-    let next = initQueue.pop();
-    db.storeNewPattern(domainId, (pattern, err) => {
-        if (err) rollbackAndExit(connection, err);
-        patternIds.push(pattern);
-        next(connection, initQueue, patternIds, domainNode);
-    });
-});
-
-//connector node
-initQueue.unshift((connection, initQueue, patternIds, domainNode) => {
-    let next = initQueue.pop();
-    let nodes = [];
-    db.addNode(true, true, patternIds[0], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes.push([]);
-        nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    let node = nodes[0].find( n => n.isConnector );
-    db.addConnection(node.id, domainNode.id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[0], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[0], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[0].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-//connector node
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, true, patternIds[1], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes.push([]);
-        nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    let node = nodes[1].find( n => n.isConnector );
-    db.addConnection(node.id, domainNode.id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[1], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[1], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[1].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-//connector node
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    db.addNode(true, true, patternIds[2], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes.push([]);
-        nodes[2].push(node);
-        next(connection, initQueue, patternIds, nodes, domainNode);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes, domainNode) => {
-    let next = initQueue.pop();
-    let node = nodes[2].find( n => n.isConnector );
-    db.addConnection(node.id, domainNode.id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[2], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[2].push(node);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternIds[2], (node, err) => {
-        if (err) rollbackAndExit(connection, err);
-        nodes[2].push(node);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[0][0].id, nodes[1][0].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[2][0].id, nodes[1][0].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[2][0].id, nodes[0][0].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[0][0].id, nodes[0][1].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[0][0].id, nodes[0][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[0][1].id, nodes[0][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[1][0].id, nodes[1][1].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[1][0].id, nodes[1][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[1][1].id, nodes[1][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[2][0].id, nodes[2][1].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[2][0].id, nodes[2][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "I think node N05 smells funny", (message, err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.storeNewMessage(nodes[1][2].id, nodes[2][2].id, "Which orange came first? The color or the fruit?", (message, err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "Is the S or C silent in scent?", (message, err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "I am attempting to store a very very long message that is over 50 characters", (message, err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.storeNewMessage(nodes[0][2].id, nodes[1][2].id, "Why is it called a building if it's already built?", (message, err) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternIds, nodes);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-    let next = initQueue.pop();
-    db.addConnection(nodes[2][1].id, nodes[2][2].id, (err, connector) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
+// ### TEST_DATA
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
-    db.getAllDomains((err, domains) => {
-        if(err || domains.length < 1) rollbackAndExit(connection, err);
-        let domainIds = domains.map( d => d.id );
-        next(connection, initQueue, domainIds[0]);
+    fs.readFile( sqlData, 'utf8', (err, sqlScript) => {
+        if (err) rollbackAndExit(connection, err);
+        // next(connection, initQueue, sqlScript);
+        executeScript(sqlScript, 0);
+        function executeScript(script, queryStart) {
+            let queryEnd = script.indexOf(';', queryStart);
+            if(queryEnd < 1) {
+                next(connection, initQueue);
+            } else {
+                let query = script.substring(queryStart, queryEnd);
+                console.log(query);
+                connection.query(query, (err) => {
+                    if (err) rollbackAndExit(connection, err);
+                    executeScript(script, queryEnd + 1);
+                });
+            }
+        }
     });
 });
 
-initQueue.unshift((connection, initQueue, oldDomainId) => {
-    let next = initQueue.pop();
-    db.getDomainNode(oldDomainId, (err, domainNode) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainNode.id);
-    });
-});
-
-//second domain
-initQueue.unshift((connection, initQueue, oldDomainNodeId) => {
-    let next = initQueue.pop();
-    db.storeNewDomain((domainId, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainId, oldDomainNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, domainId, oldDomainNodeId) => {
-    let next = initQueue.pop();
-    db.addDomainNode(false, domainId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, node.id, domainId, oldDomainNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, domainNodeId, domainId, oldDomainNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(domainNodeId, oldDomainNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, domainNodeId, domainId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, domainNodeId, domainId) => {
-    let next = initQueue.pop();
-    db.storeNewPattern(domainId, (patternId, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, patternId, domainNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, patternId, domainNodeId) => {
-    let next = initQueue.pop();
-    db.addNode(true, true, patternId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, node.id, patternId, domainNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, domainNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(connectorNodeId, domainNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, node.id);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(connectorNodeId, trNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, node.id);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, tlNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(trNodeId, tlNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, tlNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, tlNodeId) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, tlNodeId, node.id);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, tlNodeId, blNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(tlNodeId, blNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(blNodeId, connectorNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId) => {
-    let next = initQueue.pop();
-    db.addNode(true, false, patternId, (node, err) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId, node.id);
-    });
-});
-
-initQueue.unshift((connection, initQueue, connectorNodeId, patternId, trNodeId, blNodeId, brNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(blNodeId, brNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue, trNodeId, brNodeId);
-    });
-});
-
-initQueue.unshift((connection, initQueue, trNodeId, brNodeId) => {
-    let next = initQueue.pop();
-    db.addConnection(trNodeId, brNodeId, (err, connector) => {
-        if(err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
-
-// initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-//     let next = initQueue.pop();
-//     let nodeIds = nodes[2].map(n => n.id);
-//     db.getNodes(nodeIds, (nodes, err) => {
-//         if (err) rollbackAndExit(connection, err);
-//         next(connection, initQueue, patternIds, nodes);
-//     });
-// });
-
-// initQueue.unshift((connection, initQueue, patternIds, nodes) => {
-//     let next = initQueue.pop();
-//     db.getPatterns(patternIds, (patterns, err) => {
-//         if (err) rollbackAndExit(connection, err);
-//         console.log(JSON.stringify(patterns));
-//         next(connection, initQueue);
-//     });
-// });
+// ### END TEST_DATA
 
 initQueue.unshift((connection, initQueue) => {
     connection.commit((err) => {
