@@ -54,7 +54,7 @@ export class Pattern {
             }
         }
         // If 3 to 7 nodes - exactly 1 connector node
-        if (this.nodes.length >= 3 && this.nodes.length < 7) {
+        if (this.nodes.length >= 3 && this.nodes.length <= 7) {
             // No duplicate connections
             if (!Connector.checkDuplicateConnection(this.connections)) {
                 alert("There is duplicate connection in the pattern");
@@ -76,7 +76,7 @@ export class Pattern {
         }
 
         // 4 to 7 nodes
-        if (this.nodes.length >= 4 && this.nodes.length < 7) {
+        if (this.nodes.length >= 4 && this.nodes.length <= 7) {
             //  All non connector nodes must have exactly two connections to other non connector nodes
             // if (!this.maxTwoConnectorEachNode(this.getConnectorNode().id)) {
             //     alert("With 4-7 nodes, each node will connect to exact 2 nodes.");

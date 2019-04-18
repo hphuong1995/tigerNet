@@ -34,6 +34,11 @@ export class MainComponent implements OnInit, AfterViewInit {
   private magicChance = 30;
 
   private currentNode : string;
+  private currentPattern : string;
+  private currentDomain : string;
+  private currentType: string;
+
+  private isDomainNode :boolean;
 
   private currentNodeMessages: any[];
 
@@ -139,13 +144,32 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert("Please only select a node for this operation.");
       return;
     }
+    this.currentNode = this.data.selectedNodes[0];
+    this.currentDomain = this.network.getDomainByChildNodeId(this.data.selectedNodes[0]).id;
 
-    this.data.viewNode(this.data.selectedNodes[0]).subscribe( data =>{
-      let retData : any = data;
-      this.currentNodeMessages = retData;
-      this.resetSelectedElement();
-      console.log(data);
-    });
+    if(this.data.selectedNodes[0].charAt(0) === 'D'){
+      this.isDomainNode = true;
+      this.currentType = "Domain Node";
+      this.currentPattern = "N/A";
+    }
+    else{
+      this.isDomainNode = false;
+      let curPat = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]);
+      this.currentPattern = curPat.id;
+      if(curPat.getConnectorNode().id === this.data.selectedNodes[0]){
+        this.currentType = "Connector Node";
+      }
+      else{
+        this.currentType = "Non-Connector Node";
+      }
+
+      this.data.viewNode(this.data.selectedNodes[0]).subscribe( data =>{
+        let retData : any = data;
+        this.currentNodeMessages = retData;
+        this.resetSelectedElement();
+        console.log(data);
+      });
+    }
   }
 
   autoDeactivate(_this : any){
