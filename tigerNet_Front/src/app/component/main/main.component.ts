@@ -1067,6 +1067,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
       elements: elements,
+      wheelSensitivity: .3,
       style: [ // the stylesheet for the graph
         {
           selector: 'node',
