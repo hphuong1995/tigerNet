@@ -27,6 +27,10 @@ export class Connector {
             || other.targetId === this.targetId
     }
 
+    public hasEnd(id: string): boolean {
+        return this.id === id || this.targetId === id;
+    }
+
     public static compare(conn: Connector, other: Connector): boolean {
         if (conn.id === other.id && conn.targetId === other.targetId) {
             return true;

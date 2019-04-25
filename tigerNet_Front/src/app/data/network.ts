@@ -6,6 +6,7 @@ import { PatternsComponent } from '../component/patterns/patterns.component';
 export class Network {
     public domainConnections: Connector[];
     public domains: Domain[];
+    private cytoscape: any;
     constructor(domains: Domain[], domainConnections: Connector[]) {
         // this.domains = domains.map(p => new Pattern(p.id, p.nodes, p.connections));
         this.domains = domains.map(d => new Domain(d.id, d.patterns, d.domainNode, d.patternConnections));
@@ -78,6 +79,11 @@ export class Network {
 
     public getDomainNodeById(id: string): Node {
         return this.domains.find(d => d.domainNode.id === id).domainNode;
+    }
+
+    public addCytoscape(cytoscape: any) {
+        this.cytoscape = cytoscape;
+        this.domains.forEach( d => d.addCytoscape(cytoscape));
     }
 
     public isValid(): boolean {

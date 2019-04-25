@@ -8,6 +8,8 @@ export class Domain {
     public patternConnections: Connector[];
     public patterns: Pattern[] = [];
     public domainNode: Node;
+
+    private cytoscape: any;
     constructor(id: string, patterns: Pattern[], domainNode: Node, patternConnections: Connector[]) {
         this.id = id;
         this.domainNode = new Node(domainNode.isActive, domainNode.isConnector, domainNode.id);
@@ -70,6 +72,12 @@ export class Domain {
             }
         }
         return true;
+    }
+
+    public addCytoscape(cytoscape: any) {
+        this.cytoscape = cytoscape;
+        this.domainNode.addCytoscape(cytoscape);
+        this.patterns.forEach( p => p.addCytoscape(cytoscape));
     }
 
     public getAllConnections(): Connector[] {

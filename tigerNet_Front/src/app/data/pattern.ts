@@ -1,6 +1,6 @@
 import { Node } from './node';
 import { Connector } from './connector';
-
+import { Position } from './position';
 
 
 declare global {
@@ -13,13 +13,36 @@ export class Pattern {
     public id: string;
     public nodes: Node[];
     public connections: Connector[];
+    
+    private cytoscape: any;
+    private posX: number[][] = [
+        [],
+        [],
+        [],
+        [],
+        [0, 50, -50],
+        [-40, 40, 40, -40],
+        [-55, -28, 28, 50, 0],//pentagon
+        [-55, -28, 28, 50, 28, -28]//hexagon
+    ];
+
+    private posY: number[][] = [
+        [],
+        [],
+        [],
+        [],
+        [-60, 30, 30],
+        [40, 40, -40, -40],
+        [-10, 50, 50, -10, -50],//pentagon
+        [0, 50, 50, 0, -50, -50]//hexagon
+    ];
 
     constructor(id: string, nodes: Node[], connections: Connector[]) {
         //add code to validate pattern
         this.id = id;
         this.nodes = nodes.map(n => new Node(n.isActive, n.isConnector, n.id));
         this.connections = connections.map(c => new Connector(c.id, c.targetId));
-        let nums: number[] = [0,,0];
+        //let nums: number[] = [0,,0];
         
         if(!Array.prototype.transfer) {
             Array.prototype.transfer = function<T>(this: T[], transfer: (x: T) => boolean): Array<T> { 
@@ -55,6 +78,99 @@ export class Pattern {
         return this.nodes.find((node: Node) => {
             return node.id === id;
         });
+    }
+
+    public addCytoscape(cytoscape: any) {
+        this.cytoscape = cytoscape;
+        this.nodes.forEach( n => n.addCytoscape(cytoscape));
+    }
+
+    public arrange() {
+        if(this.nodes.length < 4) {
+            return;
+        }
+        let connectorPos: Position = this.getConnectorNode().Position;
+        let posX: number[] = this.posX[this.nodes.length];
+        let posY: number[] = this.posY[this.nodes.length];
+        let positionIndex: number = 0;
+        
+        let visitedNodes: Node[] = [];
+        let current: Node = this.getConnectorNode();
+        let next: Node;
+        
+        while(visitedNodes.length < this.nodes.length - 1) {
+            let connectionFromCurrent: Connector = this.connections.find( (cn: Connector) => {
+                let connectedToCurrent: boolean = cn.hasEnd(current.id);
+                let connectedToVisitedNode: boolean = !!visitedNodes.find( n => cn.hasEnd(n.id));
+                return connectedToCurrent && !connectedToVisitedNode;
+            });
+            visitedNodes.push(current);
+            if(!connectionFromCurrent) {
+                throw "unable to traverse pattern";
+            }
+            if(current.id === connectionFromCurrent.id) {
+                next = this.getNodeById(connectionFromCurrent.targetId);
+            } else {
+                next = this.getNodeById(connectionFromCurrent.id);
+            }
+            next.Position = { x: connectorPos.x + posX[positionIndex], y: connectorPos.y + posY[positionIndex++] };
+            current = next;
+        }
+
+    }
+
+    // /*
+    //  * Performs an action on all nodes.
+    //  * Goes through each node once starting with the connector node.
+    //  * Traverses the pattern through connected nodes
+    //  */
+    // public forAllNodes( workerFunction: (node: Node) => void ): void {
+    //     let nodes: Node[] = this.nodes.slice(0);
+    //     let visitedNodes: Node[] = [];
+    //     let connectors: Connector[] = this.connections.slice(0);
+    //     let previous: Node = this.getConnectorNode();
+    //     workerFunction(previous);
+    //     visitedNodes.push(previous);
+    //     let connectionToPrevious: Connector = this.connections.find( (cn: Connector) => {
+    //         let connectedToPrevious: boolean = cn.id === previous.id || cn.targetId === previous.id;
+    //         let connectedToVisitedNode: boolean = !!visitedNodes.find( n => n.id === cn.id || n.id === cn.targetId);
+    //         return connectedToPrevious && !connectedToVisitedNode;
+    //     });
+    //     if(!connectionToPrevious) {
+    //         throw "unable to traverse pattern";
+    //     }
+    //     while(visitedNodes.length <= this.nodes.length) {
+
+    //     }
+    // }
+
+    /*
+     * Performs an action on all nodes.
+     * Goes through each node once starting with the connector node.
+     * Traverses the pattern through connected nodes
+     */
+    public forAllNodes( workerFunction: (node: Node) => void ): void {
+        let nodes: Node[] = this.nodes.slice(0);
+        let visitedNodes: Node[] = [];
+        let connectors: Connector[] = this.connections.slice(0);
+        let previous: Node = this.getConnectorNode();
+        workerFunction(previous);
+        visitedNodes.push(previous);
+        let connectionToPrevious: Connector = this.connections.find( (cn: Connector) => {
+            let connectedToPrevious: boolean = cn.id === previous.id || cn.targetId === previous.id;
+            let connectedToVisitedNode: boolean = !!visitedNodes.find( n => n.id === cn.id || n.id === cn.targetId);
+            return connectedToPrevious && !connectedToVisitedNode;
+        });
+        if(!connectionToPrevious) {
+            throw "unable to traverse pattern";
+        }
+        while(visitedNodes.length <= this.nodes.length) {
+
+        }
+    }
+
+    public positionNodes() {
+
     }
 
     public isValid(): boolean {
