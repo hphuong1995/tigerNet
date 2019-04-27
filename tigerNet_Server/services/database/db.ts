@@ -571,29 +571,23 @@ class DB {
      * Creates an empty domain, stores it in the database,
      * and returns it in the callback
      * Be sure to add a domain node and a pattern, otherwise this domain will not be valid
+     * Error codes:
+     *      -1: No free domain ids
+     *      -2: No free node ids
+     *     -10: MySQL error
      */
     public storeNewDomain(callback: (domainId: string, err: Err) => void): void {
-        this.transaction(undefined, this.storeNewDomainTransaction,
-            (results: any, err: Err) => {
-                if (err) {
-                    callback(undefined, err);
-                } else {
-                    callback(results as string, undefined);
-                }
-            });
-    }
-
-    /*
-     * Creates an empty pattern, stores it in the database,
-     * and returns it in the callback
-     */
-    public storeNewPattern(domainId: string, callback: (patternId: string, err: Err) => void): void {
-        db.getDomainNode(domainId, (err: Err, domainNode: Node) => {
+        const query: string = "SELECT * FROM nodeids WHERE id LIKE 'N%' AND isFree = 1";
+        conn.query(query, (err: MysqlError, res: any[]) => {
             if (err) {
-                callback(undefined, err);
+                callback(undefined, new Err(err.message, -10));
                 return;
             }
-            this.transaction({domainId}, this.storeNewPatternTransaction,
+            if (!res || res.length < 1) {
+                callback(undefined, new Err("No free node ids", -2));
+                return;
+            }
+            this.transaction(undefined, this.storeNewDomainTransaction,
                 (results: any, err: Err) => {
                     if (err) {
                         callback(undefined, err);
@@ -601,6 +595,45 @@ class DB {
                         callback(results as string, undefined);
                     }
                 });
+        });
+
+    }
+
+    /*
+     * Creates an empty pattern, stores it in the database,
+     * and returns it in the callback
+     * Error codes:
+     *      -1: No free pattern ids
+     *      -2: No free node ids
+     *     -10: MySQL error
+     */
+    public storeNewPattern(domainId: string, callback: (patternId: string, err: Err) => void): void {
+        db.getDomainNode(domainId, (err: Err, domainNode: Node) => {
+            if (err) {
+                callback(undefined, new Err(err.message, -10));
+                return;
+            }
+            // must check that there are free nodeids
+            const query: string = "SELECT * FROM nodeids WHERE id LIKE 'N%' AND isFree = 1";
+            conn.query(query, (err: MysqlError, res: any[]) => {
+                if (err) {
+                    callback(undefined, new Err(err.message, -10));
+                    return;
+                }
+                if (!res || res.length < 1) {
+                    callback(undefined, new Err("No free node ids", -2));
+                    return;
+                }
+                this.transaction({ domainId }, this.storeNewPatternTransaction,
+                    (results: any, err: Err) => {
+                        if (err) {
+                            callback(undefined, err);
+                        } else {
+                            callback(results as string, undefined);
+                        }
+                    });
+            });
+
         });
     }
 
@@ -876,16 +909,16 @@ class DB {
         return;
     }
 
-    public getMessages(nodeId: string, callback: ( err: Err, messages: Message[]) => void): void {
+    public getMessages(nodeId: string, callback: (err: Err, messages: Message[]) => void): void {
         // id   | body | fk_receiver_id | fk_sender_id |
         const query: string = "SELECT * FROM messages WHERE fk_receiver_id = '" + nodeId + "'";
         conn.query(query, (err: MysqlError,
-            results: Array<{ id: string, body: string, fk_receiver_id: string, fk_sender_id: string}>) => {
+            results: Array<{ id: string, body: string, fk_receiver_id: string, fk_sender_id: string }>) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
                 return;
             }
-            const msgs: Message[] = results.map( (r) => new Message(r.fk_sender_id, r.fk_receiver_id, r.body, r.id));
+            const msgs: Message[] = results.map((r) => new Message(r.fk_sender_id, r.fk_receiver_id, r.body, r.id));
             callback(undefined, msgs);
         });
     }
@@ -1059,7 +1092,7 @@ class DB {
     public getPatternToDomainNodeConnectionsByDomain(domainId: string,
         callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
-        "SELECT fk_node_id, fk_target_id\
+            "SELECT fk_node_id, fk_target_id\
             FROM nodes JOIN node_connections\
             ON fk_node_id = nodes.id OR fk_target_id = nodes.id\
             WHERE fk_domain_id = '" + domainId + "'\
@@ -1112,7 +1145,7 @@ class DB {
     public getPatternToDomainNodeConnections(domainNodeId: string,
         callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
-        "SELECT DISTINCT fk_node_id, fk_target_id\
+            "SELECT DISTINCT fk_node_id, fk_target_id\
             FROM nodes JOIN node_connections\
             ON fk_node_id = nodes.id OR fk_target_id = nodes.id\
             WHERE (fk_node_id = '" + domainNodeId + "'\
@@ -1137,7 +1170,7 @@ class DB {
      */
     public getDomainToDomainConnections(callback: (connectors: Connector[], err: Err) => void): void {
         const query: string =
-        "SELECT fk_node_id, fk_target_id\
+            "SELECT fk_node_id, fk_target_id\
             FROM node_connections\
             WHERE fk_node_id like 'D%'\
             AND fk_target_id like 'D%'\
@@ -1147,7 +1180,7 @@ class DB {
                 callback(undefined, new Err(err.message, -10));
                 return;
             }
-            const connectors: Connector[] = results.map( (res) => new Connector(res.fk_node_id, res.fk_target_id));
+            const connectors: Connector[] = results.map((res) => new Connector(res.fk_node_id, res.fk_target_id));
             callback(connectors, undefined);
         });
     }
@@ -1210,15 +1243,15 @@ class DB {
                         }
                         this.getPatternToDomainNodeConnectionsByDomain(domainId,
                             (dConnectors: Connector[], err: Err) => {
-                            this.getDomainNode(domainId, (err: Err, node: Node) => {
-                                if (err) {
-                                    reject(err);
-                                    return;
-                                }
-                                dConnectors.forEach( (dc) => pConnections.push(dc));
-                                resolve(new Domain(domainId, patterns, node, pConnections));
+                                this.getDomainNode(domainId, (err: Err, node: Node) => {
+                                    if (err) {
+                                        reject(err);
+                                        return;
+                                    }
+                                    dConnectors.forEach((dc) => pConnections.push(dc));
+                                    resolve(new Domain(domainId, patterns, node, pConnections));
+                                });
                             });
-                        });
                     });
                 });
             });
@@ -1241,7 +1274,7 @@ class DB {
      */
     public getAllDomains(callback: (err: Err, domains: Domain[]) => void): void {
         const query: string = "SELECT id FROM domains";
-        conn.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+        conn.query(query, (err: MysqlError, results: Array<{ id: string }>) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
             }
@@ -1361,8 +1394,8 @@ class DB {
      *      -10: MySQL error
      */
     public deleteMessageGetMessages(mid: string, nodeId: string,
-      callback: (err: Err, messages: Message[]) => void): void {
-        const query: string = "DELETE FROM messages WHERE id = '" + mid + "' AND fk_receiver_id = '" + nodeId +  "'";
+        callback: (err: Err, messages: Message[]) => void): void {
+        const query: string = "DELETE FROM messages WHERE id = '" + mid + "' AND fk_receiver_id = '" + nodeId + "'";
         conn.query(query, (err: MysqlError) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
@@ -1391,7 +1424,7 @@ class DB {
 
     public setNodeActivated(nodeId: string, activate: boolean, callback: (err: Err) => void): void {
 
-          const query: string = "UPDATE nodes SET is_active = " + this.bit(activate) + " WHERE id = '" + nodeId + "'";
+        const query: string = "UPDATE nodes SET is_active = " + this.bit(activate) + " WHERE id = '" + nodeId + "'";
         conn.query(query, (err: MysqlError, results: any) => {
             if (err) {
                 callback(new Err(err.message, -10));
@@ -1537,13 +1570,13 @@ class DB {
         args: any,
         callback: (err: Err, results: any) => void): void {
         let query: string = "SELECT id FROM messageids WHERE isFree = 1 LIMIT 1 FOR UPDATE";
-        connection.query(query, (err: MysqlError, results: Array<{id: string}>) => {
+        connection.query(query, (err: MysqlError, results: Array<{ id: string }>) => {
             if (err) {
                 callback(new Err(err.message, -10), undefined);
                 return;
             }
             if (results.length < 1) {
-                callback(new Err("Not enoguh free message ids", -1), undefined);
+                callback(new Err("Not enough free message ids", -1), undefined);
                 return;
             }
             query = "UPDATE messageIds SET isFree = 0 WHERE id = '" + results[0].id + "'";

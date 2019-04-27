@@ -125,6 +125,16 @@ router.post("/patterns", (req: Request, res: Response) => {
             res.status(400).send(err.message);
         } else {
             db.addNode(true, true, pid, (node: Node, err: Err) => {
+                if (err) {
+                    if (err.status === -1) {
+                        res.status(400).send("Pattern limit reached for this network, cannot create new pattern.");
+                    } else if (err.status === -2) {
+                        res.status(400).send("Node limit reached for this network, cannot create new pattern.");
+                    } else {
+                        res.status(500).send(err.message);
+                    }
+                    return;
+                }
                 let nodeIdList = [];
                 const connectorList: Connector[] = [];
 
@@ -134,7 +144,7 @@ router.post("/patterns", (req: Request, res: Response) => {
                     connectorList.push(newConnector);
                 });
 
-                connectorList.push( new Connector(req.body.dnid, node.id));
+                connectorList.push(new Connector(req.body.dnid, node.id));
 
                 db.addConnections(connectorList, (err: Err) => {
                     if (err) {
@@ -168,7 +178,11 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
     console.log(req.body);
     db.addNode(true, false, req.body.pattern, (node: Node, err: Err) => {
         if (err) {
-            res.status(400).send(err.message);
+            if (err.status === -1) {
+                res.status(400).send("Node limit reached for this network");
+            } else {
+                res.status(500).send(err.message);
+            }
             return;
         }
         let nodeIdList: any[] = [];
@@ -199,7 +213,7 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                         res.status(400).send(err.message);
                     }
                     // if (network.isValid()) {
-                        res.status(200).send(network);
+                    res.status(200).send(network);
                     // } else {
                     //     res.status(400).send("Invalid network modification");
                     // }
@@ -217,7 +231,7 @@ router.post("/patterns/:pid/nodes", (req: Request, res: Response) => {
                             return;
                         }
                         // if (network.isValid()) {
-                            res.status(200).send(network);
+                        res.status(200).send(network);
                         // } else {
                         //     res.status(400).send("Invalid network modification");
                         // }
@@ -269,14 +283,38 @@ router.delete("/connections", (req: Request, res: Response) => {
 router.delete("/nodes", (req: Request, res: Response) => {
     console.log(req.query);
     db.deleteNode(req.query.nid, (err: Err) => {
-      if (err) {
-          res.status(400).send(err.message);
-      }
-      if ( req.query.pid) {
-        db.deletePattern(req.query.pid, (err: Err) => {
-          if (err) {
-              res.status(400).send(err.message);
-          } else {
+        if (err) {
+            res.status(400).send(err.message);
+        }
+        if (req.query.pid) {
+            db.deletePattern(req.query.pid, (err: Err) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    db.getNetwork((err: Err, network: Network) => {
+                        if (err) {
+                            res.status(400).send(err.message);
+                        } else {
+                            res.status(200).send(network);
+                        }
+                    });
+                }
+            });
+        } else if (req.query.id && req.query.targetId) {
+            db.addConnection(req.query.id, req.query.targetId, (err: Err, con: Connector) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    db.getNetwork((err: Err, network: Network) => {
+                        if (err) {
+                            res.status(400).send(err.message);
+                        } else {
+                            res.status(200).send(network);
+                        }
+                    });
+                }
+            });
+        } else {
             db.getNetwork((err: Err, network: Network) => {
                 if (err) {
                     res.status(400).send(err.message);
@@ -284,115 +322,94 @@ router.delete("/nodes", (req: Request, res: Response) => {
                     res.status(200).send(network);
                 }
             });
-          }
-        });
-      } else if (req.query.id && req.query.targetId) {
-        db.addConnection(req.query.id, req.query.targetId, (err: Err, con: Connector) => {
-          if (err) {
-              res.status(400).send(err.message);
-          } else {
-            db.getNetwork((err: Err, network: Network) => {
-                if (err) {
-                    res.status(400).send(err.message);
-                } else {
-                    res.status(200).send(network);
-                }
-            });
-          }
-        });
-      } else {
-        db.getNetwork((err: Err, network: Network) => {
-            if (err) {
-                res.status(400).send(err.message);
-            } else {
-                res.status(200).send(network);
-            }
-        });
-      }
+        }
     });
 });
 
 router.delete("/patterns", (req: Request, res: Response) => {
-  console.log(req.query);
-  db.deletePattern(req.query.pid, (err: Err) => {
-    if (err) {
-        res.status(400).send(err.message);
-    } else {
-      db.getNetwork((err: Err, network: Network) => {
-          if (err) {
-              res.status(400).send(err.message);
-          } else {
-              res.status(200).send(network);
-          }
-      });
-    }
-  });
-});
-
-router.delete("/domains", (req: Request, res: Response) => {
-  console.log(req.query);
-  db.deleteDomain(req.query.did, (err: Err) => {
-    if (err) {
-        res.status(400).send(err.message);
-    } else {
-      db.getNetwork((err: Err, network: Network) => {
-          if (err) {
-              res.status(400).send(err.message);
-          } else {
-              res.status(200).send(network);
-          }
-      });
-    }
-  });
-});
-
-router.post("/domains", (req: Request, res: Response) => {
-  console.log(req.body);
-  db.storeNewDomain( (domainId: string, err: Err) => {
-    if (err) {
-        res.status(400).send(err.message);
-    } else {
-      db.addDomainNode(true, domainId, (domainNode: Node, err: Err) => {
+    console.log(req.query);
+    db.deletePattern(req.query.pid, (err: Err) => {
         if (err) {
             res.status(400).send(err.message);
         } else {
-          let nodeIdList = [];
-          const connectorList: Connector[] = [];
+            db.getNetwork((err: Err, network: Network) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    res.status(200).send(network);
+                }
+            });
+        }
+    });
+});
 
-          nodeIdList = req.body.did;
-          nodeIdList.forEach((nid: string) => {
-              const newConnector = new Connector(domainNode.id, nid);
-              connectorList.push(newConnector);
-          });
+router.delete("/domains", (req: Request, res: Response) => {
+    console.log(req.query);
+    db.deleteDomain(req.query.did, (err: Err) => {
+        if (err) {
+            res.status(400).send(err.message);
+        } else {
+            db.getNetwork((err: Err, network: Network) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                } else {
+                    res.status(200).send(network);
+                }
+            });
+        }
+    });
+});
 
-          db.storeNewPattern(domainId, (patternId: string, err: Err) => {
+router.post("/domains", (req: Request, res: Response) => {
+    console.log(req.body);
+    db.storeNewDomain((domainId: string, err: Err) => {
+        if (err) {
+            res.status(400).send(err.message);
+            return;
+        }
+        db.addDomainNode(true, domainId, (domainNode: Node, err: Err) => {
             if (err) {
                 res.status(400).send(err.message);
-            } else {
-              db.addNode(true, true, patternId, (conNode: Node, err: Err) => {
-
-                  connectorList.push( new Connector( domainNode.id, conNode.id));
-                  console.log(connectorList);
-                  db.addConnections(connectorList, (err: Err) => {
-                      if (err) {
-                          res.status(400).send(err.message);
-                      } else {
-                          db.getNetwork((err: Err, network: Network) => {
-                              if (err) {
-                                  res.status(400).send(err.message);
-                              } else {
-                                  res.send(network);
-                              }
-                          });
-                      }
-                  });
-              });
+                return;
             }
-          });
-        }
-      });
-    }
-  });
+            let nodeIdList = [];
+            const connectorList: Connector[] = [];
+
+            nodeIdList = req.body.did;
+            nodeIdList.forEach((nid: string) => {
+                const newConnector = new Connector(domainNode.id, nid);
+                connectorList.push(newConnector);
+            });
+
+            db.storeNewPattern(domainId, (patternId: string, err: Err) => {
+                if (err) {
+                    res.status(400).send(err.message);
+                    return;
+                }
+                db.addNode(true, true, patternId, (conNode: Node, err: Err) => {
+                    if (err) {
+                        res.status(400).send(err.message);
+                    }
+                    connectorList.push(new Connector(domainNode.id, conNode.id));
+                    console.log(connectorList);
+                    db.addConnections(connectorList, (err: Err) => {
+                        if (err) {
+                            res.status(400).send(err.message);
+                            return;
+                        }
+                        db.getNetwork((err: Err, network: Network) => {
+                            if (err) {
+                                res.status(400).send(err.message);
+                            } else {
+                                res.send(network);
+                            }
+                        });
+
+                    });
+                });
+            });
+        });
+    });
 });
 
 export { router as adminRoutes };

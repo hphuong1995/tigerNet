@@ -11,6 +11,7 @@ import { Connector } from 'src/app/data/connector';
 import * as $ from 'jquery';
 import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Position } from 'src/app/data/position';
 
 
 declare var cytoscape: any;
@@ -57,7 +58,6 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert("Error loading the network");
         return;
       }
-      //this.resetGraph(res.body.patterns, res.body.patternConnections);
       this.resetGraph(res.body.domains, res.body.domainConnections);
     });
   }
@@ -103,6 +103,10 @@ export class MainComponent implements OnInit, AfterViewInit {
     let reqObj :any = {sender : this.data.selectedNodes[0],
                         receiver: this.data.selectedNodes[1],
                         message : this.f.message.value};
+
+    
+    this.resetSelectedElement();
+
     let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
       return '#' + n.id;
     }).reverse();
@@ -170,7 +174,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
   }
 
-  autoDeactivate(_this : any){    
+  autoDeactivate(_this : any) {
     this.network.domains.forEach( d => {
       d.patterns.forEach( p => p.arrange() );
     });
@@ -215,7 +219,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.network.getNodeById(selectedNode).isActive = true;
     });
   }
-
 
   resetSelectedElement = function () {
 
@@ -988,20 +991,12 @@ export class MainComponent implements OnInit, AfterViewInit {
             parent: domain.id
           }
         });
-        // let i = 0;
-        // let posX = [50, 90, 130, 130, 90, 50, 90];
-        // let posY = [75, 50, 75, 100, 125, 100, 88]
         pattern.nodes.forEach((node: Node) => {
           elements.push({
             data: {
               id: node.id,
               parent: pattern.id
-            },
-            // position: {
-            //   parent,
-            //   x: posX[i],
-            //   y: posY[i++]
-            // }
+            }
           });
           if (node.isConnector) {
             isConnectorSelectors += "#" + node.id + ",";
