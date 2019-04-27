@@ -170,7 +170,10 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
   }
 
-  autoDeactivate(_this : any){
+  autoDeactivate(_this : any){    
+    this.network.domains.forEach( d => {
+      d.patterns.forEach( p => p.arrange() );
+    });
     if(!this.network.domains || this.network.domains.length < 1) {
       return;
     }
@@ -940,6 +943,9 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   reset(){
+    this.network.domains.forEach( d => {// ### for testing only, remove this
+      d.patterns.forEach( p => p.arrange() );
+    });
     this.resetSelectedElement();
     this.cy.nodes().removeClass('highlighted');
     this.cy.nodes().removeClass('patternHighlighted');
@@ -982,12 +988,20 @@ export class MainComponent implements OnInit, AfterViewInit {
             parent: domain.id
           }
         });
+        // let i = 0;
+        // let posX = [50, 90, 130, 130, 90, 50, 90];
+        // let posY = [75, 50, 75, 100, 125, 100, 88]
         pattern.nodes.forEach((node: Node) => {
           elements.push({
             data: {
               id: node.id,
               parent: pattern.id
-            }
+            },
+            // position: {
+            //   parent,
+            //   x: posX[i],
+            //   y: posY[i++]
+            // }
           });
           if (node.isConnector) {
             isConnectorSelectors += "#" + node.id + ",";
@@ -1038,6 +1052,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.cy = cytoscape({
       container: document.getElementById('cy'), // container to render in
       elements: elements,
+      wheelSensitivity: .3,
       style: [ // the stylesheet for the graph
         {
           selector: 'node',
@@ -1117,14 +1132,15 @@ export class MainComponent implements OnInit, AfterViewInit {
       ],
 
       layout: {
-        name: 'cose-bilkent',
-        rows: 1
+        name: 'cose-bilkent'//,
+        // gravityRangeCompound: 20,
+        // gravityCompound: 20,
+        // nestingFactor: 3,
+        // nodeRepulsion: 50000
       }
 
     });
     cytoscape.use(coseBilkent);
-    //var collector = this.cy.collection();
-    //console.log(this);
     var _this = this;
     //this.cy.$('#' + clickedEle).addClass('test');
 
@@ -1137,6 +1153,14 @@ export class MainComponent implements OnInit, AfterViewInit {
     //   }
     //  });
 
+    this.network.addCytoscape(this.cy);
+
+    this.cy.ready( () => {  
+      // this.network.addCytoscape(this.cy);
+      this.network.domains.forEach( d => {
+        d.patterns.forEach( p => p.arrange() );
+      });
+    });
 
     this.cy.nodes().on('tap', function (e) {
       //let clickedNode : string;
