@@ -943,9 +943,9 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   reset(){
-    this.network.domains.forEach( d => {// ### for testing only, remove this
-      d.patterns.forEach( p => p.arrange() );
-    });
+    // this.network.domains.forEach( d => {// ### for testing only, remove this
+    //   d.patterns.forEach( p => p.arrange() );
+    // });
     this.resetSelectedElement();
     this.cy.nodes().removeClass('highlighted');
     this.cy.nodes().removeClass('patternHighlighted');
@@ -1133,6 +1133,8 @@ export class MainComponent implements OnInit, AfterViewInit {
 
       layout: {
         name: 'cose-bilkent'//,
+        // randomize: false,
+        // animate: false
         // gravityRangeCompound: 20,
         // gravityCompound: 20,
         // nestingFactor: 3,
@@ -1142,16 +1144,6 @@ export class MainComponent implements OnInit, AfterViewInit {
     });
     cytoscape.use(coseBilkent);
     var _this = this;
-    //this.cy.$('#' + clickedEle).addClass('test');
-
-    // this.cy.nodes().forEach(function( ele ){
-    //   let idTest=ele.id();
-    //   for(let inActived of _this.listTest){
-    //     if(idTest===inActived){
-    //       ele.addClass('inactiveSelectors');
-    //     }
-    //   }
-    //  });
 
     this.network.addCytoscape(this.cy);
 
@@ -1198,11 +1190,6 @@ export class MainComponent implements OnInit, AfterViewInit {
         }
 
       }
-      // if(clickedEle.charAt(0) === 'P' && ! _this.data.selectedPatterns.includes(clickedEle)) {
-      //   _this.data.selectedPatterns.push(clickedEle);
-      // } else if(clickedEle.charAt(0) === 'N' && ! _this.data.selectedNodes.includes(clickedEle)) {
-      //   _this.data.selectedNodes.push(clickedEle);
-      // }
     });
 
     let inactiveNodes = inactiveSelectors.split(',');
@@ -1213,9 +1200,6 @@ export class MainComponent implements OnInit, AfterViewInit {
         this.cy.$( nid).addClass('inactiveSelectors');
       }
     });
-    // sleep(ms:number){
-    //   return new Promise(resolve=>setTimeout(resolve,ms));
-    // }
 
     this.cy.edges().on('tap', function (e) {
       //let clickedNode : string;
@@ -1238,6 +1222,10 @@ export class MainComponent implements OnInit, AfterViewInit {
       var clickedEle = e.target.id();
       _this.data.selectedLink.push(clickedEle.substring(0, 3));
       _this.data.selectedLink.push(clickedEle.substring(3, 6));
+    });
+
+    this.cy.on('tap', function (e) {
+      _this.reset();
     });
   }
 }

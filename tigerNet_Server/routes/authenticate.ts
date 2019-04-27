@@ -24,7 +24,7 @@ router.post( "/api/v1/login", ( req: Request, res: Response ) => {
             }
             const sess = new Session( req.session.id, uuid());
             req.session.user = user;
-            res.cookie("X-CSRF", sess.csrf, { expires: new Date(Date.now() + 1_200_000)});
+            res.cookie("X-CSRF", sess.csrf, { expires: new Date(Date.now() + 12_000_000)});
             db.storeSession(sess, (session: Session, err3: Err) => {
                 if (err3) {
                     endSession(req, res, (e: Err) => {
