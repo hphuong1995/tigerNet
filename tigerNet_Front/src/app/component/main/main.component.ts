@@ -84,7 +84,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   async sendMessage(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
-      alert("Please only select 2 node for this operation.");
+      alert("Please only select 2 node. for this operation.");
       return;
     }
 
@@ -96,11 +96,9 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     if(this.data.selectedNodes[0].charAt(0) === 'D' || this.data.selectedNodes[1].charAt(0) === 'D'){
       this.resetSelectedElement();
-      alert("Domain node can not participate in this operation");
+      alert("Domain node can not participate in this operation.");
       return;
     }
-
-    console.log(this.data.selectedNodes);
 
     let reqObj :any = {sender : this.data.selectedNodes[0],
                         receiver: this.data.selectedNodes[1],
@@ -122,7 +120,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.sendMessage(reqObj).subscribe( data =>{
       console.log(data);
       this.f.message.setValue("");
-      alert("message sent successfully.");
+      alert("Message sent successfully.");
       this.resetSelectedElement();
     });
 
@@ -135,13 +133,13 @@ export class MainComponent implements OnInit, AfterViewInit {
   viewNode(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
-      alert("Please only select node for this operation.");
+      alert("Please only select nodes for this operation.");
       return;
     }
 
     if (this.data.selectedNodes.length !== 1 ){
       this.resetSelectedElement();
-      alert("Please only select a node for this operation.");
+      alert("Please only select one node for this operation.");
       return;
     }
     this.currentNode = this.data.selectedNodes[0];
@@ -201,7 +199,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   activeNode(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
-      alert("Please only select node for this operation.");
+      alert("Please only select nodes for this operation.");
       return;
     }
 
@@ -217,12 +215,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
 
   resetSelectedElement = function () {
-    // this.data.selectedNodes.forEach( (selectedNode) =>{
-    //   this.cy.$('#'+selectedNode).json({ selected: false });
-    // });
-    // this.data.selectedPatterns.forEach( (selectedPattern) =>{
-    //   this.cy.$('#'+selectedPattern).json({ selected: false });
-    // });
+
     this.data.selectedNodes.forEach((selectedNode: string) => {
       this.cy.$('#' + selectedNode).removeClass('highlighted');
     });
@@ -251,9 +244,9 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
 
     // check if a pattern is selected
-    if (this.data.selectedPatterns.length !== 0) {
+    if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
-      alert("Please select only 1 Pattern that new node will be added to.");
+      alert("Please only select nodes for this operation.");
       return;
     }
     // check if at least 1 node and less than 3 node is selected
@@ -285,7 +278,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.data.selectedNodes.forEach((node: string) => {
         if (!currentPattern.getNodeById(node)) {
           this.resetSelectedElement();
-          alert("Please select nodes that inside the only 1 patern pattern.");
+          alert("Please select nodes that inside the only 1 pattern.");
           return;
         }
       });
@@ -294,7 +287,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       if (this.data.selectedNodes.length === 3) {
         if (!this.data.selectedNodes.includes(currentPattern.getConnectorNode().id)) {
           this.resetSelectedElement();
-          alert("When user choose 3 nodes, one of them must be connector node");
+          alert("When 3 nodes are selected, one of them must be connector node");
           return;
         }
       }
@@ -303,8 +296,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       if (currentPattern.nodes.length >= 2) {
         if (this.data.selectedNodes.length < 2) {
           this.resetSelectedElement();
-          console.log("hit");
-          alert("Selected pattern has more than 3 nodes, please select at least 2 nodes to maintain the ring.");
+          alert("Selected pattern has more than 2 nodes, please select at least 2 nodes to maintain the ring.");
           return;
         }
 
@@ -327,7 +319,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
         if (flag) {
           this.resetSelectedElement();
-          alert("You can not add a connection there.");
+          alert("You can not add a node there.");
           return;
         }
       }
@@ -341,7 +333,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.resetSelectedElement();
 
       this.oldNetwork = this.network;
-      // this.network = new Network(this.oldNetwork.patterns, this.oldNetwork.patternConnections);
       this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
       let pattern: Pattern = this.network.getPatternById(reqObject.pattern);
       const connectorList: Connector[] = [];
@@ -380,8 +371,6 @@ export class MainComponent implements OnInit, AfterViewInit {
         if (!res.ok) {
           alert(res.body);
         } else {
-          console.log(res.body);
-          //this.resetGraph(res.body.patterns, res.body.patternConnections);
           this.resetGraph(res.body.domains, res.body.domainConnections);
         }
       });
@@ -389,16 +378,21 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   addConnection = function () {
+    if(this.data.selectedLink.length !== 0 ){
+      this.resetSelectedElement();
+      alert("Please select 2 nodes or 2 patterns or 2 domains to add a connection.");
+      return;
+    }
     if (this.data.selectedPatterns.length !== 2 && this.data.selectedNodes.length !== 2 && this.data.selectedDomains.length !== 2) {
       this.resetSelectedElement();
-      alert("Please select 2 nodes or 2 patterns or 2 domains to add a link");
+      alert("Please select 2 nodes or 2 patterns or 2 domains to add a connection");
       return;
     }
     else {
       if (this.data.selectedPatterns.length === 2) {
         if (this.data.selectedNodes.length !== 0 || this.data.selectedDomains.length !== 0) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
+          alert("Please select 2 elements of same type to add a connection.");
           return;
         }
         else {
@@ -406,7 +400,6 @@ export class MainComponent implements OnInit, AfterViewInit {
           var arrToSend = [];
 
           this.data.selectedPatterns.forEach( (pat) => {
-            //console.log(this.network.getPatternById(pat).getConnectorNode().id);
             arrToSend.push(this.network.getPatternById(pat).getConnectorNode().id);
           });
 
@@ -429,7 +422,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       else if (this.data.selectedDomains.length === 2) {
         if (this.data.selectedPatterns.length !== 0 || this.data.selectedNodes.length !== 0) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
+          alert("Please select 2 elements of same type to add a connection.");
           return;
         }
 
@@ -456,7 +449,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       else if (this.data.selectedNodes.length === 2) {
         if (this.data.selectedPatterns.length !== 0 || this.data.selectedDomains.length !== 0 ) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes or 2 patterns or 2 domains to add a link, not both");
+          alert("Please select 2 elements of same type to add a connection.");
           return;
         }
 
@@ -465,12 +458,12 @@ export class MainComponent implements OnInit, AfterViewInit {
         p = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]);
         other = this.network.getPatternByChildNodeId(this.data.selectedNodes[1]);
         if (!p || !other) {
-          alert("Please select 2 nodes within the same pattern");
+          alert("Please select 2 nodes within the same pattern.");
           return;
         }
         if (p.id !== other.id) {
           this.resetSelectedElement();
-          alert("Please select 2 nodes in the same pattern.");
+          alert("Please select 2 nodes within the same pattern.");
           return;
         }
 
@@ -516,7 +509,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
     if(this.data.selectedLink.length != 1) {
-      alert("Please select one connection to delete.");
+      alert("Please select only one connection to delete.");
       return;
     }
     var arrToSend: any[] = [];
@@ -544,7 +537,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
       if (!this.network.isValid()) {
         this.network = this.oldNetwork;
-        alert("Operation will break the network");
+        alert("Operation will break the network.");
         return;
       }
       else {
@@ -599,7 +592,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
             if (!this.network.isValid()) {
               this.network = this.oldNetwork;
-              alert("Operation will break the network");
+              alert("Operation will break the network.");
               return;
             }
             else {
@@ -624,7 +617,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       }
       if (this.data.selectedPatterns.length === 0) {
         this.resetSelectedElement();
-        alert("Please select a pattern that new pattern connect to.");
+        alert("Please select at least one pattern that new pattern connect to.");
         return;
       }
       else {
@@ -647,7 +640,6 @@ export class MainComponent implements OnInit, AfterViewInit {
           this.resetGraph(data.domains, data.domainConnections);
         });
       }
-
   }
 
   checkConnectionExist(arrToSend: any[], arrayToCheck: any[]) {
@@ -675,7 +667,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
     if (this.data.selectedPatterns.length !== 1) {
       this.resetSelectedElement();
-      alert("Please 1 pattern to delete");
+      alert("Please select one pattern to delete.");
       return;
     }
 
@@ -692,8 +684,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     if(!this.network.isValid()) {
       this.network = this.oldNetwork;
       this.resetSelectedElement();
-      console.log("not valid");
-      alert("Invalid network modification");
+      alert("Operation will break the network.");
       return;
     }
 
@@ -712,7 +703,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
     if (this.data.selectedDomains.length !== 1) {
       this.resetSelectedElement();
-      alert("Please 1 Domain to delete");
+      alert("Please select one Domain to delete.");
       return;
     }
 
@@ -738,8 +729,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     if (!this.network.isValid()) {
       this.network = this.oldNetwork;
       this.resetSelectedElement();
-      console.log("not valid");
-      alert("Operation will break the network");
+      alert("Operation will break the network.");
       return;
     }
     else{
@@ -785,7 +775,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   deleteNode() {
     if (this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
       this.resetSelectedElement();
-      alert("Please select a node to delete");
+      alert("Please select a node to delete.");
       return;
     }
     if (this.data.selectedNodes.length !== 1) {
@@ -805,7 +795,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.resetSelectedElement();
 
     if (reqObject.currentNodeNum === 1 && reqObject.node !== reqObject.conNode) {
-      alert("Something wrong");
+      alert("The network is in invalid state. Please check the network.");
       return;
     }
 
@@ -834,7 +824,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       if (!this.network.isValid()) {
         this.network = this.oldNetwork;
         this.resetSelectedElement();
-        console.log("not valid");
         alert("Domains must not be empty");
         return;
       }
@@ -863,7 +852,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       if (!this.network.isValid()) {
         this.network = this.oldNetwork;
         this.resetSelectedElement();
-        console.log("not valid");
         alert("Operation will break the network");
         return;
       }
@@ -923,13 +911,10 @@ export class MainComponent implements OnInit, AfterViewInit {
           flag = false;
       }
 
-
-      console.log(joinNodes);
       console.log(pattern);
       if (!this.network.isValid()) {
         this.network = this.oldNetwork;
         this.resetSelectedElement();
-        console.log("not valid");
         alert("Operation will break the network");
         return;
       }
