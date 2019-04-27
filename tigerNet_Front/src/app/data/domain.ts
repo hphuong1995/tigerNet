@@ -143,6 +143,9 @@ export class Domain {
         if(startPattern) {
             path = startPattern.getPathToConnector(start);
             // path.pop();
+            if( path === undefined ) {
+                return undefined;
+            }
             
             if(endPattern) {
                 // path = path.concat(this.connToConnPath(startPattern.getConnectorNode(), endPattern.getConnectorNode()));
