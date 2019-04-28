@@ -3,18 +3,10 @@ import express from "express";
 import { NextFunction, Request, Response } from "express";
 const router: any = express.Router();
 
-import { NetConnectOpts } from "net";
-import { isContext } from "vm";
-import { ClientQuestion } from "../data/clientQuestion";
-import { Domain } from "../data/domain";
 import { Message } from "../data/message";
 import { Network } from "../data/network";
-import { Node } from "../data/node";
-import { Question } from "../data/question";
-import { SecurityAnswer } from "../data/securityAnswer";
 import { User } from "../data/user";
 import { Err } from "./../data/err";
-import { Session } from "./../data/session";
 import { db } from "./../services/database/db";
 
 function validUid( userId: string, req: Request ) {
@@ -131,6 +123,9 @@ router.post("/messages", (req: Request, res: Response) => {
   console.log(req.body);
   db.storeNewMessage(req.body.sender, req.body.receiver, req.body.message, (message, err: Err) => {
     if (err) {
+      if (err.status === -1) {
+        err.message = "Cannot create new message, network has reached its message capacity.";
+      }
       res.status(400).send(err.message);
     } else {
       res.status(200).send(message);

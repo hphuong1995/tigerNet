@@ -46,8 +46,8 @@ const USERS_TABLE =
         username VARCHAR(22) NOT NULL,\
         passhash VARCHAR(61) NOT NULL,\
         is_admin BIT NOT NULL, \
-        is_blocked BIT NOT NULL,\
-        login_attempts INT NOT NULL,\
+        is_blocked BIT NOT NULL DEFAULT 0,\
+        login_attempts INT NOT NULL DEFAULT 0,\
         PRIMARY KEY (id)\
     );";
 
@@ -64,7 +64,7 @@ const MESSAGES_TABLE =
         CONSTRAINT FOREIGN KEY (fk_sender_id)\
         REFERENCES nodes(id)\
         ON UPDATE CASCADE\
-        ON DELETE SET NULL,\
+        ON DELETE NO ACTION,\
         PRIMARY KEY (id)\
     );";
 
@@ -79,7 +79,7 @@ const SECURITY_ANSWERS_TABLE =
     "CREATE TABLE security_answers (\
         id VARCHAR(45) NOT NULL,\
         answer VARCHAR(45) NOT NULL,\
-        incorrect_guess BIT NOT NULL,\
+        incorrect_guess BIT NOT NULL DEFAULT 0,\
         fk_user_id VARCHAR(45) NOT NULL,\
         CONSTRAINT FOREIGN KEY (fk_user_id)\
         REFERENCES users(id)\
@@ -444,6 +444,155 @@ initQueue.unshift((connection, initQueue) => {
         next(connection, initQueue);
     });
 });
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "INSERT INTO users (id, username, passhash, is_admin) VALUES ?";
+    let values = [
+        [uuid(), 'administrator', bcrypt.hashSync('IMonitor', 10), true],
+        [uuid(), 'LMarshall', bcrypt.hashSync('LindaM', 10), false],
+        [uuid(), 'MClutcher', bcrypt.hashSync('MaxClutch', 10), false],
+        [uuid(), 'EWickerson', bcrypt.hashSync('EmilyWicker', 10), false]
+    ];
+    connection.query(query, [values], (err) => {
+        if (err) rollbackAndExit(connection, err);
+        next(connection, initQueue);
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "SELECT id FROM users WHERE username = 'administrator'";
+    connection.query(query, (err, results) => {
+        if (err) rollbackAndExit(connection, err);
+        console.log(results);
+        let id = results[0].id;
+        let questions = [
+            [uuid(), "What is your favorite film?"],
+            [uuid(), "What city would you like to visit as your dream vacation?"],
+            [uuid(), "What is the short name of the college you attended first?"]
+        ];
+        let answers = [
+            [uuid(), "Die Hard", id, questions[0][0]],
+            [uuid(), "Paris", id, questions[1][0]],
+            [uuid(), "Concordia", id, questions[2][0]],
+        ];
+        query = "INSERT INTO questions (id, question) VALUES ?";
+        connection.query(query, [questions], (err) => {
+            if (err) rollbackAndExit(connection, err);
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            connection.query(query, [answers], (err) => {
+                if (err) rollbackAndExit(connection, err);
+                next(connection, initQueue);
+            });
+        });
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "SELECT id FROM users WHERE username = 'LMarshall'";
+    connection.query(query, (err, results) => {
+        if (err) rollbackAndExit(connection, err);
+        console.log(results);
+        let id = results[0].id;
+        let questions = [
+            [uuid(), "What city were you born in?"],
+            [uuid(), "What is your favorite film?"],
+            [uuid(), "What is your closest friend’s nick name?"]
+        ];
+        let answers = [
+            [uuid(), "Nashville", id, questions[0][0]],
+            [uuid(), "Spider Man", id, questions[1][0]],
+            [uuid(), "Turtle", id, questions[2][0]],
+        ];
+        query = "INSERT INTO questions (id, question) VALUES ?";
+        connection.query(query, [questions], (err) => {
+            if (err) rollbackAndExit(connection, err);
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            connection.query(query, [answers], (err) => {
+                if (err) rollbackAndExit(connection, err);
+                next(connection, initQueue);
+            });
+        });
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "SELECT id FROM users WHERE username = 'MClutcher'";
+    connection.query(query, (err, results) => {
+        if (err) rollbackAndExit(connection, err);
+        console.log(results);
+        let id = results[0].id;
+        let questions = [
+            [uuid(), "What is the name of the high school you attended?"],
+            [uuid(), "What are the last four digits of your current phone number?"],
+            [uuid(), "What is your closest friend’s nickname?"]
+        ];
+        let answers = [
+            [uuid(), "Longville High School", id, questions[0][0]],
+            [uuid(), "7823", id, questions[1][0]],
+            [uuid(), "Magnet", id, questions[2][0]],
+        ];
+        query = "INSERT INTO questions (id, question) VALUES ?";
+        connection.query(query, [questions], (err) => {
+            if (err) rollbackAndExit(connection, err);
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            connection.query(query, [answers], (err) => {
+                if (err) rollbackAndExit(connection, err);
+                next(connection, initQueue);
+            });
+        });
+    });
+});
+
+initQueue.unshift((connection, initQueue) => {
+    let next = initQueue.pop();
+    let query = "SELECT id FROM users WHERE username = 'EWickerson'";
+    connection.query(query, (err, results) => {
+        if (err) rollbackAndExit(connection, err);
+        console.log(results);
+        let id = results[0].id;
+        let questions = [
+            [uuid(), "Who is your favorite singer?"],
+            [uuid(), "Who is your favorite school teacher?"],
+            [uuid(), "What is your closest friend’s nickname?"]
+        ];
+        let answers = [
+            [uuid(), "Jeanette Chan", id, questions[0][0]],
+            [uuid(), "Michael Chan", id, questions[1][0]],
+            [uuid(), "Biker", id, questions[2][0]],
+        ];
+        query = "INSERT INTO questions (id, question) VALUES ?";
+        connection.query(query, [questions], (err) => {
+            if (err) rollbackAndExit(connection, err);
+            query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id) VALUES ?";
+            connection.query(query, [answers], (err) => {
+                if (err) rollbackAndExit(connection, err);
+                next(connection, initQueue);
+            });
+        });
+    });
+});
+
+// let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
+//     let values = [
+//         [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
+//         [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
+//         [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
+//         [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
+//         [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
+//         [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
+//     ];
+// let query = "INSERT INTO questions(id, question) VALUES ?";
+// params.questions = [
+//     [uuid(), "What is your favorite class?"],
+//     [uuid(), "When was your first dog born?"],
+//     [uuid(), "What is your brother's name?"],
+//     [uuid(), "What is your favorite color?"],
+//     [uuid(), "What is your favorite food?"],
+// ];
 
 initQueue.unshift((connection, initQueue) => {
     let params = {};

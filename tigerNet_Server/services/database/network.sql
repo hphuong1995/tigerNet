@@ -255,3 +255,26 @@ INSERT INTO node_connections(fk_node_id, fk_target_id) VALUES ('D00','D01');
 INSERT INTO node_connections(fk_node_id, fk_target_id) VALUES ('D00','D02');
 INSERT INTO node_connections(fk_node_id, fk_target_id) VALUES ('D01','D02');
 INSERT INTO node_connections(fk_node_id, fk_target_id) VALUES ('D02','D03');
+-- Message Ids
+UPDATE messageids SET isFree = 0 WHERE id LIKE 'M00_';
+UPDATE messageids SET isFree = 0 WHERE id = 'M010';
+UPDATE messageids SET isFree = 0 WHERE id = 'M011';
+UPDATE messageids SET isFree = 0 WHERE id = 'M012';
+UPDATE messageids SET isFree = 0 WHERE id = 'M013';
+UPDATE messageids SET isFree = 0 WHERE id = 'M014';
+-- Messages
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M000', 'N04', 'N32', 'This is a test message.');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M001', 'N03', 'N12', 'Can we connect our patterns?');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M002', 'N20', 'N70', 'Routing through the domains.');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M003', 'N52', 'N53', 'Hi Neighbor!');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M004', 'N45', 'N33', 'Complicated routing!');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M005', 'N62', 'N76', 'Informal descriptions are sent to you!');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M006', 'N27', 'N57', 'Any message from the other domains?');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M007', 'N32', 'N68', 'What is the syllabus for the final exam?');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M008', 'N17', 'N70', 'Incorrect attachment in the mail.');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M009', 'N45', 'N49', 'Please distribute this to our pattern members.');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M010', 'N04', 'N75', 'Is this the longest path? Please confirm.');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M011', 'N15', 'N33', 'Do we belong to the same domain? If not, can we mo');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M012', 'N26', 'N29', 'How do we make our communication quicker?');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M013', 'N55', 'N31', 'A list of items are on the way to you!');
+INSERT INTO messages(id, fk_sender_id, fk_receiver_id, body) VALUES ('M014', 'N71', 'N70', 'I am leaving, good bye!');
