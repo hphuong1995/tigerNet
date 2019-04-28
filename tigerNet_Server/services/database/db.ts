@@ -548,7 +548,7 @@ class DB {
                 }
                 queries(connection, args, (err: Err, results: any) => {
                     if (err) {
-                        transactionCallback(undefined, new Err(err.message, -10));
+                        transactionCallback(undefined, err);
                         connection.rollback(() => connection.release());
                         return;
                     }
