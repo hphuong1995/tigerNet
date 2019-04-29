@@ -607,114 +607,115 @@ initQueue.unshift((connection, initQueue) => {
 //     [uuid(), "What is your favorite food?"],
 // ];
 
-initQueue.unshift((connection, initQueue) => {
-    let params = {};
-    params.adminUser = {
-        id: uuid(),
-        username: 'Harrison',
-        passHash: bcrypt.hashSync('tiger0485', 10),
-        isAdmin: true,
-        isBlocked: false
-    }
+// initQueue.unshift((connection, initQueue) => {
 
-    params.user = {
-        id: uuid(),
-        username: 'Horacio',
-        passHash: bcrypt.hashSync('tiger0485', 10),
-        isAdmin: false,
-        isBlocked: false
-    }
+//     let params = {};
+//     params.adminUser = {
+//         id: uuid(),
+//         username: 'Harrison',
+//         passHash: bcrypt.hashSync('tiger0485', 10),
+//         isAdmin: true,
+//         isBlocked: false
+//     }
 
-    params.questions = [
-        [uuid(), "What is your favorite class?"],
-        [uuid(), "When was your first dog born?"],
-        [uuid(), "What is your brother's name?"],
-        [uuid(), "What is your favorite color?"],
-        [uuid(), "What is your favorite food?"],
-    ];
+//     params.user = {
+//         id: uuid(),
+//         username: 'Horacio',
+//         passHash: bcrypt.hashSync('tiger0485', 10),
+//         isAdmin: false,
+//         isBlocked: false
+//     }
 
-    params.adminAnswers = [
-        {
-            id: uuid(),
-            questionId: params.questions[0][0],
-            userId: params.adminUser.id,
-            answer: "CS 744"
-        },
-        {
-            id: uuid(),
-            questionId: params.questions[1][0],
-            userId: params.adminUser.id,
-            answer: "2000"
-        },
-        {
-            id: uuid(),
-            questionId: params.questions[2][0],
-            userId: params.adminUser.id,
-            answer: "Leeroy"
-        }
-    ];
+//     params.questions = [
+//         [uuid(), "What is your favorite class?"],
+//         [uuid(), "When was your first dog born?"],
+//         [uuid(), "What is your brother's name?"],
+//         [uuid(), "What is your favorite color?"],
+//         [uuid(), "What is your favorite food?"],
+//     ];
 
-    params.userAnswers = [
-        {
-            id: uuid(),
-            questionId: params.questions[2][0],
-            userId: params.user.id,
-            answer: "Kevin"
-        },
-        {
-            id: uuid(),
-            questionId: params.questions[3][0],
-            userId: params.user.id,
-            answer: "green"
-        },
-        {
-            id: uuid(),
-            questionId: params.questions[4][0],
-            userId: params.user.id,
-            answer: "apple pie"
-        }
-    ];
-    let next = initQueue.pop();
-    let query = "INSERT INTO questions(id, question) VALUES ?";
-    connection.query(query, [params.questions], (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, params);
-    });
-});
+//     params.adminAnswers = [
+//         {
+//             id: uuid(),
+//             questionId: params.questions[0][0],
+//             userId: params.adminUser.id,
+//             answer: "CS 744"
+//         },
+//         {
+//             id: uuid(),
+//             questionId: params.questions[1][0],
+//             userId: params.adminUser.id,
+//             answer: "2000"
+//         },
+//         {
+//             id: uuid(),
+//             questionId: params.questions[2][0],
+//             userId: params.adminUser.id,
+//             answer: "Leeroy"
+//         }
+//     ];
 
-initQueue.unshift((connection, initQueue, params) => {
-    let adminUser = params.adminUser;
-    let user = params.user;
-    let next = initQueue.pop();
-    let query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
-    let values = [
-        [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
-        [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
-    ];
-    connection.query(query, [values], (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue, params);
-    });
-});
+//     params.userAnswers = [
+//         {
+//             id: uuid(),
+//             questionId: params.questions[2][0],
+//             userId: params.user.id,
+//             answer: "Kevin"
+//         },
+//         {
+//             id: uuid(),
+//             questionId: params.questions[3][0],
+//             userId: params.user.id,
+//             answer: "green"
+//         },
+//         {
+//             id: uuid(),
+//             questionId: params.questions[4][0],
+//             userId: params.user.id,
+//             answer: "apple pie"
+//         }
+//     ];
+//     let next = initQueue.pop();
+//     let query = "INSERT INTO questions(id, question) VALUES ?";
+//     connection.query(query, [params.questions], (err, res, fields) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue, params);
+//     });
+// });
 
-initQueue.unshift((connection, initQueue, params) => {
-    let next = initQueue.pop();
-    let adminAnswers = params.adminAnswers;
-    let userAnswers = params.userAnswers;
-    let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
-    let values = [
-        [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
-        [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
-        [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
-        [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
-        [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
-        [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
-    ];
-    connection.query(query, [values], (err, res, fields) => {
-        if (err) rollbackAndExit(connection, err);
-        next(connection, initQueue);
-    });
-});
+// initQueue.unshift((connection, initQueue, params) => {
+//     let adminUser = params.adminUser;
+//     let user = params.user;
+//     let next = initQueue.pop();
+//     let query = "INSERT INTO users (id, username, passhash, is_admin, is_blocked, login_attempts) VALUES ?";
+//     let values = [
+//         [adminUser.id, adminUser.username, adminUser.passHash, adminUser.isAdmin, adminUser.isBlocked, 0],
+//         [user.id, user.username, user.passHash, user.isAdmin, user.isBlocked, 0]
+//     ];
+//     connection.query(query, [values], (err, res, fields) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue, params);
+//     });
+// });
+
+// initQueue.unshift((connection, initQueue, params) => {
+//     let next = initQueue.pop();
+//     let adminAnswers = params.adminAnswers;
+//     let userAnswers = params.userAnswers;
+//     let query = "INSERT INTO security_answers (id, answer, fk_user_id, fk_question_id, incorrect_guess) VALUES ?";
+//     let values = [
+//         [adminAnswers[0].id, adminAnswers[0].answer, adminAnswers[0].userId, adminAnswers[0].questionId, false],
+//         [adminAnswers[1].id, adminAnswers[1].answer, adminAnswers[1].userId, adminAnswers[1].questionId, false],
+//         [adminAnswers[2].id, adminAnswers[2].answer, adminAnswers[2].userId, adminAnswers[2].questionId, false],
+//         [userAnswers[0].id, userAnswers[0].answer, userAnswers[0].userId, userAnswers[0].questionId, false],
+//         [userAnswers[1].id, userAnswers[1].answer, userAnswers[1].userId, userAnswers[1].questionId, false],
+//         [userAnswers[2].id, userAnswers[2].answer, userAnswers[2].userId, userAnswers[2].questionId, false]
+//     ];
+//     connection.query(query, [values], (err, res, fields) => {
+//         if (err) rollbackAndExit(connection, err);
+//         next(connection, initQueue);
+//     });
+// });
 
 initQueue.unshift((connection, initQueue) => {
     let next = initQueue.pop();
