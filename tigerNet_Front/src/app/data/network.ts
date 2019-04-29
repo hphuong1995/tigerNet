@@ -125,15 +125,20 @@ export class Network {
         // all domains must be connected in some way
         let network: Connector[] = [];
 
-        for (const connector of this.domainConnections) {
-            if (network.length === 0 || network.find(cn => cn.sharesEnd(connector))) {
-                network.push(connector);
+        let removeConnectedConnector: (connectors: Connector[], connectedTo: Connector) => void = (connectors, connectedTo) => {
+            let index: number = connectors.findIndex(cn => cn.sharesEnd(connectedTo));
+            if(index === -1) {
+                return;
             }
+            connectors.splice(1,1);
         }
-
-        if (network.length !== this.domainConnections.length) {
-            return false;
-        }
+        
+        // // ###FIXME bug here
+        // for (const connector of this.domainConnections) {
+        //     if (network.length === 0 || network.find(cn => cn.sharesEnd(connector))) {
+        //         network.push(connector);
+        //     }
+        // }
 
         if(!this.checkDomainIsolate()){
           return false;
