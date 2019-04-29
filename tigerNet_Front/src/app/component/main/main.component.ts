@@ -106,6 +106,59 @@ export class MainComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // async sendMessage(){
+  //   if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
+  //     this.resetSelectedElement();
+  //     alert("Please only select 2 node. for this operation.");
+  //     return;
+  //   }
+
+  //   if (this.data.selectedNodes.length !== 2 ) {
+  //     this.resetSelectedElement();
+  //     alert("Please only select exactly 2 node for this operation.");
+  //     return;
+  //   }
+
+  //   if(this.data.selectedNodes[0].charAt(0) === 'D' || this.data.selectedNodes[1].charAt(0) === 'D'){
+  //     this.resetSelectedElement();
+  //     alert("Domain node can not participate in this operation.");
+  //     return;
+  //   }
+
+  //   let reqObj :any = {sender : this.data.selectedNodes[0],
+  //                       receiver: this.data.selectedNodes[1],
+  //                       message : this.f.message.value};
+
+
+  //   this.resetSelectedElement();
+
+  //   let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
+  //     return '#' + n.id;
+  //   }).reverse();
+  //   if(route.length === 0) {
+  //     alert('Message cannot be sent');
+  //     return;
+  //   }
+  //   for(let node of route){
+  //     this.cy.$(node).addClass('path');
+  //     //this.jAni.play();
+  //     await this.sleep(1000);
+  //   }
+
+
+  //   this.data.sendMessage(reqObj).subscribe( (res: HttpResponse<Object>) =>{
+  //     console.log(res);
+  //     this.f.message.setValue("");
+  //     alert("Message sent successfully.");
+  //     this.resetSelectedElement();
+  //   }, (err: any) => {
+  //     alert(err.error);
+  //     return;
+  //   });
+
+
+  // }
+
   async sendMessage(){
     if (this.data.selectedPatterns.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedDomains.length !== 0) {
       this.resetSelectedElement();
@@ -129,20 +182,47 @@ export class MainComponent implements OnInit, AfterViewInit {
                         receiver: this.data.selectedNodes[1],
                         message : this.f.message.value};
 
-
     this.resetSelectedElement();
+    
+    let getCytoRoute: (start: string, end: string) => string[] = (start, end) => {
+      return this.network.getPath(start, end).map( (n: Node) => {
+        return '#' + n.id;
+      });
+    }
 
-    let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
-      return '#' + n.id;
-    }).reverse();
+    // let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
+    //   return '#' + n.id;
+    // }).reverse();
+
+    let route: string[] = getCytoRoute(reqObj.sender, reqObj.receiver);
+
     if(route.length === 0) {
       alert('Message cannot be sent');
       return;
     }
-    for(let node of route){
+
+    // for(let node of route){
+    //   this.cy.$(node).addClass('path');
+    //   //this.jAni.play();
+    //   await this.sleep(1000);
+    // }
+    let next: string;
+
+    while(route.length > 1) {
+      let node: string = route.pop();
       this.cy.$(node).addClass('path');
-      //this.jAni.play();
+      let next: string = route.pop();
+      route = getCytoRoute(next.substring(1), reqObj.receiver);
+      
+      if(route.length === 0) {
+        alert('Message cannot be sent');
+        return;
+      }
+
       await this.sleep(1000);
+    }
+    if(next) {
+      this.cy.$(next).addClass('path');
     }
 
 
@@ -155,8 +235,6 @@ export class MainComponent implements OnInit, AfterViewInit {
       alert(err.error);
       return;
     });
-
-
   }
 
   sleep(ms:number){
@@ -552,7 +630,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         }
 
         // check if selected Node is in the same pattern
-        let p, other: Pattern;
+        let p: Pattern, other: Pattern;
         p = this.network.getPatternByChildNodeId(this.data.selectedNodes[0]);
         other = this.network.getPatternByChildNodeId(this.data.selectedNodes[1]);
         if (!p || !other) {
