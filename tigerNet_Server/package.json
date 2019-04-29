@@ -8,7 +8,7 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node bin/startServer.js",
+    "start": "nodemon bin/startServer.js",
     "debug": "node --inspect-brk bin/startServer.js",
     "databaseDebug": "node --inspect-brk services/database/dbinit.js",
     "databaseReset": "node services/database/dbinit.js"
