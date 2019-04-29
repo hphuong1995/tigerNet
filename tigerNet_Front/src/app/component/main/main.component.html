@@ -189,6 +189,26 @@
         </mat-action-row>
     </mat-expansion-panel>
 
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+        <mat-panel-title>
+            Change Randomization
+        </mat-panel-title>
+        <mat-panel-description>
+            <p style="text-align:right;margin: auto">
+            Change the rate of random
+            </p>
+        </mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-action-row >
+            <mat-form-field [formGroup]="randomRate" id="text" appearance = "outline">
+                <mat-label>Magic Number</mat-label>
+                <textarea formControlName="randomRate" style="height:20px" matInput placeholder="Magic Number"></textarea>
+            </mat-form-field>
+            <p><button style="margin-left: 10px" id="setRandomNumber" mat-raised-button (click)="setRandomNumber()">Set Random Number</button></p>
+        </mat-action-row>
+    </mat-expansion-panel>
+
     <div class="resetButton">
         <button mat-fab color="primary" (click)="reset()">Reset</button>
     </div>

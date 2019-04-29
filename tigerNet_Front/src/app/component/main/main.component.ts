@@ -40,6 +40,8 @@ export class MainComponent implements OnInit, AfterViewInit {
   private currentDomain : string;
   private currentType: string;
 
+  private randomRate: FormGroup;
+
   private isDomainNode :boolean;
 
   private currentNodeMessages: any[];
@@ -52,6 +54,10 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     this.sendMess = this.formBuilder.group({
         message: ['']
+    });
+
+    this.randomRate = this.formBuilder.group({
+        randomRate: ['']
     });
 
     this.data.getNetwork().subscribe((res: HttpResponse<Network>) => {
@@ -77,6 +83,14 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   get f() { return this.sendMess.controls; }
+
+  get getRandomForm() { return this.randomRate.controls;}
+
+
+  setRandomNumber(){
+    console.log(this.getRandomForm.randomRate.value);
+    this.magicChance = this.getRandomForm.randomRate.value;
+  }
 
   deleteMess( messageId :string, nid : string){
   this.data.deleteMess(messageId, nid).subscribe((res: HttpResponse<Object>) =>{
@@ -928,6 +942,12 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
 
     var selectedNodeId = this.data.selectedNodes[0];
+
+    if(selectedNodeId.charAt(0) === 'D'){
+      this.resetSelectedElement();
+      alert("You can not delete domain node.");
+      return;
+    }
 
     var reqObject: { pattern: string, node: string, conNode: string, currentNodeNum: number } = {
       pattern: this.network.getPatternByChildNodeId(selectedNodeId).id,
