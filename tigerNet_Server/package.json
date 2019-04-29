@@ -8,7 +8,8 @@
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "nodemon bin/startServer.js",
+    "start": "pm2 start bin/startServer.js --no-daemon",
+    "reload": "pm2 restart startServer",
     "debug": "node --inspect-brk bin/startServer.js",
     "databaseDebug": "node --inspect-brk services/database/dbinit.js",
     "databaseReset": "node services/database/dbinit.js"
@@ -33,9 +34,9 @@
     "express": "^4.16.2",
     "express-session": "^1.15.6",
     "mysql": "^2.16.0",
-    "nodemon": "^1.18.11",
     "npm": "^5.7.1",
     "path": "^0.12.7",
+    "pm2": "^3.5.0",
     "tslint": "^5.12.1",
     "typescript": "^3.3.3",
     "uuid": "^3.2.1"

@@ -82,8 +82,8 @@ export class DataService {
     return this.http.get('api/v1/nodes/' + reqStr);
   }
 
-  deleteMess( messId : string, nid : string){
+  deleteMess( messId : string, nid : string): Observable<HttpResponse<Object>> {
     console.log(messId + " " + nid);
-    return this.http.delete('api/v1/messages?mid=' + messId + '&nid=' + nid);
+    return this.http.delete('api/v1/messages?mid=' + messId + '&nid=' + nid, { observe: 'response'});
   }
 }

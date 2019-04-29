@@ -75,9 +75,13 @@ export class MainComponent implements OnInit, AfterViewInit {
   get f() { return this.sendMess.controls; }
 
   deleteMess( messageId :string, nid : string){
-    this.data.deleteMess(messageId, nid).subscribe(data =>{
-      let retData : any = data;
-      this.currentNodeMessages = retData;
+    this.data.deleteMess(messageId, nid).subscribe(res =>{
+      if(!res.ok) {
+        alert(res.body);
+        return;
+      }
+      // let retData : any = res.body;      
+      this.currentNodeMessages = <[]>res.body;
     });
   }
 
