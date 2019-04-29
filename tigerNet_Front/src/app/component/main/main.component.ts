@@ -84,7 +84,7 @@ export class MainComponent implements OnInit, AfterViewInit {
         alert(res.body);
         return;
       }
-      // let retData : any = res.body;      
+      // let retData : any = res.body;
       this.currentNodeMessages = <[]>res.body;
     }, (err: any) => {
       alert(err.error);
@@ -115,7 +115,7 @@ export class MainComponent implements OnInit, AfterViewInit {
                         receiver: this.data.selectedNodes[1],
                         message : this.f.message.value};
 
-    
+
     this.resetSelectedElement();
 
     let route: string[]=this.network.getPath(reqObj.sender,reqObj.receiver).map( (n: Node) => {
@@ -458,12 +458,29 @@ export class MainComponent implements OnInit, AfterViewInit {
 
           var conList = this.network.getDomainByChildNodeId(arrToSend[0]).getAllConnections();
 
+          if( this.network.getDomainByChildNodeId(arrToSend[0]).id !== this.network.getDomainByChildNodeId(arrToSend[1]).id){
+            alert("Please choose two patterns in the same domain to connect");
+            return;
+          }
+
           this.resetSelectedElement();
 
           if (this.checkConnectionExist(arrToSend, conList)) {
             alert("The connection between selected Pattern is already exist.");
             return;
           } else {
+            // this.oldNetwork = this.network;
+            // this.network = new Network(this.oldNetwork.domains, this.oldNetwork.domainConnections);
+            // var currentDomain = this.network.getDomainByChildNodeId(arrToSend[0]);
+            //
+            // currentDomain.patternConnections.push(new Connector(arrToSend[0], arrToSend[1]));
+            //
+            // if (!this.network.isValid()) {
+            //   this.resetSelectedElement();
+            //   this.network = this.oldNetwork;
+            //   return;
+            // }
+
             this.data.addNewConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
               // console.log(data);
               // this.resetGraph(data.patterns, data.patternConnections);
@@ -687,7 +704,7 @@ export class MainComponent implements OnInit, AfterViewInit {
               return;
             }
             else {
-              this.data.deleteConnection(arrToSend).subscribe((res: HttpResponse<Network>) => { 
+              this.data.deleteConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
                 if(!res.ok) {
                   alert(res.body);
                   return;
@@ -1285,7 +1302,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
     this.network.addCytoscape(this.cy);
 
-    this.cy.ready( () => {  
+    this.cy.ready( () => {
       // this.network.addCytoscape(this.cy);
       this.network.domains.forEach( d => {
         d.patterns.forEach( p => p.arrange() );
