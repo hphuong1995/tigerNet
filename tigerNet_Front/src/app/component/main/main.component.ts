@@ -347,17 +347,23 @@ export class MainComponent implements OnInit, AfterViewInit {
         //     nonNodes.push(node);
         //   }
         // });
-        this.data.selectedNodes.forEach(nodeId => {
-          if (nodeId !== currentPattern.getConnectorNode().id) {
-            nonNodes.push(nodeId);
-          }
-        });
+        // this.data.selectedNodes.forEach(nodeId => {
+        //   if (nodeId !== currentPattern.getConnectorNode().id) {
+        //     nonNodes.push(nodeId);
+        //   }
+        // });
+
+        // currentPattern.connections.forEach(con => {
+        //   if (con.id === nonNodes[0] && con.targetId === nonNodes[1])
+        //     flag = false;
+        //   if (con.id === nonNodes[1] && con.targetId === nonNodes[0])
+        //     flag = false;
+        // });
 
         currentPattern.connections.forEach(con => {
-          if (con.id === nonNodes[0] && con.targetId === nonNodes[1])
-            flag = false;
-          if (con.id === nonNodes[1] && con.targetId === nonNodes[0])
-            flag = false;
+            if(con.compareTo(new Connector(this.data.selectedNodes[0], this.data.selectedNodes[1]))) {
+              flag = false;
+            }
         });
 
         if (flag) {
