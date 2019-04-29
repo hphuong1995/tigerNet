@@ -12,6 +12,7 @@ import * as $ from 'jquery';
 import { resetCompiledComponents } from '@angular/core/src/render3/jit/module';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Position } from 'src/app/data/position';
+import { resetFakeAsyncZone } from '@angular/core/testing';
 
 
 declare var cytoscape: any;
@@ -59,6 +60,9 @@ export class MainComponent implements OnInit, AfterViewInit {
         return;
       }
       this.resetGraph(res.body.domains, res.body.domainConnections);
+    }, (err: any) => {
+      alert(err.error);
+      return;
     });
   }
 
@@ -75,13 +79,16 @@ export class MainComponent implements OnInit, AfterViewInit {
   get f() { return this.sendMess.controls; }
 
   deleteMess( messageId :string, nid : string){
-    this.data.deleteMess(messageId, nid).subscribe(res =>{
+  this.data.deleteMess(messageId, nid).subscribe((res: HttpResponse<Object>) =>{
       if(!res.ok) {
         alert(res.body);
         return;
       }
       // let retData : any = res.body;      
       this.currentNodeMessages = <[]>res.body;
+    }, (err: any) => {
+      alert(err.error);
+      return;
     });
   }
 
@@ -125,11 +132,14 @@ export class MainComponent implements OnInit, AfterViewInit {
     }
 
 
-    this.data.sendMessage(reqObj).subscribe( data =>{
-      console.log(data);
+    this.data.sendMessage(reqObj).subscribe( (res: HttpResponse<Object>) =>{
+      console.log(res);
       this.f.message.setValue("");
       alert("Message sent successfully.");
       this.resetSelectedElement();
+    }, (err: any) => {
+      alert(err.error);
+      return;
     });
 
 
@@ -169,11 +179,17 @@ export class MainComponent implements OnInit, AfterViewInit {
         this.currentType = "Non-Connector Node";
       }
 
-      this.data.viewNode(this.data.selectedNodes[0]).subscribe( data =>{
-        let retData : any = data;
-        this.currentNodeMessages = retData;
+      this.data.viewNode(this.data.selectedNodes[0]).subscribe( (res: HttpResponse<Object>) => {
+        if(!res.ok) {
+          alert(res.body);
+          return;
+        }
+        this.currentNodeMessages = <[]>res.body;
         this.resetSelectedElement();
-        console.log(data);
+        console.log(res.body);
+      }, (err: any) => {
+        alert(err.error);
+        return;
       });
     }
   }
@@ -203,6 +219,9 @@ export class MainComponent implements OnInit, AfterViewInit {
         // this.network.getPatternByChildNodeId(selectedNode).getNodeById(selectedNode).isActive = false;
         this.network.getNodeById(selectedNode).isActive = false;
         this.cy.$('#' + selectedNode).addClass('inactiveSelectors');
+      }, (err: any) => {
+        alert(err.error);
+        return;
       });
     }
   }
@@ -221,10 +240,13 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.network.getNodeById(selectedNode).isActive = true;
       this.resetSelectedElement();
       this.network.getNodeById(selectedNode).isActive = true;
+    }, (err: any) => {
+      alert(err.error);
+      return;
     });
   }
 
-  resetSelectedElement = function () {
+  resetSelectedElement() {
 
     this.data.selectedNodes.forEach((selectedNode: string) => {
       this.cy.$('#' + selectedNode).removeClass('highlighted');
@@ -245,7 +267,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     this.data.selectedDomains = [];
   }
 
-  addNode = function () {
+  addNode() {
     //console.log(this.data.selectedNodes);
 
     if (!this.user.isAdmAccount()) {
@@ -278,9 +300,15 @@ export class MainComponent implements OnInit, AfterViewInit {
         did: currentDomain.id,
         dnid: currentDomain.domainNode.id
       };
-      this.data.addPattern(reqData).subscribe((data) => {
-        var retData: any = data;
-        this.resetGraph(retData.domains, retData.domainConnections);
+      this.data.addPattern(reqData).subscribe((res: HttpResponse<Network>) => {
+        if(!res.ok) {
+          alert(res.body);
+          return;
+        }
+        this.resetGraph(res.body.domains, res.body.domainConnections);
+      }, (err: any) => {
+        alert(err.error);
+        return;
       });
     }
     else {
@@ -314,9 +342,14 @@ export class MainComponent implements OnInit, AfterViewInit {
 
         var nonNodes: string[] = [];
 
-        this.data.selectedNodes.forEach(node => {
-          if (node.id !== currentPattern.getConnectorNode().id) {
-            nonNodes.push(node);
+        // this.data.selectedNodes.forEach(node => {
+        //   if (node.id !== currentPattern.getConnectorNode().id) {
+        //     nonNodes.push(node);
+        //   }
+        // });
+        this.data.selectedNodes.forEach(nodeId => {
+          if (nodeId !== currentPattern.getConnectorNode().id) {
+            nonNodes.push(nodeId);
           }
         });
 
@@ -383,6 +416,10 @@ export class MainComponent implements OnInit, AfterViewInit {
         } else {
           this.resetGraph(res.body.domains, res.body.domainConnections);
         }
+      }, (err: any) => {
+        alert(err.error);
+        this.network = this.oldNetwork;
+        return;
       });
     }
   }
@@ -421,10 +458,17 @@ export class MainComponent implements OnInit, AfterViewInit {
             alert("The connection between selected Pattern is already exist.");
             return;
           } else {
-            this.data.addNewConnection(arrToSend).subscribe((data) => {
-              console.log(data);
+            this.data.addNewConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
+              // console.log(data);
               // this.resetGraph(data.patterns, data.patternConnections);
-              this.resetGraph(data.domains, data.domainConnections);
+              if(!res.ok) {
+                alert(res.body);
+                return;
+              }
+              this.resetGraph(res.body.domains, res.body.domainConnections);
+            }, (err: any) => {
+              alert(err.error);
+              return;
             });
           }
         }
@@ -448,10 +492,17 @@ export class MainComponent implements OnInit, AfterViewInit {
           alert("The connection between selected Domain is already exist.");
           return;
         } else {
-          this.data.addNewConnection(arrToSend).subscribe((data) => {
-            console.log(data);
+          this.data.addNewConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
+            // console.log(data);
             // this.resetGraph(data.patterns, data.patternConnections);
-            this.resetGraph(data.domains, data.domainConnections);
+            if(!res.ok) {
+              alert(res.body);
+              return;
+            }
+            this.resetGraph(res.body.domains, res.body.domainConnections);
+          }, (err: any) => {
+            alert(err.error);
+            return;
           });
         }
 
@@ -502,10 +553,17 @@ export class MainComponent implements OnInit, AfterViewInit {
           return;
         }
 
-        this.data.addNewConnection(this.data.selectedNodes).subscribe((data) => {
-          console.log(data);
-          this.resetGraph(data.domains, data.domainConnections);
+        this.data.addNewConnection(this.data.selectedNodes).subscribe((res: HttpResponse<Network>) => {
+          // console.log(data);
+          if(!res.ok) {
+            alert(res.body);
+            return;
+          }
+          this.resetGraph(res.body.domains, res.body.domainConnections);
           this.resetSelectedElement();
+        }, (err: any) => {
+          alert(err.error);
+          return;
         });
       }
     }
@@ -551,15 +609,23 @@ export class MainComponent implements OnInit, AfterViewInit {
         return;
       }
       else {
-        this.data.deleteConnection(arrToSend).subscribe(data => {
-          var retData: any = data;
-          this.resetGraph(retData.domains, retData.domainConnections);
+        this.data.deleteConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
+          if(!res.ok) {
+            alert(res.body);
+            return;
+          }
+          this.resetGraph(res.body.domains, res.body.domainConnections);
+        }, (err: any) => {
+          alert(err.error);
+          this.network = this.oldNetwork;
+          return;
         });
       }
     }
     else if (arrToSend[0].charAt(0) === 'D' || arrToSend[1].charAt(0) === 'D') {
       this.resetSelectedElement();
       alert("User can not delete the connection that assosiates with domain node.");
+      this.network = this.oldNetwork;
       return;
     }
     else{
@@ -568,9 +634,17 @@ export class MainComponent implements OnInit, AfterViewInit {
           !== this.network.getPatternByChildNodeId(arrToSend[1]).id) {
           // check isolate
           this.resetSelectedElement();
-          this.data.deleteConnection(arrToSend).subscribe(data => {
-            var retData: any = data;
-            this.resetGraph(retData.domains, retData.domainConnections);
+          this.data.deleteConnection(arrToSend).subscribe((res: HttpResponse<Network>) => {
+            if(!res.ok) {
+              alert(res.body);
+              this.network = this.oldNetwork;
+              return;
+            }
+            this.resetGraph(res.body.domains, res.body.domainConnections);
+          }, (err: any) => {
+            alert(err.error);
+            this.network = this.oldNetwork;
+            return;
           });
         }
         else {  // delete connection in the Pattern
@@ -579,6 +653,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           if (arrToSend[0] !== currentPat.getConnectorNode().id && arrToSend[1] !== currentPat.getConnectorNode().id) {
             this.resetSelectedElement();
             alert("You can only delete connection from connector Node to non-connector Node");
+            this.network = this.oldNetwork;
             return;
           }
           else {
@@ -606,9 +681,16 @@ export class MainComponent implements OnInit, AfterViewInit {
               return;
             }
             else {
-              this.data.deleteConnection(arrToSend).subscribe(data => {
-                var retData: any = data;
-                this.resetGraph(retData.domains, retData.domainConnections);
+              this.data.deleteConnection(arrToSend).subscribe((res: HttpResponse<Network>) => { 
+                if(!res.ok) {
+                  alert(res.body);
+                  return;
+                }
+                this.resetGraph(res.body.domains, res.body.domainConnections);
+              }, (err: any) => {
+                alert(err.error);
+                this.network = this.oldNetwork;
+                return;
               });
             }
           }
@@ -644,10 +726,16 @@ export class MainComponent implements OnInit, AfterViewInit {
           did: currentDomain.id,
           dnid: currentDomain.domainNode.id
         }
-        console.log(reqData);
-        this.data.addPattern(reqData).subscribe((data: Network) => {
-          console.log(data);
-          this.resetGraph(data.domains, data.domainConnections);
+        // console.log(reqData);
+        this.data.addPattern(reqData).subscribe((res: HttpResponse<Network>) => {
+          if(!res.ok) {
+            alert(res.body);
+            return;
+          }
+          this.resetGraph(res.body.domains, res.body.domainConnections);
+        }, (err: any) => {
+          alert(err.error);
+          return;
         });
       }
   }
@@ -698,10 +786,17 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.data.deletePattern(this.data.selectedPatterns[0]).subscribe(data => {
+    this.data.deletePattern(this.data.selectedPatterns[0]).subscribe((res: HttpResponse<Network>) => {
       this.resetSelectedElement();
-      var retData: any = data;
-      this.resetGraph(retData.domains, retData.domainConnections);
+      if(!res.ok) {
+        alert(res.body);
+        return;
+      }
+      this.resetGraph(res.body.domains, res.body.domainConnections);
+    }, (err: any) => {
+      alert(err.error);
+      this.network = this.oldNetwork;
+      return;
     });
   }
 
@@ -709,11 +804,13 @@ export class MainComponent implements OnInit, AfterViewInit {
     if (this.data.selectedNodes.length !== 0 || this.data.selectedLink.length !== 0 || this.data.selectedPatterns.length !== 0) {
       this.resetSelectedElement();
       alert("Please only select domain for this operation.");
+      this.network = this.oldNetwork;
       return;
     }
     if (this.data.selectedDomains.length !== 1) {
       this.resetSelectedElement();
       alert("Please select one Domain to delete.");
+      this.network = this.oldNetwork;
       return;
     }
 
@@ -743,10 +840,16 @@ export class MainComponent implements OnInit, AfterViewInit {
       return;
     }
     else{
-      this.data.deleteDomain( selectedDomain ).subscribe( data => {
-        console.log(data);
-        var resData : any = data;
-        this.resetGraph(resData.domains, resData.domainConnections);
+      this.data.deleteDomain( selectedDomain ).subscribe( (res: HttpResponse<Network>) => {
+        if(!res.ok) {
+          alert(res.body);
+          return;
+        }
+        this.resetGraph(res.body.domains, res.body.domainConnections);
+      }, (err: any) => {
+        alert(err.error);
+        this.network = this.oldNetwork;
+        return;
       });
     }
   }
@@ -772,9 +875,16 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.resetSelectedElement();
       var reqData = {did : arrToSend};
       console.log(reqData);
-      this.data.addDomain(reqData).subscribe((data: Network) => {
-        console.log(data);
-        this.resetGraph(data.domains, data.domainConnections);
+      this.data.addDomain(reqData).subscribe((res: HttpResponse<Network>) => {
+        // console.log(data);
+        if(!res.ok) {
+          alert(res.body);
+          return;
+        }
+        this.resetGraph(res.body.domains, res.body.domainConnections);
+      }, (err: any) => {
+        alert(err.error);
+        return;
       });
     }
 
@@ -838,10 +948,18 @@ export class MainComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      this.data.deleteNode(sendObj).subscribe(data => {
-        console.log(data);
-        var resData: any = data;
-        this.resetGraph(resData.domains, resData.domainConnections);
+      this.data.deleteNode(sendObj).subscribe( (res: HttpResponse<Network>) => {
+        // console.log(data);
+        if(!res.ok) {
+          alert(res.body);
+          this.network = this.oldNetwork;
+          return;
+        }
+        this.resetGraph(res.body.domains, res.body.domainConnections);
+      }, (err: any) => {
+        alert(err.error);
+        this.network = this.oldNetwork;
+        return;
       });
     }
     else if (reqObject.currentNodeNum > 1 && reqObject.currentNodeNum < 4 && reqObject.node !== reqObject.conNode) {
@@ -867,10 +985,18 @@ export class MainComponent implements OnInit, AfterViewInit {
       }
       else {
         let sendObj = { node: reqObject.node };
-        this.data.deleteNode(sendObj).subscribe(data => {
-          console.log(data);
-          var resData: any = data;
-          this.resetGraph(resData.domains, resData.domainConnections);
+        this.data.deleteNode(sendObj).subscribe( (res: HttpResponse<Network>) => {
+          // console.log(data);
+          if(!res.ok) {
+            alert(res.body);
+            this.network = this.oldNetwork;
+            return;
+          }
+          this.resetGraph(res.body.domains, res.body.domainConnections);
+        }, (err: any) => {
+          alert(err.error);
+          this.network = this.oldNetwork;
+          return;
         });
       }
     }
@@ -940,10 +1066,18 @@ export class MainComponent implements OnInit, AfterViewInit {
         else {
           sendObj = { node: reqObject.node };
         }
-        this.data.deleteNode(sendObj).subscribe(data => {
-          console.log(data);
-          var resData: any = data;
-          this.resetGraph(resData.domains, resData.domainConnections);
+        this.data.deleteNode(sendObj).subscribe( (res: HttpResponse<Network>) => {
+          // console.log(data);
+          if(!res.ok) {
+            alert(res.body);
+            this.network = this.oldNetwork;
+            return;
+          }
+          this.resetGraph(res.body.domains, res.body.domainConnections);
+        }, (err: any) => {
+          alert(err.error);
+          this.network = this.oldNetwork;
+          return;
         });
       }
     }
@@ -969,7 +1103,6 @@ export class MainComponent implements OnInit, AfterViewInit {
     let isConnectorSelectors = "";
     let isDomainNodeSelectors = "";
 
-    // this.oldNetwork = this.network;
     this.network = new Network(domains, domainConnections);
 
     this.network.domains.forEach((domain: Domain) => {

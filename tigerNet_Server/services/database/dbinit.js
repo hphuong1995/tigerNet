@@ -51,6 +51,23 @@ const USERS_TABLE =
         PRIMARY KEY (id)\
     );";
 
+// const MESSAGES_TABLE =
+//     "CREATE TABLE messages (\
+//         id VARCHAR(45) NOT NULL,\
+//         body VARCHAR(51) NOT NULL,\
+//         fk_receiver_id VARCHAR(45) NOT NULL,\
+//         CONSTRAINT FOREIGN KEY (fk_receiver_id)\
+//         REFERENCES nodes(id)\
+//         ON UPDATE CASCADE\
+//         ON DELETE RESTRICT,\
+//         fk_sender_id VARCHAR(45),\
+//         CONSTRAINT FOREIGN KEY (fk_sender_id)\
+//         REFERENCES nodes(id)\
+//         ON UPDATE NO ACTION\
+//         ON DELETE NO ACTION,\
+//         PRIMARY KEY (id)\
+//     );";
+
 const MESSAGES_TABLE =
     "CREATE TABLE messages (\
         id VARCHAR(45) NOT NULL,\
@@ -61,10 +78,6 @@ const MESSAGES_TABLE =
         ON UPDATE CASCADE\
         ON DELETE RESTRICT,\
         fk_sender_id VARCHAR(45),\
-        CONSTRAINT FOREIGN KEY (fk_sender_id)\
-        REFERENCES nodes(id)\
-        ON UPDATE CASCADE\
-        ON DELETE NO ACTION,\
         PRIMARY KEY (id)\
     );";
 
@@ -111,25 +124,6 @@ const NODES_TABLE =
         PRIMARY KEY (id)\
     );";
 
-const NODES_DELETE_TRIGGER = 
-    "CREATE TRIGGER nodes_delete\
-        BEFORE DELETE ON nodes\
-        FOR EACH ROW\
-        BEGIN\
-            DELETE FROM messages WHERE fk_receiver_id = OLD.id;\
-            UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
-        END\
-    ";
-
-const MESSAGES_DELETE_TRIGGER = 
-    "CREATE TRIGGER messages_delete\
-        BEFORE DELETE ON messages\
-        FOR EACH ROW\
-        BEGIN\
-            UPDATE messageids SET isFree = 1 WHERE id = OLD.id;\
-        END\
-    ";
-
 const PATTERNS_TABLE =
     "CREATE TABLE patterns (\
         id VARCHAR(6) NOT NULL,\
@@ -166,6 +160,25 @@ const PATTERNS_DELETE_TRIGGER =
         BEGIN\
             DELETE FROM nodes WHERE fk_pattern_id = OLD.id;\
             UPDATE patternids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
+
+const NODES_DELETE_TRIGGER = 
+    "CREATE TRIGGER nodes_delete\
+        BEFORE DELETE ON nodes\
+        FOR EACH ROW\
+        BEGIN\
+            DELETE FROM messages WHERE fk_receiver_id = OLD.id;\
+            UPDATE nodeids SET isFree = 1 WHERE id = OLD.id;\
+        END\
+    ";
+
+const MESSAGES_DELETE_TRIGGER = 
+    "CREATE TRIGGER messages_delete\
+        BEFORE DELETE ON messages\
+        FOR EACH ROW\
+        BEGIN\
+            UPDATE messageids SET isFree = 1 WHERE id = OLD.id;\
         END\
     ";
     
